@@ -1,6 +1,7 @@
 import Image from "next/image";
 import React from "react";
 import Container from "./Container";
+import Button from "./Button";
 
 function HeroSection() {
   const categories = [
@@ -49,7 +50,7 @@ function HeroSection() {
                   />
 
                   {/* Overlay with gradient + text */}
-                  <div className="absolute inset-0 bg-black/40  flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                     <h3 className="text-white text-2xl font-bold">
                       {category.name}
                     </h3>
@@ -60,29 +61,28 @@ function HeroSection() {
           </div>
         </Container>
 
-  
-        <div className="relative  z-10">
-          <div className="container  mx-auto px-4 py-24 md:py-16">
-            <div className="grid grid-cols-1 md:grid-cols-2  items-center">
+        <div className="relative z-10">
+          <Container className="py-6!" >
+            <div className="grid grid-cols-1 md:grid-cols-2 items-center">
               {/* Text content */}
               <div className="text-white">
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
                   <span className="text-yellow-400">Delicious</span> Food
                   Delivered To Your Doorstep
                 </h1>
-                <p className="text-lg md:text-xl mb-8 max-w-lg">
+                <p className="text-lg md:text-xl mb-8 max-w-xl">
                   Order from your favorite restaurants with just a few taps.
                   Fast delivery, fresh meals, and unforgettable taste
                   experiences.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <button className="bg-yellow-400 hover:bg-yellow-500 text-red-900 font-bold px-8 py-3 rounded-full shadow-lg transition transform hover:scale-105">
+                  <Button className="py-3! px-8! ">
                     Order Now
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
-          </div>
+          </Container>
         </div>
       </div>
     </div>

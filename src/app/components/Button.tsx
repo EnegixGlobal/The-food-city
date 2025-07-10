@@ -10,7 +10,7 @@ function Button({children, type="button", className="", ...props}: ButtonProps) 
   return (
     <button
       type={type}
-      className={`bg-yellow-400 hover:bg-yellow-500 text-red-800 font-bold px-6 py-2 rounded-full shadow-lg transition transform hover:scale-102 ${className}`}
+      className={`bg-yellow-400 cursor-pointer hover:bg-yellow-500 text-red-800 font-bold md:px-4 md:py-1 px-3 py-1 rounded-full shadow-lg transition transform hover:scale-102 ${className}`}
       {...props}
     >
       {children}
