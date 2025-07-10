@@ -10,7 +10,7 @@ function Card({
 }) {
   return (
     <div
-      className={`w-full max-w-[230px]
+      className={`w-full md:max-w-[230px] max-w-[220px] 
                  
                   flex-shrink-0 
                   bg-white rounded-xl shadow-md overflow-hidden 

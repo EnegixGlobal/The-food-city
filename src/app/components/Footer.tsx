@@ -1,11 +1,12 @@
 import React from 'react';
 import { FaFacebook, FaInstagram, FaTwitter, FaYoutube, FaMapMarkerAlt, FaPhone, FaEnvelope } from 'react-icons/fa';
+import Container from './Container';
 
 const Footer = () => {
   return (
-    <footer className="bg-red-900 text-white pt-12 pb-6">
+    <footer className="bg-red-900 text-white  pb-6">
       {/* Container Wrapper */}
-      <div className="container mx-auto px-4">
+      <Container>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           
           {/* Column 1: About */}
@@ -91,7 +92,7 @@ const Footer = () => {
             <a href="#" className="font-medium hover:text-yellow-400 transition">FAQ</a>
           </div>
         </div>
-      </div>
+      </Container>
     </footer>
   );
 };

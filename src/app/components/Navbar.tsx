@@ -2,8 +2,15 @@
 
 import React, { useState } from "react";
 import Button from "./Button";
-import { FaHome, FaPhone, FaUser } from "react-icons/fa";
+import {
+  FaCartArrowDown,
+  FaCartPlus,
+  FaHome,
+  FaPhone,
+  FaUser,
+} from "react-icons/fa";
 import Link from "next/link";
+import { MdOutlineShoppingCart } from "react-icons/md";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -128,7 +135,12 @@ function Navbar() {
                 {item.name}
               </a>
             ))}
-            <Button>Order Now</Button>
+            <div className="relative">
+              <Button className="flex items-center justify-center gap-2">
+                <FaCartPlus /> Cart
+              </Button>
+              <span className="h-5 w-5 absolute right-7 -top-3 bg-red-400 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -153,7 +165,7 @@ function Navbar() {
         {/* Mobile Menu */}
         {isOpen && (
           <div className="md:hidden bg-red-700 rounded-lg shadow-lg mb-2 overflow-hidden">
-            <Link 
+            <Link
               href="/"
               className=" px-6 py-3 hover:bg-red-600 transition flex items-center">
               <svg
@@ -245,7 +257,7 @@ function Navbar() {
               Contact
             </Link>
             <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-red-800 font-bold px-6 py-3 mt-2 transition">
-              Order Now
+              Cart
             </button>
           </div>
         )}
