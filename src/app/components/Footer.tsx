@@ -4,7 +4,7 @@ import Container from './Container';
 
 const Footer = () => {
   return (
-    <footer className="bg-red-900 text-white  pb-6">
+    <footer className="bg-[#471419] text-white  pb-6">
       {/* Container Wrapper */}
       <Container>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">

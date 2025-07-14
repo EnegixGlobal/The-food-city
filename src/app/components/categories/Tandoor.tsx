@@ -2,8 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Card from "../Card";
-import Image from "next/image";
-import Button from "../Button";
 import { FaArrowRight } from "react-icons/fa";
 
 function Tandoor() {
@@ -110,26 +108,7 @@ function Tandoor() {
         className="flex overflow-x-auto scroll-smooth  py-2 gap-4 scrollbar-hide"
         onScroll={(e) => setScrollPosition(e.currentTarget.scrollLeft)}>
         {tandoor.map((item) => (
-          <Card key={item.id}>
-            <div className=" aspect-square  overflow-hidden">
-              <Image
-                src={item.image}
-                alt={item.name}
-                width={80}
-                height={100}
-                className="w-full h-full object-cover transition-transform duration-500 hover:scale-102"
-              />
-            </div>
-            <div className="p-5">
-              <h3 className="text-xl font-bold text-gray-800 mb-2">
-                {item.name}
-              </h3>
-              <div className="flex justify-between items-center">
-                <span className="text-red-600 font-bold">{item.price}</span>
-                <Button className="">Add to Cart</Button>
-              </div>
-            </div>
-          </Card>
+          <Card key={item.id} item={item} />
         ))}
       </div>
 

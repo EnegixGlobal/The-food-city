@@ -2,6 +2,8 @@ import Image from "next/image";
 import React from "react";
 import Container from "./Container";
 import Button from "./Button";
+import { FaArrowRight } from "react-icons/fa";
+import Link from "next/link";
 
 function HeroSection() {
   const categories = [
@@ -9,21 +11,25 @@ function HeroSection() {
       name: "Indian",
       bgImage:
         "https://imgs.search.brave.com/zwudZdgp40IeX0z7JRLUmi2ElldrTgitQOAUR0eFZCI/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly90NC5m/dGNkbi5uZXQvanBn/LzAyLzg0LzQ2Lzg5/LzM2MF9GXzI4NDQ2/ODk4M180S1pTaWV2/SDBwZmxlRFM4amhu/Z05iZVl1WVNwSnpO/RC5qcGc",
+      href: "/indian",
     },
     {
       name: "Chinese",
       bgImage:
         "https://imgs.search.brave.com/aZNSSTItd1B-CNzgoIxpRkXUxfeNublpDw__ar6l_QE/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly93d3cu/c2h1dHRlcnN0b2Nr/LmNvbS9pbWFnZS1w/aG90by9hc3NvcnRl/ZC1jaGluZXNlLWZv/b2Qtb24tZGFyay0y/NjBudy0yMjA5NzQz/ODI3LmpwZw",
+      href: "/chinese",
     },
     {
       name: "South",
       bgImage:
         "https://imgs.search.brave.com/AzUHwLQ7CQpRCZGZ47e1HT31k-Sk6iYExceNCqwlmeo/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly93d3cu/c2h1dHRlcnN0b2Nr/LmNvbS9pbWFnZS1w/aG90by9ncm91cC1z/b3V0aC1pbmRpYW4t/Zm9vZC1saWtlLTI2/MG53LTExNTM4MTg4/MjMuanBn",
+      href: "/south-indian",
     },
     {
       name: "Tandoor",
       bgImage:
         "https://imgs.search.brave.com/ORCKll6DBlMoHhUCJohZN1jTn0uCXXDRhmA7aCBybJ0/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTI4/NzU5MTg3MS9waG90/by9pbmRpYW4tZm9v/ZC5qcGc_cz02MTJ4/NjEyJnc9MCZrPTIw/JmM9dXFmMWdXQTFh/THAwV3A4bE9HbUV1/Y1BkYWxjVDIzZGpB/WGpzTHpzSHV6Yz0",
+      href: "/tandoor",
     },
   ];
 
@@ -41,28 +47,31 @@ function HeroSection() {
                 key={index}
                 className="border-2 border-white/45  cursor-pointer rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
                 {/* Image + Text Overlay */}
-                <div className="relative w-full h-24">
-                  <Image
-                    src={category.bgImage}
-                    alt={category.name}
-                    fill
-                    className="object-cover"
-                  />
+                <Link href={category.href}>
+                  <div className="relative w-full h-24">
+                    <Image
+                      src={category.bgImage}
+                      alt={category.name}
+                      fill
+                      className="object-cover"
+                    />
 
-                  {/* Overlay with gradient + text */}
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <h3 className="text-white text-2xl font-bold">
-                      {category.name}
-                    </h3>
+                    {/* Overlay with gradient + text */}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <h3 className="text-white text-2xl font-bold flex items-center gap-2 justify-center">
+                        {category.name}{" "}
+                        <FaArrowRight className="text-lg text-yellow-300" />
+                      </h3>
+                    </div>
                   </div>
-                </div>
+                </Link>
               </div>
             ))}
           </div>
         </Container>
 
         <div className="relative z-10">
-          <Container className="py-6!" >
+          <Container className="py-6!">
             <div className="grid grid-cols-1 md:grid-cols-2 items-center">
               {/* Text content */}
               <div className="text-white">
@@ -76,9 +85,7 @@ function HeroSection() {
                   experiences.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button className="py-3! px-8! ">
-                    Order Now
-                  </Button>
+                  <Button className="py-3! px-8! ">Order Now</Button>
                 </div>
               </div>
             </div>

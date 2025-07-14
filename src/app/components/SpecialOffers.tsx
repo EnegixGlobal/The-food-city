@@ -56,7 +56,7 @@ const SpecialOffers = () => {
       nextSlide();
     }, 5000);
     return () => clearInterval(interval);
-  }, [currentSlide]);
+  }, [currentSlide, nextSlide]);
 
   return (
     <div className="relative bg-gray-100 md:py-12 py-8 md:px-4 text-gray-800 overflow-hidden">
