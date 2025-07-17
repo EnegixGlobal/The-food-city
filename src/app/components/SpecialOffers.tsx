@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import Container from "./Container";
 import Button from "./Button";
@@ -42,13 +42,13 @@ const SpecialOffers = () => {
     },
   ];
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev === offers.length - 1 ? 0 : prev + 1));
-  };
+  }, [setCurrentSlide, offers.length]);
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev === 0 ? offers.length - 1 : prev - 1));
-  };
+  }, [setCurrentSlide, offers.length]);
 
   // Auto-slide every 5 seconds
   useEffect(() => {
@@ -67,8 +67,8 @@ const SpecialOffers = () => {
           Special Offers
         </h2>
         <p className="text-center text-maroon-200 mb-4 max-w-2xl mx-auto">
-          Limited-time deals you don&apos;t want to miss! Grab them before they&apos;re
-          gone.
+          Limited-time deals you don&apos;t want to miss! Grab them before
+          they&apos;re gone.
         </p>
 
         {/* Carousel */}

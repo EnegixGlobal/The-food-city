@@ -1,13 +1,46 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-
-images: {
-    domains: ['imgs.search.brave.com', 'anotherdomain.com', "images.unsplash.com", "www.cookwithmanali.com", "www.indianhealthyrecipes.com"],
-    // You can also set deviceSizes, imageSizes, formats, etc.
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'imgs.search.brave.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.cookwithmanali.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.indianhealthyrecipes.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'source.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn-icons-png.flaticon.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
-
-
 };
 
 export default nextConfig;

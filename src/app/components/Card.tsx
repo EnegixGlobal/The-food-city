@@ -16,27 +16,31 @@ function Card({
 
   return (
     <div
-      className={`w-full md:max-w-[230px] max-w-[220px] 
+      className={`w-full md:max-w-[260px]  max-w-[180px] 
                  
                   flex-shrink-0 
                   bg-white rounded-xl shadow-md overflow-hidden 
                   hover:shadow-xl transition-all duration-300 
                   ${className}`}
       {...props}>
-      <div className=" aspect-square  overflow-hidden">
+      <div className="   overflow-hidden">
         <Image
           src={item.image}
           alt={item.name}
           width={80}
           height={100}
-          className="w-full h-full object-cover transition-transform duration-500 hover:scale-102"
+          className="w-full md:h-[200px] h-[180px] object-cover transition-transform duration-500 hover:scale-102"
         />
       </div>
       <div className="p-3">
-        <h3 className="text-xl font-bold text-gray-800 mb-2">{item.name}</h3>
+        <h3 className=" text-sm md:text-xl font-bold text-gray-800 mb-2 ">
+          {item.name}
+        </h3>
         <div className="flex justify-between items-center">
-          <span className="text-red-600 font-bold">{item.price}</span>
-          <Button className="">Add to Cart</Button>
+          <span className="text-red-600 font-bold text-xs md:text-sm">
+            {item.price}
+          </span>
+          <Button className="text-xs md:text-sm">Add to Cart</Button>
         </div>
       </div>
     </div>

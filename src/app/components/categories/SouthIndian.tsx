@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Card from "../Card";
 import { FaArrowRight } from "react-icons/fa";
+import Link from "next/link";
 
 function SouthIndian() {
   const southIndian = [
@@ -110,9 +111,11 @@ function SouthIndian() {
         <h2 className="text-2xl md:text-3xl  font-bold text-red-800 mb-4">
           South Cuisine
         </h2>
+        <Link href="/south-indian">
         <span className="flex items-center justify-center gap-3 font-bold text-red-800 hover:text-red-700 hover:transform hover:scale-102 transition cursor-pointer">
           View All <FaArrowRight />
         </span>
+        </Link>
       </div>
       <button
         onClick={scrollLeft}

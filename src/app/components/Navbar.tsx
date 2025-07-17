@@ -5,11 +5,24 @@ import Button from "./Button";
 import { FaCartPlus, FaHome, FaPhone, FaSearch, FaUser } from "react-icons/fa";
 import Link from "next/link";
 import { BiSolidOffer } from "react-icons/bi";
+import SideLogin from "./SideLogin";
+import { FiLogIn } from "react-icons/fi";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [openLogin, setOpenLogin] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  // Simulating a logged-in state for demonstration
+
+  useEffect(() => {
+    // Simulate a login state after 2 seconds
+    const timer = setTimeout(() => {
+      setIsLoggedIn(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: Event) => {
@@ -35,11 +48,6 @@ function Navbar() {
       name: "Offers",
       href: "/offers",
       icon: <BiSolidOffer />,
-    },
-    {
-      name: "Sign In",
-      href: "/login",
-      icon: <FaUser />,
     },
   ];
 
@@ -75,6 +83,15 @@ function Navbar() {
                   {item.name}
                 </Link>
               ))}
+              <span
+                className="hover:text-yellow-300 transition font-bold flex items-center cursor-pointer"
+                onClick={() => setOpenLogin(true)}>
+                {" "}
+                <span className="h-6 w-6 flex font-bold items-center justify-center mr-1 text-gray-200">
+                  <FaUser />
+                </span>{" "}
+                Login
+              </span>
               <Link href="/cart" className="relative">
                 <Button className="flex items-center justify-center gap-2">
                   <FaCartPlus /> Cart
@@ -97,6 +114,9 @@ function Navbar() {
                   <FaCartPlus />
                 </span>
               </Link>
+              <span onClick={() => setOpenLogin(true)} className="text-2xl">
+                <FaUser />
+              </span>
               <button
                 className=" focus:outline-none p-2 rounded-full bg-red-700 hover:bg-red-800"
                 onClick={() => setIsOpen(!isOpen)}>
@@ -124,11 +144,18 @@ function Navbar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden fixed inset-0 bg-black/50 z-50">
+        <div className="md:hidden fixed  inset-0 bg-black/50 z-50">
           <div
             ref={menuRef}
             className="w-3/4 h-screen text-white bg-red-900 rounded-r-lg shadow-lg overflow-auto">
             <h2 className="text-2xl font-bold p-4">The Food City</h2>
+            {!isLoggedIn && (
+              <button
+                className="flex text-lg font-bold py-4 items-center justify-center gap-3 px-6  border-t border-red-800 hover:bg-red-800 transition"
+                onClick={() => setOpenLogin(true)}>
+                <FiLogIn className="h-6 w-6" /> Login
+              </button>
+            )}
             <Link
               href="/"
               className="px-6 py-3 hover:bg-red-600 transition flex items-center"
@@ -161,7 +188,12 @@ function Navbar() {
               </button>
             )} */}
           </div>
+          <button onClick={() => setOpenLogin(true)}>Login</button>
         </div>
+      )}
+
+      {openLogin && (
+        <SideLogin isOpen={openLogin} onClose={() => setOpenLogin(false)} />
       )}
     </>
   );
