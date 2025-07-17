@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Button from "./Button";
-import { FaCartPlus, FaHome,FaSearch, FaUser } from "react-icons/fa";
+import { FaCartPlus, FaHome, FaSearch, FaUser } from "react-icons/fa";
 import Link from "next/link";
 import { BiSolidOffer } from "react-icons/bi";
 import SideLogin from "./SideLogin";
@@ -154,7 +154,16 @@ function Navbar() {
           <div
             ref={menuRef}
             className="w-3/4 h-screen text-white bg-red-900 rounded-r-lg shadow-lg overflow-auto">
-            <h2 className="text-2xl font-bold p-4">The Food City</h2>
+            <div className="p-5 flex items-center justify-left">
+              <Image
+                src="/logo.png"
+                alt="The Food City"
+                width={40}
+                height={40}
+                className=" inline-block mr-3 -rotate-12"
+              />
+              <span className="text-2xl font-bold ">The Food City</span>
+            </div>
             {!isLoggedIn && (
               <button
                 className="flex text-lg font-bold py-4 items-center justify-center gap-3 px-6  border-t border-red-800 hover:bg-red-800 transition"

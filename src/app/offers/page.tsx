@@ -101,7 +101,9 @@ const OffersPage = () => {
         {/* Hero Section */}
         <div className="bg-green-700 text-white mt-10 md:py-12 py-10 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto text-center">
-            <h1 className="text-2xl md:text-3xl font-bold mb-4">Special Offers</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-4">
+              Special Offers
+            </h1>
             <p className="md:text-xl text-md max-w-3xl mx-auto">
               Discover amazing deals and discounts on your favorite dishes.
               Limited time offers!
@@ -172,7 +174,7 @@ const OffersPage = () => {
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-2 flex items-center justify-between">
+                  <div className="bg-gray-50 flex rounded-lg p-2 md:flex-row flex-wrap items-center justify-between">
                     <div className="flex items-center">
                       <FiTag className="text-red-900 mr-2" />
                       <span className="font-mono font-medium">
@@ -202,8 +204,6 @@ const OffersPage = () => {
             </div>
           )}
         </div>
-
-
       </div>
       <Footer />
     </>
