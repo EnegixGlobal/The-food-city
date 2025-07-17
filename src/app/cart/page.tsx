@@ -60,9 +60,9 @@ const CartPage = () => {
                 <div
                   key={item.id}
                   className="border-b border-gray-100 last:border-0">
-                  <div className="flex md:p-6 p-2">
+                  <div className="flex md:p-6 p-3">
                     {/* Item Image */}
-                    <div className="mr-4 flex-shrink-0">
+                    <div className="md:mr-4 mr-2 flex-shrink-0">
                       <Image
                         width={150}
                         height={150}
@@ -127,7 +127,7 @@ const CartPage = () => {
           </div>
 
           {/* Order Summary Section */}
-          <div className="flex-3 ">
+          <div className="flex-3 mb-16 md:mb-0">
             <div className="bg-white rounded-xl shadow-md md:p-6 sticky top-20 p-4">
               <h2 className="md:text-2xl text-xl font-bold text-red-900 mb-6 border-b pb-2">
                 Order Summary
@@ -163,24 +163,30 @@ const CartPage = () => {
                     ${total.toFixed(2)}
                   </span>
                 </span>
-                <Button className="">Checkout</Button>
+                <Link href="/checkout">
+                  <Button className="">Checkout</Button>
+                </Link>
               </div>
-
+              {/* Checkout Button */}
               {/* Continue Shopping */}
               <Link href="/" >
-              <button className="w-full mb-16 mt-4 border border-red-900 text-red-900 hover:bg-red-50 py-3 rounded-lg font-medium transition">
+              <Button className="w-full mt-4 py-3">
                 Continue Shopping
-              </button>
+              </Button>
               </Link>
-              <div className="md:hidden fixed w-full rounded-t-xl h-20 bg-red-900 bottom-0 left-0 ">
-                <div className=" flex items-center justify-between w-full p-4 shadow-md ">
+              <div className="md:hidden bg-red-900 fixed w-full rounded-t-2xl h-18   bottom-0 left-0 ">
+                <div className=" flex items-center justify-between w-full py-5 px-4 shadow-md ">
                   <span className="text-lg font-bold text-white">
                     Total
                     <span className="text-xl font-bold text-gray-200 ml-2">
                       ${total.toFixed(2)}
                     </span>
                   </span>
-                  <Button className="">Checkout</Button>
+                  <Link href="/checkout">
+                    <Button className=" text-red-900 hover:bg-gray-100">
+                      Checkout
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>

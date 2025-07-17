@@ -2,11 +2,12 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Button from "./Button";
-import { FaCartPlus, FaHome, FaPhone, FaSearch, FaUser } from "react-icons/fa";
+import { FaCartPlus, FaHome,FaSearch, FaUser } from "react-icons/fa";
 import Link from "next/link";
 import { BiSolidOffer } from "react-icons/bi";
 import SideLogin from "./SideLogin";
 import { FiLogIn } from "react-icons/fi";
+import Image from "next/image";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -60,9 +61,14 @@ function Navbar() {
             <div className="flex items-center space-x-6">
               <Link href="/">
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center bg-white text-red-600 rounded-full w-12 h-12 font-bold text-2xl mr-3">
-                    <span className="transform -rotate-12">TFC</span>
-                  </div>
+                  <Image
+                    src="/logo.png"
+                    alt="Food City Logo"
+                    width={60}
+                    height={60}
+                    className="transform -rotate-12 mr-3"
+                  />
+
                   <h1 className="text-2xl font-bold tracking-tight hidden sm:block">
                     The Food City
                   </h1>
@@ -172,11 +178,11 @@ function Navbar() {
               About
             </Link>
             <Link
-              href="/contact"
+              href="/offers"
               className="block px-6 py-3 border-t border-red-600 hover:bg-red-600 transition"
               onClick={() => setIsOpen(false)}>
-              <FaPhone className="h-5 w-5 mr-2 text-gray-400 inline" />
-              Contact
+              <BiSolidOffer className="h-5 w-5 mr-2 text-gray-400 inline" />
+              Offers
             </Link>
             <Link href="/cart" onClick={() => setIsOpen(false)}>
               <Button className=" py-2 mt-2 px-20 ml-4">Cart</Button>

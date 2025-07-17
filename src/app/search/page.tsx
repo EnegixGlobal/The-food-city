@@ -67,7 +67,7 @@ const Search = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setShowSuggestions(true)}
                   placeholder="Search for your favorite food..."
-                  className="w-full px-6 py-3 pr-12 rounded-md border border-gray-300 focus:outline-none text-lg font-semibold"
+                  className="w-full px-6 py-3 pr-12  border border-gray-300 focus:outline-none text-lg font-semibold"
                 />
                 <button
                   type="submit"

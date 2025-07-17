@@ -20,7 +20,7 @@ function Input({value, required, minLength, onChange, placeholder, type = "text"
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`w-full px-6 py-3 pr-12 rounded-md border border-gray-300 focus:outline-none text-lg font-semibold ${className}`}
+        className={`w-full px-6 py-3 pr-12  border border-gray-300 focus:outline-none text-lg font-semibold ${className}`}
         disabled={disabled}
         {...props}
         required={required}
