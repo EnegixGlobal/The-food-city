@@ -44,9 +44,11 @@ const CartPage = () => {
       {/* Container */}
       <Container>
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-red-900 mb-2">Your Cart</h1>
-          <p className="text-lg text-gray-600">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl md:text-3xl  font-bold text-red-900 mb-2">
+            Your Cart
+          </h1>
+          <p className="text-sm md:text-lg text-gray-600">
             Review your delicious selections
           </p>
         </div>
@@ -169,10 +171,8 @@ const CartPage = () => {
               </div>
               {/* Checkout Button */}
               {/* Continue Shopping */}
-              <Link href="/" >
-              <Button className="w-full mt-4 py-3">
-                Continue Shopping
-              </Button>
+              <Link href="/">
+                <Button className="w-full mt-4 py-3">Continue Shopping</Button>
               </Link>
               <div className="md:hidden bg-red-900 fixed w-full rounded-t-2xl h-18   bottom-0 left-0 ">
                 <div className=" flex items-center justify-between w-full py-5 px-4 shadow-md ">
