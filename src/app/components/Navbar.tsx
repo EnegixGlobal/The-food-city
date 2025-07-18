@@ -8,14 +8,18 @@ import { BiSolidOffer } from "react-icons/bi";
 import SideLogin from "./SideLogin";
 import { FiLogIn } from "react-icons/fi";
 import Image from "next/image";
+import { useCartStore } from "../zustand/cartStore";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [openLogin, setOpenLogin] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const getTotalItems = useCartStore((state) => state.getTotalItems);
 
   // Simulating a logged-in state for demonstration
+
+  console.log(getTotalItems());
 
   useEffect(() => {
     // Simulate a login state after 2 seconds
@@ -103,7 +107,7 @@ function Navbar() {
                   <FaCartPlus /> Cart
                 </Button>
                 <span className="h-5 w-5 absolute right-7 -top-3 bg-red-400 rounded-full flex items-center justify-center text-xs font-bold">
-                  2
+                  {getTotalItems()}
                 </span>
               </Link>
             </div>

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { FiTrash2, FiPlus, FiMinus } from "react-icons/fi";
 import Container from "../components/Container";
@@ -5,6 +7,7 @@ import Navbar from "../components/Navbar";
 import Image from "next/image";
 import Button from "../components/Button";
 import Link from "next/link";
+import { useCartStore } from "../zustand/cartStore";
 
 const CartPage = () => {
   // Sample cart items data
@@ -28,6 +31,10 @@ const CartPage = () => {
       specialInstructions: "Medium spicy",
     },
   ];
+
+  const getTotalItems = useCartStore((state) => state.getTotalItems);
+
+  console.log(getTotalItems());
 
   // Calculate totals
   const subtotal = cartItems.reduce(
