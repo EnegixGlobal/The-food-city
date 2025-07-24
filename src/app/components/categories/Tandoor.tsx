@@ -10,28 +10,28 @@ function Tandoor() {
     {
       id: 10,
       name: "Margherita Pizza",
-      price: "$15.99",
+      price: "15.99",
       image:
         "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     },
     {
       id: 11,
       name: "Pasta Alfredo",
-      price: "$13.99",
+      price: "13.99",
       image:
         "https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     },
     {
       id: 12,
       name: "Garlic Bread",
-      price: "$6.99",
+      price: "6.99",
       image:
         "https://images.unsplash.com/photo-1608190003443-86a6ab6e567e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     },
     {
       id: 13,
       name: "Tiramisu",
-      price: "$8.99",
+      price: "8.99",
       image:
         "https://images.unsplash.com/photo-1563805042-7684c019e1cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1127&q=80",
     },

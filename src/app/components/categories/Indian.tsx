@@ -10,7 +10,7 @@ function Indian() {
     {
       id: 1,
       name: "Paneer Tikka",
-      price: "$12.99",
+      price: "12.99",
       rating: 4.5,
       image:
         "https://images.unsplash.com/photo-1601050690597-df0568f70950?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
@@ -18,7 +18,7 @@ function Indian() {
     {
       id: 2,
       name: "Butter Chicken",
-      price: "$14.99",
+      price: "14.99",
       rating: 4.5,
       image:
         "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
@@ -26,7 +26,7 @@ function Indian() {
     {
       id: 3,
       name: "Biryani",
-      price: "$13.99",
+      price: "13.99",
       rating: 4.5,
       image:
         "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1188&q=80",
@@ -34,7 +34,7 @@ function Indian() {
     {
       id: 4,
       name: "Masala Dosa",
-      price: "$10.99",
+      price: "10.99",
       rating: 4.5,
       image:
         "https://images.unsplash.com/photo-1559533083-71f5095f0e1b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
@@ -42,7 +42,7 @@ function Indian() {
     {
       id: 5,
       name: "Samosa",
-      price: "$5.99",
+      price: "5.99",
       rating: 4.5,
       image:
         "https://images.unsplash.com/photo-1601050690597-df0568f70950?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",

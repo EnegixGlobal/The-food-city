@@ -1,9 +1,11 @@
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Button from "./Button";
 import { FiStar } from "react-icons/fi";
 import { useCartStore } from "../zustand/cartStore";
 import CardSkeleton from "./CardSkeleton";
+import { FaCartShopping } from "react-icons/fa6";
+import { FaCartPlus, FaRupeeSign } from "react-icons/fa";
 
 interface CartProps {
   className?: string;
@@ -18,11 +20,19 @@ interface CartProps {
 }
 
 function Card({ className = "", item, ...props }: CartProps) {
-  const { addToCart, isInCart } = useCartStore((state) => state);
+  const { addToCart, isInCart, getCartItems } = useCartStore((state) => state);
+  const [cartItems, setCartItems] = useState([]);
+
+  useEffect(() => {
+    const items = getCartItems();
+    setCartItems(items);
+  }, [getCartItems]);
 
   if (!item) {
     return <CardSkeleton />;
   }
+
+  console.log(cartItems);
 
   const handleAddToCart = () => {
     if (item) {
@@ -71,10 +81,13 @@ function Card({ className = "", item, ...props }: CartProps) {
           )}
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-red-600 font-bold text-xs md:text-sm">
-            {typeof item.price === 'string' ? item.price : `$${item.price.toFixed(2)}`}
+          <span className="text-red-600 font-bold flex items-center justify-center text-xs md:text-sm">
+            <FaRupeeSign  />
+            {typeof item.price === 'string' ? item.price : `${item.price.toFixed(2)}`}
           </span>
-
+          <span>
+      
+          </span>
           <Button
             onClick={handleAddToCart}
             className={`text-xs md:text-sm ${
@@ -82,7 +95,7 @@ function Card({ className = "", item, ...props }: CartProps) {
                 ? "bg-green-500! hover:bg-green-600"
                 : "bg-yellow-500!"
             } text-white`}>
-            {isInCart(item.id) ? "View Cart"  : "Add to Cart"}
+                 <span className="flex items-center justify-center gap-2"> {isInCart(item.id) ? <FaCartShopping/> : <FaCartPlus />}{isInCart(item.id) ? "Added"  : "Add to Cart"}</span>
           </Button>
         </div>
       </div>

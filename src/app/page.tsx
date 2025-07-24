@@ -4,6 +4,7 @@
 import dynamic from 'next/dynamic';
 import Footer from "./components/Footer";
 import Process from "./components/Process";
+import BottomCart from './components/BottomCart';
 
 // Dynamically import components that use client-side features
 const Navbar = dynamic(() => import("./components/Navbar"), { ssr: false });
@@ -20,6 +21,7 @@ export default function Home() {
       <Process />
       <SpecialOffers />
       <Footer />
+      <BottomCart />
 
     </div>
   );

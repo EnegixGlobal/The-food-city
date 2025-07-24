@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { FaMinus, FaPlus, FaUser } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaMinus, FaPlus, FaUser, FaRupeeSign } from "react-icons/fa";
 import {
   FiUser,
   FiPhone,
@@ -9,32 +9,41 @@ import {
   FiCreditCard,
   FiArrowRight,
   FiX,
+  FiTrash2,
 } from "react-icons/fi";
 import Input from "../components/Input";
 import Container from "../components/Container";
 import Image from "next/image";
 import Button from "../components/Button";
+import { useCartStore } from "../zustand/cartStore";
+
+interface CartItem {
+  id: number;
+  name: string;
+  image: string;
+  price: number;
+  quantity: number;
+}
 
 const CheckoutPage = () => {
-  // Sample cart items
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Masala Dosa",
-      price: 8.99,
-      quantity: 2,
-      image:
-        "https://images.unsplash.com/photo-1635667839851-9ae595677a2f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-    {
-      id: 2,
-      name: "Tandoori Chicken",
-      price: 15.99,
-      quantity: 1,
-      image:
-        "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-  ]);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Get cart data from Zustand store
+  const {
+    cart,
+    updateQuantity,
+    removeFromCart,
+    getSubtotal,
+    getTotalWithTaxAndDelivery,
+  } = useCartStore();
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // Use real cart data after hydration
+  const cartItems = isHydrated ? cart : [];
 
   // Form states
   const [phone, setPhone] = useState("");
@@ -50,23 +59,19 @@ const CheckoutPage = () => {
   const [showAddressSidebar, setShowAddressSidebar] = useState(false);
   const [activeStep, setActiveStep] = useState(1); // 1: Login, 2: Address, 3: Payment
 
-  // Calculate totals
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const tax = subtotal * 0.1; // 10% tax
-  const deliveryFee = 2.99;
-  const total = subtotal + tax + deliveryFee;
+  // Calculate totals using cart store functions
+  const subtotal = isHydrated ? getSubtotal() : 0;
 
-  // Handle quantity changes
-  const updateQuantity = (id: number, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    setCartItems(
-      cartItems.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    );
+  // Handle quantity changes using cart store
+  const handleUpdateQuantity = (id: number, newQuantity: number) => {
+    if (newQuantity < 1 || !isHydrated) return;
+    updateQuantity(id, newQuantity);
+  };
+
+  const handleRemoveItem = (id: number) => {
+    if (isHydrated) {
+      removeFromCart(id);
+    }
   };
 
   // Handle address input change
@@ -245,67 +250,86 @@ const CheckoutPage = () => {
 
               {/* Cart Items */}
               <div className="space-y-4 mb-6">
-                {cartItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        width={64}
-                        height={64}
-                        className="w-16 h-16 rounded-lg object-cover"
-                      />
-                      <div className="ml-4">
-                        <h3 className="text-sm font-medium text-gray-900">
-                          {item.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          ${item.price.toFixed(2)}
-                        </p>
+                {cartItems.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Your cart is empty
+                  </div>
+                ) : (
+                  cartItems.map((item: CartItem) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">
+                      <div className="flex items-center">
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          width={64}
+                          height={64}
+                          className="w-16 h-16 rounded-lg object-cover"
+                        />
+                        <div className="ml-4">
+                          <h3 className="text-sm font-medium text-gray-900">
+                            {item.name}
+                          </h3>
+                          <p className="text-sm text-gray-600 flex items-center">
+                            <FaRupeeSign size={12} className="mr-1" />
+                            {item.price.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex p-1 items-center border border-gray-300 rounded-lg">
+                          <button
+                            onClick={() =>
+                              handleUpdateQuantity(item.id, item.quantity - 1)
+                            }
+                            className="p-1 text-gray-600 hover:text-red-900">
+                            <FaMinus size={14} />
+                          </button>
+                          <span className="px-2 text-sm font-medium">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() =>
+                              handleUpdateQuantity(item.id, item.quantity + 1)
+                            }
+                            className="p-1 text-gray-600 hover:text-red-900">
+                            <FaPlus size={14} />
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveItem(item.id)}
+                          className="p-2 text-red-500 hover:text-red-700">
+                          <FiTrash2 size={14} />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex p-1 items-center border border-gray-300 rounded-none">
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity - 1)
-                        }
-                        className="p-1 text-gray-600 hover:text-red-900">
-                        <FaMinus size={14} />
-                      </button>
-                      <span className="px-2 text-sm font-medium">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity + 1)
-                        }
-                        className="p-1 text-gray-600 hover:text-red-900">
-                        <FaPlus size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               {/* Order Totals */}
               <div className="border-t border-gray-200 pt-4 space-y-3">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span className="flex items-center">
+                    <FaRupeeSign size={12} className="mr-1" />
+                    {subtotal.toFixed(2)}
+                  </span>
                 </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Tax (10%)</span>
-                  <span>${tax.toFixed(2)}</span>
-                </div>
+                
                 <div className="flex justify-between text-gray-600">
                   <span>Delivery Fee</span>
-                  <span>${deliveryFee.toFixed(2)}</span>
+                  <span className="flex items-center text-green-500">
+                    Free
+                  </span>
                 </div>
                 <div className="flex justify-between text-lg font-semibold text-gray-900 pt-2">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span className="flex items-center">
+                    <FaRupeeSign size={14} className="mr-1" />
+                    {isHydrated ? getTotalWithTaxAndDelivery().toFixed(2) : subtotal.toFixed(2)}
+                  </span>
                 </div>
               </div>
             </div>

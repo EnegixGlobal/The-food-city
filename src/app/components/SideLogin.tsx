@@ -53,7 +53,7 @@ const SideLogin = ({
         <div className="h-full flex flex-col p-6 md:p-8 pt-16 md:pt-16">
           {/* Header */}
           <div className="text-left mb-8">
-            <h2 className="text-3xl font  mb-2">
+            <h2 className="text-3xl font-semibold mb-2">
               {isLogin ? "Login" : "Sign Up"}
             </h2>
             <p className="text-gray-600">
@@ -111,7 +111,7 @@ const SideLogin = ({
             </div>
 
             {/* Submit Button */}
-            <Button type="submit" className="mt-6 py-3!">
+            <Button type="submit" className="mt-6 py-3! rounded-none">
               {isLogin ? "Login" : "Create Account"}
             </Button>
           </form>

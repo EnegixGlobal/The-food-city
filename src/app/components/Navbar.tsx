@@ -15,7 +15,13 @@ function Navbar() {
   const menuRef = useRef<HTMLDivElement>(null);
   const [openLogin, setOpenLogin] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const getTotalItems = useCartStore((state) => state.getTotalItems);
+
+  // Handle hydration to prevent mismatch
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Simulating a logged-in state for demonstration
 
@@ -107,7 +113,7 @@ function Navbar() {
                   <FaCartPlus /> Cart
                 </Button>
                 <span className="h-5 w-5 absolute right-7 -top-3 bg-red-400 rounded-full flex items-center justify-center text-xs font-bold">
-                  {getTotalItems()}
+                  {isHydrated ? getTotalItems() : 0}
                 </span>
               </Link>
             </div>
