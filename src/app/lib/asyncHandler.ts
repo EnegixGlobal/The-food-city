@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError } from "@/app/lib/apiError";
 
-export function asyncHandler(fn: (req: NextRequest) => Promise<Response>) {
+function asyncHandler(fn: (req: NextRequest) => Promise<Response>) {
   return async (req: NextRequest): Promise<Response> => {
     try {
       return await fn(req);
@@ -11,3 +11,5 @@ export function asyncHandler(fn: (req: NextRequest) => Promise<Response>) {
     }
   };
 }
+
+export { asyncHandler };
