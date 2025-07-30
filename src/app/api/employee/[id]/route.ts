@@ -1,5 +1,5 @@
 import connectDb from "@/app/db/connectDb";
-import { apiError } from "@/app/lib/apiError";
+import { apiError } from "@/app/lib/ApiError";
 import { apiResponse } from "@/app/lib/apiResponse";
 import Employee from "@/app/models/Employee";
 import { NextRequest } from "next/server";

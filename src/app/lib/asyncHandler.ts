@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { apiError } from "@/app/lib/apiError";
+import { apiError } from "@/app/lib/ApiError";
 
 function asyncHandler(fn: (req: NextRequest) => Promise<Response>) {
   return async (req: NextRequest): Promise<Response> => {

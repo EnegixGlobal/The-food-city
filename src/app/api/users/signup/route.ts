@@ -2,7 +2,7 @@ import connectDb from "@/app/db/connectDb";
 import { NextRequest, NextResponse } from "next/server";
 import User from "@/app/models/User";
 import { apiResponse } from "@/app/lib/apiResponse";
-import { apiError } from "@/app/lib/apiError";
+import { apiError } from "@/app/lib/ApiError";
 import { normalizePhoneNumber } from "@/app/utils/sendOtp";
 
 // Input validation schema

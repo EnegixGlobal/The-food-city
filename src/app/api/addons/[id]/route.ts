@@ -1,5 +1,5 @@
 import connectDb from "@/app/db/connectDb";
-import { apiError } from "@/app/lib/apiError";
+import { apiError } from "@/app/lib/ApiError";
 import { apiResponse } from "@/app/lib/apiResponse";
 import AddOn from "@/app/models/AddOns";
 import { deleteFromCloudinary } from "@/app/utils/deleteFromCloudinary";

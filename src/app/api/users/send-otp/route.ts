@@ -1,7 +1,7 @@
 import connectDb from "@/app/db/connectDb";
 import bcryptjs from "bcryptjs";
 import User from "@/app/models/User";
-import { apiError } from "@/app/lib/apiError";
+import { apiError } from "@/app/lib/ApiError";
 import { asyncHandler } from "@/app/lib/asyncHandler";
 import { apiResponse } from "@/app/lib/apiResponse";
 import {
