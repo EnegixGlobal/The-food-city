@@ -17,7 +17,7 @@ export const POST = asyncHandler(async (res) => {
   };
 
   const missingFields = Object.entries(requiredFields)
-    .filter(([_key, value]) => !value)
+    .filter(([, value]) => !value)
     .map(([key]) => key);
 
   if (missingFields.length > 0) {
