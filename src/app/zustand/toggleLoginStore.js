@@ -1,5 +1,4 @@
-// store/useLoginStore.js
-import { create } from 'zustand';
+import { create } from "zustand";
 
 const useToggleLoginStore = create((set) => ({
   isLoginOpen: false, // Initial state for your login modal/sidebar

@@ -9,32 +9,42 @@ import SideLogin from "./SideLogin";
 import { FiLogIn } from "react-icons/fi";
 import Image from "next/image";
 import { useCartStore } from "../zustand/cartStore";
+import useUserStore from "../zustand/userStore";
+import axios from "axios";
 
 function Navbar() {
+  const [userHoverOpen, setUserHoverOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [openLogin, setOpenLogin] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const getTotalItems = useCartStore((state) => state.getTotalItems);
+
+  // Get user from userStore instead of cartStore
+  const user = useUserStore((state) => state.user);
+  const clearUser = useUserStore((state) => state.clearUser);
+
+  const handleLogout = async () => {
+    await axios.post("/api/users/logout").then(() => {
+      clearUser();
+      setUserHoverOpen(false);
+    });
+  };
 
   // Handle hydration to prevent mismatch
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
-  // Simulating a logged-in state for demonstration
-
-  console.log(getTotalItems());
-
-  useEffect(() => {
-    // Simulate a login state after 2 seconds
-    const timer = setTimeout(() => {
-      setIsLoggedIn(true);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
+  // useEffect(() => {
+  //   // Simulate a login state after 2 seconds
+  //   const timer = setTimeout(() => {
+  //     setIsLoggedIn(true);
+  //   }, 2000);
+  //   return () => clearTimeout(timer);
+  // }, []);
   // Close menu when clicking outside
+
   useEffect(() => {
     const handleClickOutside = (event: Event) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -92,22 +102,136 @@ function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="hover:text-yellow-300 transition font-bold flex items-center">
+                  className="hover:text-yellow-300 py-6 transition font-bold flex items-center">
                   <span className="h-6 w-6 flex font-bold items-center justify-center mr-1 text-gray-200">
                     {item.icon}
                   </span>
                   {item.name}
                 </Link>
               ))}
-              <span
-                className="hover:text-yellow-300 transition font-bold flex items-center cursor-pointer"
-                onClick={() => setOpenLogin(true)}>
-                {" "}
-                <span className="h-6 w-6 flex font-bold items-center justify-center mr-1 text-gray-200">
-                  <FaUser />
-                </span>{" "}
-                Login
-              </span>
+              {!user ? (
+                <span
+                  className="hover:text-yellow-300 transition font-bold flex items-center cursor-pointer"
+                  onClick={() => setOpenLogin(true)}>
+                  {" "}
+                  <span className="h-6 w-6 flex font-bold items-center justify-center mr-1 text-gray-200">
+                    <FaUser />
+                  </span>{" "}
+                  Login
+                </span>
+              ) : (
+                <div
+                  className="relative"
+                  onMouseEnter={() => setUserHoverOpen(true)}
+                  onMouseLeave={() => setUserHoverOpen(false)}>
+                  <span className="hover:text-yellow-300 transition font-bold flex items-center cursor-pointer">
+                    <span className="h-6 w-6 flex font-bold items-center justify-center mr-1 text-gray-200">
+                      <FaUser />
+                    </span>
+                    <span className="py-4">
+                      {isHydrated ? user?.name || user?.phone : "User"}
+                    </span>
+                  </span>
+
+                  {userHoverOpen && (
+                    <div className="absolute top-full -left-14  w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 transform transition-all duration-200 ease-out opacity-100 scale-100">
+                      {/* Arrow pointer */}
+                      <div className="absolute -top-2 left-25 w-4 h-4 bg-white border-l border-t border-gray-200 transform rotate-45"></div>
+
+                      <div className="py-3">
+                        {/* User info header */}
+                        <div className="px-4 py-2 border-b border-gray-100">
+                          <p className="text-sm font-semibold text-gray-800">
+                            {user?.name || "User"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {user?.phone || user?.email}
+                          </p>
+                        </div>
+
+                        {/* Menu items */}
+                        <ul className="py-1">
+                          <li>
+                            <Link
+                              href="/my-account"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-700 transition-all duration-150">
+                              <FaUser className="w-4 h-4 mr-3 text-gray-400" />
+                              My Account
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/orders"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-700 transition-all duration-150">
+                              <svg
+                                className="w-4 h-4 mr-3 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                                />
+                              </svg>
+                              My Orders
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/settings"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-700 transition-all duration-150">
+                              <svg
+                                className="w-4 h-4 mr-3 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                              </svg>
+                              Settings
+                            </Link>
+                          </li>
+
+                          {/* Divider */}
+                          <div className="border-t border-gray-100 my-1"></div>
+
+                          <li>
+                            <button
+                              onClick={handleLogout}
+                              className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-150">
+                              <svg
+                                className="w-4 h-4 mr-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                />
+                              </svg>
+                              Logout
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <Link href="/cart" className="relative">
                 <Button className="flex items-center justify-center gap-2">
                   <FaCartPlus /> Cart
@@ -172,9 +296,14 @@ function Navbar() {
                 height={40}
                 className=" inline-block mr-3 -rotate-12"
               />
-              <span className="text-2xl font-bold ">The Food City</span>
+              <span
+                onCopy={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
+                className="text-2xl font-bold select-none">
+                The Food City
+              </span>
             </div>
-            {!isLoggedIn && (
+            {!user && (
               <button
                 className="flex text-lg font-bold py-4 items-center justify-center gap-3 px-6  border-t border-red-800 hover:bg-red-800 transition"
                 onClick={() => setOpenLogin(true)}>

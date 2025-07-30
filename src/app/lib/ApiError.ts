@@ -1,9 +1,9 @@
-export class ApiError extends Error {
-  statusCode: number;
+import { NextResponse } from "next/server";
 
-  constructor(statusCode: number, message: string) {
-    super(message);
-    this.statusCode = statusCode;
-    Error.captureStackTrace(this, this.constructor);
-  }
-}
+export const apiError = (statusCode: number, message: string, error: unknown = null) => {
+  return NextResponse.json({
+    success: false,
+    message,
+    error: process.env.NODE_ENV === "development" ? error : undefined // Optional: Hide raw error in prod
+  }, { status: statusCode });
+};

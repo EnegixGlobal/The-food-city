@@ -32,7 +32,6 @@ function Card({ className = "", item, ...props }: CartProps) {
     return <CardSkeleton />;
   }
 
-  console.log(cartItems);
 
   const handleAddToCart = () => {
     if (item) {
