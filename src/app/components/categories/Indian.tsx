@@ -5,49 +5,8 @@ import Card from "../Card";
 import { FaArrowRight } from "react-icons/fa";
 import Link from "next/link";
 
-function Indian() {
-  const indian = [
-    {
-      id: 1,
-      name: "Paneer Tikka",
-      price: "12.99",
-      rating: 4.5,
-      image:
-        "https://images.unsplash.com/photo-1601050690597-df0568f70950?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-    {
-      id: 2,
-      name: "Butter Chicken",
-      price: "14.99",
-      rating: 4.5,
-      image:
-        "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-    {
-      id: 3,
-      name: "Biryani",
-      price: "13.99",
-      rating: 4.5,
-      image:
-        "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1188&q=80",
-    },
-    {
-      id: 4,
-      name: "Masala Dosa",
-      price: "10.99",
-      rating: 4.5,
-      image:
-        "https://images.unsplash.com/photo-1559533083-71f5095f0e1b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-    {
-      id: 5,
-      name: "Samosa",
-      price: "5.99",
-      rating: 4.5,
-      image:
-        "https://images.unsplash.com/photo-1601050690597-df0568f70950?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-  ];
+function Indian({products}: { products: any[] }) {
+
 
   const [scrollPosition, setScrollPosition] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -101,7 +60,7 @@ function Indian() {
           </span>
         </Link>
       </div>
-      <button
+      {products.length >= 5 && <button
         onClick={scrollLeft}
         className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 transition transform hover:scale-110">
         <svg
@@ -116,18 +75,22 @@ function Indian() {
             d="M15 19l-7-7 7-7"
           />
         </svg>
-      </button>
+      </button>}
 
       <div
         ref={carouselRef}
         className="flex overflow-x-auto scroll-smooth  py-2 gap-4 scrollbar-hide"
         onScroll={(e) => setScrollPosition(e.currentTarget.scrollLeft)}>
-        {indian.map((item) => (
-          <Card key={item.id} item={item} />
-        ))}
+       {products.length === 0 ? (
+          <p className="text-center text-xl font-thin text-gray-500">
+            No items available for Indian cuisine at the moment.
+          </p>
+        ) : (
+          products.map((product) => <Card key={product._id} item={product} />)
+        )}
       </div>
 
-      <button
+     {products.length >= 5 && <button
         onClick={scrollRight}
         className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 transition transform hover:scale-110">
         <svg
@@ -142,7 +105,7 @@ function Indian() {
             d="M9 5l7 7-7 7"
           />
         </svg>
-      </button>
+      </button>}
     </div>
   );
 }

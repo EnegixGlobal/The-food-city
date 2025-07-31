@@ -5,12 +5,12 @@ import Button from "./Button";
 import { FaCartPlus, FaHome, FaSearch, FaUser } from "react-icons/fa";
 import Link from "next/link";
 import { BiSolidOffer } from "react-icons/bi";
-import SideLogin from "./SideLogin";
 import { FiLogIn } from "react-icons/fi";
 import Image from "next/image";
+import axios from "axios";
 import { useCartStore } from "../zustand/cartStore";
 import useUserStore from "../zustand/userStore";
-import axios from "axios";
+import SideLogin from "./SideLogin";
 
 function Navbar() {
   const [userHoverOpen, setUserHoverOpen] = useState(false);
@@ -161,7 +161,7 @@ function Navbar() {
                           </li>
                           <li>
                             <Link
-                              href="/orders"
+                              href="/my-account/orders"
                               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-700 transition-all duration-150">
                               <svg
                                 className="w-4 h-4 mr-3 text-gray-400"
@@ -180,7 +180,7 @@ function Navbar() {
                           </li>
                           <li>
                             <Link
-                              href="/settings"
+                              href="/my-account/settings"
                               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-700 transition-all duration-150">
                               <svg
                                 className="w-4 h-4 mr-3 text-gray-400"
@@ -249,14 +249,25 @@ function Navbar() {
                   <FaSearch />
                 </span>
               </Link>
-              <Link href="/cart">
+              <Link href="/cart" className="relative">
                 <span className="text-2xl">
                   <FaCartPlus />
                 </span>
+                <span className="h-4 w-4 absolute -right-2 -top-2 bg-red-400 rounded-full flex items-center justify-center text-xs font-bold">
+                  {isHydrated ? getTotalItems() : 0}
+                </span>
               </Link>
-              <span onClick={() => setOpenLogin(true)} className="text-2xl">
-                <FaUser />
-              </span>
+              {!user ? (
+                <span onClick={() => setOpenLogin(true)} className="text-2xl">
+                  <FaUser />
+                </span>
+              ) : (
+                <Link href="/my-account">
+                  <span className="text-2xl">
+                    <FaUser />
+                  </span>
+                </Link>
+              )}
               <button
                 className=" focus:outline-none p-2 rounded-full bg-red-700 hover:bg-red-800"
                 onClick={() => setIsOpen(!isOpen)}>
@@ -303,50 +314,129 @@ function Navbar() {
                 The Food City
               </span>
             </div>
-            {!user && (
+
+            {/* User Section */}
+            {user ? (
+              <div className="border-t border-red-800 p-4">
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center mr-3">
+                    <FaUser className="text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">{user.name || "User"}</p>
+                    <p className="text-sm text-red-200">{user.phone || user.email}</p>
+                  </div>
+                </div>
+                
+                {/* User Menu Items */}
+                <Link
+                  href="/my-account"
+                  className="flex items-center px-4 py-3 hover:bg-red-800 transition rounded"
+                  onClick={() => setIsOpen(false)}>
+                  <FaUser className="h-5 w-5 mr-3 text-gray-400" />
+                  My Account
+                </Link>
+                <Link
+                  href="/my-account/orders"
+                  className="flex items-center px-4 py-3 hover:bg-red-800 transition rounded"
+                  onClick={() => setIsOpen(false)}>
+                  <svg
+                    className="w-5 h-5 mr-3 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                    />
+                  </svg>
+                  My Orders
+                </Link>
+                <Link
+                  href="/my-account/addresses"
+                  className="flex items-center px-4 py-3 hover:bg-red-800 transition rounded"
+                  onClick={() => setIsOpen(false)}>
+                  <svg
+                    className="w-5 h-5 mr-3 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  My Addresses
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-3 hover:bg-red-800 transition rounded text-red-300">
+                  <svg
+                    className="w-5 h-5 mr-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
+                  </svg>
+                  Logout
+                </button>
+              </div>
+            ) : (
               <button
                 className="flex text-lg font-bold py-4 items-center justify-center gap-3 px-6  border-t border-red-800 hover:bg-red-800 transition"
-                onClick={() => setOpenLogin(true)}>
+                onClick={() => {
+                  setOpenLogin(true);
+                  setIsOpen(false);
+                }}>
                 <FiLogIn className="h-6 w-6" /> Login
               </button>
             )}
-            <Link
-              href="/"
-              className="px-6 py-3 hover:bg-red-600 transition flex items-center"
-              onClick={() => setIsOpen(false)}>
-              <FaHome className="h-5 w-5 mr-2 text-gray-400" />
-              Home
-            </Link>
-            <div className="border-t border-red-800"></div>
-            <Link
-              href="/about"
-              className="block px-6 py-3 border-t border-red-800 hover:bg-red-800 transition"
-              onClick={() => setIsOpen(false)}>
-              <FaUser className="h-5 w-5 mr-2 text-gray-400 inline" />
-              About
-            </Link>
-            <Link
-              href="/offers"
-              className="block px-6 py-3 border-t border-red-600 hover:bg-red-600 transition"
-              onClick={() => setIsOpen(false)}>
-              <BiSolidOffer className="h-5 w-5 mr-2 text-gray-400 inline" />
-              Offers
-            </Link>
-            <Link href="/cart" onClick={() => setIsOpen(false)}>
-              <Button className=" py-2 mt-2 px-20 ml-4">Cart</Button>
-            </Link>
 
-            {/* {isLoggedIn && (
-              <button className="block px-6 py-3 border-t border-red-800 hover:bg-red-800 transition">
-                Log out
-              </button>
-            )} */}
+            {/* Navigation Links */}
+            <div className="border-t border-red-800 mt-4">
+              <Link
+                href="/"
+                className="px-6 py-3 hover:bg-red-600 transition flex items-center"
+                onClick={() => setIsOpen(false)}>
+                <FaHome className="h-5 w-5 mr-2 text-gray-400" />
+                Home
+              </Link>
+              <Link
+                href="/offers"
+                className="block px-6 py-3 border-t border-red-600 hover:bg-red-600 transition"
+                onClick={() => setIsOpen(false)}>
+                <BiSolidOffer className="h-5 w-5 mr-2 text-gray-400 inline" />
+                Offers
+              </Link>
+              <Link href="/cart" onClick={() => setIsOpen(false)}>
+                <Button className="py-2 mt-2 px-20 ml-4">
+                  Cart ({isHydrated ? getTotalItems() : 0})
+                </Button>
+              </Link>
+            </div>
           </div>
-          <button onClick={() => setOpenLogin(true)}>Login</button>
         </div>
       )}
 
-      {openLogin && (
+      {openLogin && !user && (
         <SideLogin isOpen={openLogin} onClose={() => setOpenLogin(false)} />
       )}
     </>

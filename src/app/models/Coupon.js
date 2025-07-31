@@ -9,6 +9,9 @@ const CouponSchema = new mongoose.Schema(
       uppercase: true,
       trim: true,
     },
+    offerImage: {
+      type: String,
+    },
     discountType: {
       type: String,
       enum: ["percentage", "fixed"],
@@ -52,7 +55,6 @@ CouponSchema.index({ code: 1 });
 CouponSchema.index({ discountType: 1 });
 CouponSchema.index({ startDate: 1, endDate: 1 });
 CouponSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
 
 const Coupon = mongoose.models.Coupon || mongoose.model("Coupon", CouponSchema);
 export default Coupon;

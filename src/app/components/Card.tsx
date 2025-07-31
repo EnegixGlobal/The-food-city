@@ -6,16 +6,21 @@ import { useCartStore } from "../zustand/cartStore";
 import CardSkeleton from "./CardSkeleton";
 import { FaCartShopping } from "react-icons/fa6";
 import { FaCartPlus, FaRupeeSign } from "react-icons/fa";
+import Link from "next/link";
 
 interface CartProps {
   className?: string;
   item?: {
+    category: any;
+    ratingCount: number;
+    title: string;
+    imageUrl: string;
     id: number;
     slug?: string;
     name: string;
     price: number | string;
     image: string;
-    rating?: number;
+    rating: number;
   };
 }
 
@@ -32,19 +37,19 @@ function Card({ className = "", item, ...props }: CartProps) {
     return <CardSkeleton />;
   }
 
-
   const handleAddToCart = () => {
     if (item) {
       // Convert price to number if it's a string
-      const priceAsNumber = typeof item.price === 'string' 
-        ? parseFloat(item.price.replace('$', '')) 
-        : item.price;
-      
+      const priceAsNumber =
+        typeof item.price === "string"
+          ? parseFloat(item.price.replace("$", ""))
+          : item.price;
+
       addToCart({
         ...item,
         price: priceAsNumber,
         rating: item.rating || 0,
-        slug: item.slug || `${item.name.toLowerCase().replace(/\s+/g, '-')}`
+        slug: item.slug || `${item.name.toLowerCase().replace(/\s+/g, "-")}`,
       });
     }
   };
@@ -58,35 +63,41 @@ function Card({ className = "", item, ...props }: CartProps) {
                   hover:shadow-xl transition-all duration-300 
                   ${className}`}
       {...props}>
-      <div className="   overflow-hidden">
-        <Image
-          src={item.image}
-          alt={item.name}
-          width={80}
-          height={100}
-          className="w-full md:h-[200px] h-[180px] object-cover transition-transform duration-500 hover:scale-102"
-        />
-      </div>
+      <Link
+        href={`/${item.category}/${
+          item.slug || item.name.toLowerCase().replace(/\s+/g, "-")
+        }`}>
+        <div className="   overflow-hidden">
+          <Image
+            src={item.imageUrl || item.image}
+            alt={item.name}
+            width={80}
+            height={100}
+            className="w-full md:h-[200px] h-[180px] object-cover transition-transform duration-500 hover:scale-102"
+          />
+        </div>
+      </Link>
       <div className="p-3">
         <div className="flex items-center justify-between mb-2">
-          <h3 className=" text-sm md:text-xl font-bold text-gray-800 mb-2 ">
-            {item.name}
+          <h3 className="mt-1.5 text-sm md:text-[16px] line-clamp-1 font-bold text-gray-800 mb-2 max-w-[170px]">
+            {item.title}
           </h3>
-          {item.rating && (
-            <div className="flex items-center">
-              <FiStar className="text-yellow-400 mr-1" />
-              <span>{item.rating}</span>
-            </div>
-          )}
+
+          <div className="flex items-center">
+            <FiStar className="text-yellow-400 mr-1" />
+            <span className="flex items-center justify-center">
+              {item.rating.toFixed(1)} {`(${item.ratingCount || 0})`}
+            </span>
+          </div>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-red-600 font-bold flex items-center justify-center text-xs md:text-sm">
-            <FaRupeeSign  />
-            {typeof item.price === 'string' ? item.price : `${item.price.toFixed(2)}`}
+            <FaRupeeSign />
+            {typeof item.price === "string"
+              ? item.price
+              : `${item.price.toFixed(2)}`}
           </span>
-          <span>
-      
-          </span>
+          <span></span>
           <Button
             onClick={handleAddToCart}
             className={`text-xs md:text-sm ${
@@ -94,7 +105,11 @@ function Card({ className = "", item, ...props }: CartProps) {
                 ? "bg-green-500! hover:bg-green-600"
                 : "bg-yellow-500!"
             } text-white`}>
-                 <span className="flex items-center justify-center gap-2"> {isInCart(item.id) ? <FaCartShopping/> : <FaCartPlus />}{isInCart(item.id) ? "Added"  : "Add to Cart"}</span>
+            <span className="flex items-center justify-center gap-2">
+              {" "}
+              {isInCart(item.id) ? <FaCartShopping /> : <FaCartPlus />}
+              {isInCart(item.id) ? "Added" : "Add to Cart"}
+            </span>
           </Button>
         </div>
       </div>

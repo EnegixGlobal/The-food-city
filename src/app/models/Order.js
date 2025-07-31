@@ -90,6 +90,12 @@ const orderSchema = new mongoose.Schema(
       uppercase: true,
       index: true,
     },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
     items: [orderItemSchema],
     addons: [orderAddOnSchema],
     customerInfo: {

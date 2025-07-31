@@ -1,10 +1,15 @@
-import {  FaLeaf } from "react-icons/fa";
+"use client";
+
+import { FaLeaf } from "react-icons/fa";
 import { FiFilter, FiChevronDown } from "react-icons/fi";
 import { GiChickenOven, GiNoodles, GiIndiaGate } from "react-icons/gi";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import Container from "../components/Container";
 import MainCard from "../components/MainCard";
+import { useEffect, useState } from "react";
+import Spinner from "../components/Spinner";
+import MainCardSkeletonGrid from "../components/MainCardSkeleton";
 
 interface CategoryPageProps {
   params: Promise<{ category: string }>;
@@ -16,150 +21,118 @@ const menuDatabase = {
     title: "Indian Delicacies",
     description: "Authentic flavors from across India",
     icon: <GiIndiaGate className="text-3xl" />,
-    items: [
-      {
-        id: 1,
-        name: "Butter Chicken",
-        slug: "butter-chicken",
-        price: 14.99,
-        rating: 4.7,
-        prepTime: "25-35 min",
-        spicyLevel: 2,
-        image:
-          "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-        isVeg: false,
-        isBestseller: true,
-      },
-      {
-        id: 1,
-        name: "Butter Chicken",
-        slug: "butter-chicken",
-        price: 14.99,
-        rating: 4.7,
-        prepTime: "25-35 min",
-        spicyLevel: 2,
-        image:
-          "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-        isVeg: true,
-        isBestseller: true,
-      },
-      // More Indian items...
-    ],
   },
   chinese: {
     title: "Chinese Wok",
     description: "Oriental flavors with perfect wok hei",
     icon: <GiNoodles className="text-3xl" />,
-    items: [
-      {
-        id: 5,
-        name: "Szechuan Noodles",
-        slug: "szechuan-noodles",
-        price: 11.99,
-        rating: 4.4,
-        prepTime: "20-30 min",
-        spicyLevel: 3,
-        image:
-          "https://images.unsplash.com/photo-1551183053-bf91a1d81141?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-        isVeg: false,
-        isBestseller: false,
-      },
-      {
-        id: 6,
-        name: "Szechuan Noodles",
-        slug: "szechuan-noodles",
-        price: 11.99,
-        rating: 4.4,
-        prepTime: "20-30 min",
-        spicyLevel: 3,
-        image:
-          "https://images.unsplash.com/photo-1551183053-bf91a1d81141?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-        isVeg: false,
-        isBestseller: false,
-      },
-      // More Chinese items...
-    ],
   },
   "south-indian": {
     title: "South Indian Specials",
     description: "Traditional flavors from Southern India",
     icon: <FaLeaf className="text-3xl" />,
-    items: [
-      {
-        id: 9,
-        name: "Masala Dosa",
-        slug: "masala-dosa",
-        price: 8.99,
-        rating: 4.6,
-        prepTime: "15-25 min",
-        spicyLevel: 1,
-        image:
-          "https://images.unsplash.com/photo-1559533083-71f5095f0e1b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-        isVeg: true,
-        isBestseller: true,
-      },
-      // More South Indian items...
-    ],
   },
   tandoor: {
     title: "Tandoori Grill",
     description: "Smoky flavors from the clay oven",
     icon: <GiChickenOven className="text-3xl" />,
-    items: [
-      {
-        id: 13,
-        name: "Tandoori Chicken",
-        slug: "tandoori-chicken",
-        price: 15.99,
-        rating: 4.8,
-        prepTime: "30-40 min",
-        spicyLevel: 2,
-        image:
-          "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-        isVeg: false,
-        isBestseller: true,
-      },
-      // More Tandoor items...
-    ],
   },
 };
 
+const baseUrl = process.env.PUBLIC_URL || "http://localhost:3000";
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
-  const { category } = await params;
+export default function CategoryPage({ params }: CategoryPageProps) {
+  const [category, setCategory] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
   const categoryKey = category
     .toLowerCase()
     .replace(" ", "-") as keyof typeof menuDatabase;
   const categoryData = menuDatabase[categoryKey] || menuDatabase.indian;
+  const [products, setProducts] = useState([]);
 
-  // State would be managed differently in actual implementation
-  const filters = {
-    vegOnly: false,
-    bestsellersOnly: false,
-    maxPrice: 30,
-    minRating: 0,
-    spiceLevel: null as number | null,
-    sortBy: "popular", // 'popular' | 'price-low' | 'price-high' | 'rating'
+  // Filter states
+  const [filters, setFilters] = useState({
+    isVeg: false,
+    isBestSeller: false,
+    minPrice: "",
+    maxPrice: "",
+    minRating: "",
+    sortBy: "createdAt",
+    sortOrder: "desc"
+  });
+
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Extract category from params
+  useEffect(() => {
+    const getCategory = async () => {
+      const resolvedParams = await params;
+      setCategory(resolvedParams.category);
+    };
+    getCategory();
+  }, [params]);
+
+  // Build query string with filters
+  const buildQueryString = () => {
+    const queryParams = new URLSearchParams({
+      category: category
+    });
+
+    if (filters.isVeg) queryParams.append('isVeg', 'true');
+    if (filters.isBestSeller) queryParams.append('isBestSeller', 'true');
+    if (filters.minPrice) queryParams.append('minPrice', filters.minPrice);
+    if (filters.maxPrice) queryParams.append('maxPrice', filters.maxPrice);
+    if (filters.minRating) queryParams.append('minRating', filters.minRating);
+    if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
+    if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
+
+    return queryParams.toString();
   };
 
-  // Filter logic (would be client-side in real implementation)
-  const filteredItems = categoryData.items.filter((item) => {
-    return (
-      (!filters.vegOnly || item.isVeg) &&
-      (!filters.bestsellersOnly || item.isBestseller) &&
-      item.price <= filters.maxPrice &&
-      item.rating >= filters.minRating &&
-      (filters.spiceLevel === null || item.spicyLevel === filters.spiceLevel)
-    );
-  });
+  // fetching products according to category and filters
+  useEffect(() => {
+    if (!category) return;
 
-  // Sort logic
-  const sortedItems = [...filteredItems].sort((a, b) => {
-    if (filters.sortBy === "price-low") return a.price - b.price;
-    if (filters.sortBy === "price-high") return b.price - a.price;
-    if (filters.sortBy === "rating") return b.rating - a.rating;
-    return (b.isBestseller ? 1 : 0) - (a.isBestseller ? 1 : 0); // Popular first
-  });
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const queryString = buildQueryString();
+        const res = await fetch(`${baseUrl}/api/product?${queryString}`);
+        const data = await res.json();
+        setProducts(data.data.products || []);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [category, filters]);
+
+  // Handle filter changes
+  const handleFilterChange = (filterKey: string, value: any) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterKey]: value
+    }));
+  };
+
+  // Reset all filters
+  const resetFilters = () => {
+    setFilters({
+      isVeg: false,
+      isBestSeller: false,
+      minPrice: "",
+      maxPrice: "",
+      minRating: "",
+      sortBy: "createdAt",
+      sortOrder: "desc"
+    });
+  };
+
+  console.log(products);
 
   return (
     <>
@@ -190,8 +163,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           {/* Filters Bar */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <h2 className="text-2xl font-bold text-red-900">
-              {sortedItems.length}{" "}
-              {sortedItems.length === 1 ? "Delicious Item" : "Delicious Items"}
+              {products.length}{" "}
+              {products.length === 1 ? "Delicious Item" : "Delicious Items"}
             </h2>
 
             <div className="flex flex-wrap gap-3">
@@ -199,30 +172,34 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               <div className="relative group">
                 <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 transition">
                   <span>
-                    Sort:{" "}
-                    {
+                    Sort: {
                       {
-                        popular: "Popular",
-                        "price-low": "Price: Low to High",
-                        "price-high": "Price: High to Low",
+                        createdAt: "Latest",
+                        price: filters.sortOrder === "asc" ? "Price: Low to High" : "Price: High to Low",
                         rating: "Rating",
-                      }[filters.sortBy]
+                        title: "Name"
+                      }[filters.sortBy] || "Latest"
                     }
                   </span>
                   <FiChevronDown className="transition-transform group-hover:rotate-180" />
                 </button>
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-10 hidden group-hover:block">
+                <div className="absolute right-0  w-56 bg-white rounded-md shadow-lg z-10 hidden group-hover:block">
                   <div className="py-1">
                     {[
-                      { value: "popular", label: "Popular" },
-                      { value: "rating", label: "Rating" },
-                      { value: "price-low", label: "Price: Low to High" },
-                      { value: "price-high", label: "Price: High to Low" },
-                    ].map((option) => (
+                      { value: "createdAt", label: "Latest", order: "desc" },
+                      { value: "rating", label: "Rating", order: "desc" },
+                      { value: "price", label: "Price: Low to High", order: "asc" },
+                      { value: "price", label: "Price: High to Low", order: "desc" },
+                      { value: "title", label: "Name", order: "asc" },
+                    ].map((option, index) => (
                       <button
-                        key={option.value}
+                        key={index}
+                        onClick={() => {
+                          handleFilterChange('sortBy', option.value);
+                          handleFilterChange('sortOrder', option.order);
+                        }}
                         className={`block w-full text-left px-4 py-2 text-sm ${
-                          filters.sortBy === option.value
+                          filters.sortBy === option.value && filters.sortOrder === option.order
                             ? "bg-red-100 text-red-900"
                             : "text-gray-700 hover:bg-gray-100"
                         }`}>
@@ -233,21 +210,137 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                 </div>
               </div>
 
-              <span className="border rounded-full h-10 w-10 flex items-center justify-center text-xl ">
+              <button 
+                onClick={() => setShowFilters(!showFilters)}
+                className={`border rounded-full h-10 w-10 flex items-center justify-center text-xl transition-colors ${
+                  showFilters ? 'bg-red-100 border-red-300 text-red-600' : 'hover:bg-gray-100'
+                }`}>
                 <FiFilter />
-              </span>
+              </button>
             </div>
           </div>
 
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6 border">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">Filters</h3>
+                <button 
+                  onClick={resetFilters}
+                  className="text-red-600 hover:text-red-700 text-sm font-medium">
+                  Reset All
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {/* Quick Filters */}
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-3">Quick Filters</h4>
+                  <div className="space-y-2">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.isVeg}
+                        onChange={(e) => handleFilterChange('isVeg', e.target.checked)}
+                        className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      />
+                      <span className="ml-2 text-sm">Vegetarian Only</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.isBestSeller}
+                        onChange={(e) => handleFilterChange('isBestSeller', e.target.checked)}
+                        className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      />
+                      <span className="ml-2 text-sm">Bestsellers Only</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Price Range */}
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-3">Price Range (₹)</h4>
+                  <div className="space-y-2">
+                    <input
+                      type="number"
+                      placeholder="Min Price"
+                      value={filters.minPrice}
+                      onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Max Price"
+                      value={filters.maxPrice}
+                      onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Rating */}
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-3">Minimum Rating</h4>
+                  <select
+                    value={filters.minRating}
+                    onChange={(e) => handleFilterChange('minRating', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500">
+                    <option value="">Any Rating</option>
+                    <option value="4">4+ Stars</option>
+                    <option value="3.5">3.5+ Stars</option>
+                    <option value="3">3+ Stars</option>
+                    <option value="2.5">2.5+ Stars</option>
+                  </select>
+                </div>
+
+                {/* Active Filters Summary */}
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-3">Active Filters</h4>
+                  <div className="space-y-1">
+                    {filters.isVeg && (
+                      <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                        Vegetarian
+                      </span>
+                    )}
+                    {filters.isBestSeller && (
+                      <span className="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full ml-1">
+                        Bestsellers
+                      </span>
+                    )}
+                    {(filters.minPrice || filters.maxPrice) && (
+                      <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full ml-1">
+                        ₹{filters.minPrice || '0'} - ₹{filters.maxPrice || '∞'}
+                      </span>
+                    )}
+                    {filters.minRating && (
+                      <span className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full ml-1">
+                        {filters.minRating}+ ⭐
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Food Items Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-4 md:gap-6 gap-2">
-            {sortedItems.map((item) => (
-              <MainCard key={item.id} item={item} category={category} />
-            ))}
-          </div>
+          {loading ? (
+            <MainCardSkeletonGrid rows={2} itemsPerRow={4} />
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-4 md:gap-6 gap-2">
+              {products?.map((product: any) => (
+                <MainCard
+                  key={product._id}
+                  item={product}
+                  category={category}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Empty State */}
-          {sortedItems.length === 0 && (
+          {!loading && products.length === 0 && (
             <div className="text-center py-16">
               <div className="max-w-md mx-auto">
                 <div className="text-6xl mb-4">🍽️</div>
@@ -257,7 +350,9 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                 <p className="text-gray-500 mb-6">
                   Try adjusting your filters to see more options
                 </p>
-                <button className="bg-red-900 hover:bg-red-800 text-white px-6 py-3 rounded-full font-medium transition">
+                <button 
+                  onClick={resetFilters}
+                  className="bg-red-900 hover:bg-red-800 text-white px-6 py-3 rounded-full font-medium transition">
                   Reset All Filters
                 </button>
               </div>

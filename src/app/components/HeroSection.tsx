@@ -1,11 +1,49 @@
+"use client";
+
 import Image from "next/image";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Container from "./Container";
 import Button from "./Button";
-import { FaArrowRight } from "react-icons/fa";
+import { FaArrowRight, FaPercent, FaGift, FaFire } from "react-icons/fa";
 import Link from "next/link";
 
+interface Coupon {
+  _id: string;
+  code: string;
+  discountType: string;
+  discountValue: number;
+  applicableItems: string[];
+  startDate: string;
+  endDate: string;
+  usageLimit: number;
+  isActive: boolean;
+  offerImage?: string;
+}
+
 function HeroSection() {
+  const [offers, setOffers] = useState<Coupon[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch offers from API
+  useEffect(() => {
+    const fetchOffers = async () => {
+      try {
+        const response = await fetch('/api/coupon');
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+          setOffers(data.data.slice(0, 3)); // Get only first 3 offers
+        }
+      } catch (error) {
+        console.error('Error fetching offers:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOffers();
+  }, []);
+
   const categories = [
     {
       name: "Indian",
@@ -72,7 +110,7 @@ function HeroSection() {
 
         <div className="relative z-10">
           <Container className="py-6!">
-            <div className="grid grid-cols-1 md:grid-cols-2 items-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8">
               {/* Text content */}
               <div className="text-white">
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
@@ -88,6 +126,8 @@ function HeroSection() {
                   <Button className="py-3! px-8! ">Order Now</Button>
                 </div>
               </div>
+
+              
             </div>
           </Container>
         </div>

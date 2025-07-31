@@ -6,7 +6,7 @@ import { deleteFromCloudinary } from "@/app/utils/deleteFromCloudinary";
 import { NextRequest } from "next/server";
 
 export const GET = async (
-  req: NextRequest,
+  _req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await context.params;
@@ -24,7 +24,8 @@ export const GET = async (
     }
 
     return apiResponse(200, "Add-on fetched successfully", addon);
-  } catch (_error) {
+  } catch (error) {
+    console.error("Error fetching add-on:", error);
     return apiError(500, "Internal server error");
   }
 };
@@ -54,7 +55,8 @@ export const PATCH = async (
     }
 
     return apiResponse(200, "Add-on Updated successfully", addon);
-  } catch (_error) {
+  } catch (error) {
+    console.error("Error updating add-on:", error);
     return apiError(500, "Internal server error");
   }
 };
@@ -83,7 +85,8 @@ export const DELETE = async (
     deleteFromCloudinary(addon?.imagePublicId);
 
     return apiResponse(200, "Add-on deleted successfully", addon);
-  } catch (_error) {
+  } catch (error) {
+    console.error("Error deleting add-on:", error);
     return apiError(500, "Internal server error");
   }
 };

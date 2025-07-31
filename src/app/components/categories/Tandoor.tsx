@@ -4,39 +4,9 @@ import React, { useEffect, useRef, useState } from "react";
 import Card from "../Card";
 import { FaArrowRight } from "react-icons/fa";
 import Link from "next/link";
+import { div } from "framer-motion/client";
 
-function Tandoor() {
-  const tandoor = [
-    {
-      id: 10,
-      name: "Margherita Pizza",
-      price: "15.99",
-      image:
-        "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-    {
-      id: 11,
-      name: "Pasta Alfredo",
-      price: "13.99",
-      image:
-        "https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-    {
-      id: 12,
-      name: "Garlic Bread",
-      price: "6.99",
-      image:
-        "https://images.unsplash.com/photo-1608190003443-86a6ab6e567e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-    {
-      id: 13,
-      name: "Tiramisu",
-      price: "8.99",
-      image:
-        "https://images.unsplash.com/photo-1563805042-7684c019e1cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1127&q=80",
-    },
-  ];
-
+function Tandoor({ products }: { products: any[] }) {
   const [scrollPosition, setScrollPosition] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
@@ -89,48 +59,56 @@ function Tandoor() {
           </span>
         </Link>
       </div>
-      <button
-        onClick={scrollLeft}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 transition transform hover:scale-110">
-        <svg
-          className="w-6 h-6 text-red-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-      </button>
+      {products.length >= 5 && (
+        <button
+          onClick={scrollLeft}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 transition transform hover:scale-110">
+          <svg
+            className="w-6 h-6 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+      )}
 
       <div
         ref={carouselRef}
         className="flex overflow-x-auto scroll-smooth  py-2 gap-4 scrollbar-hide"
         onScroll={(e) => setScrollPosition(e.currentTarget.scrollLeft)}>
-        {tandoor.map((item) => (
-          <Card key={item.id} item={item} />
-        ))}
+        {products.length === 0 ? (
+          <p className="text-center text-xl font-thin text-gray-500">
+            No items available for Tandoor cuisine at the moment.
+          </p>
+        ) : (
+          products.map((product) => <Card key={product._id} item={product} />)
+        )}
       </div>
 
-      <button
-        onClick={scrollRight}
-        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 transition transform hover:scale-110">
-        <svg
-          className="w-6 h-6 text-red-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
-      </button>
+      {products.length >= 5 && (
+        <button
+          onClick={scrollRight}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 transition transform hover:scale-110">
+          <svg
+            className="w-6 h-6 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

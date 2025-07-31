@@ -2,7 +2,7 @@ import Image from "next/image";
 import React from "react";
 import Button from "./Button";
 import { FiClock, FiStar } from "react-icons/fi";
-import { FaFire } from "react-icons/fa";
+import { FaFire, FaRupeeSign } from "react-icons/fa";
 import Link from "next/link";
 
 function MainCard({
@@ -14,6 +14,7 @@ function MainCard({
   className?: string;
   category?: string; // Add category type
   item?: {
+    title: string;
     id: number;
     slug: string;
     name: string;
@@ -24,6 +25,7 @@ function MainCard({
     spicyLevel: number;
     isVeg: boolean;
     isBestseller: boolean;
+    ratingCount: number;
   };
 }) {
   if (!item) {
@@ -38,9 +40,11 @@ function MainCard({
   ];
 
   return (
-    <Link href={`/${category}/${item.slug}`}>
-      <div className={`bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${className}`} {...props}>
-        {/* Item Image */}
+    <div
+      className={`bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${className}`}
+      {...props}>
+      {/* Item Image */}
+      <Link href={`/${category}/${item.slug}`}>
         <div className="relative h-48 overflow-hidden">
           <Image
             src={item.image}
@@ -73,39 +77,42 @@ function MainCard({
             )}
           </div>
         </div>
+      </Link>
 
-        {/* Item Details */}
-        <div className="md:p-3 p-2">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-md md:text-lg font-bold text-gray-800">
-              {item.name}
-            </h3>
-            <span className="text-red-600 font-bold text-sm md:text-lg">
-              ${item.price.toFixed(2)}
+      {/* Item Details */}
+      <div className="md:p-3 p-2">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-sm md:text-[16px] line-clamp-1 max-w-[170px] font-bold text-gray-800">
+            {item.title}
+          </h3>
+          <span className="text-red-600 flex items-center font-bold text-sm md:text-md">
+            <FaRupeeSign className="h-3" />
+            {item.price.toFixed(2)}
+          </span>
+        </div>
+
+        {/* Meta Info */}
+        <div className="flex flex-wrap md:gap-4 gap-2 text-sm text-gray-600 mb-4">
+          <div className="flex items-center">
+            <FiStar className="text-yellow-400 mr-1" />
+            <span>
+              {item.rating.toFixed(1)} ({item.ratingCount}){" "}
             </span>
           </div>
-
-          {/* Meta Info */}
-          <div className="flex flex-wrap md:gap-4 gap-2 text-sm text-gray-600 mb-4">
-            <div className="flex items-center">
-              <FiStar className="text-yellow-400 mr-1" />
-              <span>{item.rating}</span>
-            </div>
-            <div className="flex items-center">
-              <FiClock className="text-gray-400 mr-1" />
-              <span>{item.prepTime}</span>
-            </div>
-            <div className="flex items-center">
-              <FaFire className="text-red-400 mr-1" />
-              <span>{spiceLevels[item.spicyLevel].label}</span>
-            </div>
+          <div className="flex items-center">
+            <FiClock className="text-gray-400 mr-1" />
+            <span>{item.prepTime}</span>
           </div>
-
-          {/* Add to Cart Button */}
-          <Button className="w-full ">ADD TO CART</Button>
+          <div className="flex items-center">
+            <FaFire className="text-red-400 mr-1" />
+            <span>{spiceLevels[item.spicyLevel].label}</span>
+          </div>
         </div>
+
+        {/* Add to Cart Button */}
+        <Button className="w-full text-sm ">ADD TO CART</Button>
       </div>
-    </Link>
+    </div>
   );
 }
 

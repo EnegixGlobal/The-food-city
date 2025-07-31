@@ -2,14 +2,14 @@
 import Image from 'next/image'
 import React from 'react'
 
-function Spinner({ className = ""}) {
+function Spinner({ className = "", h=24, w=24 }) {
   return (
     <div className={`flex items-center justify-center ${className}`}>
       <Image
         src="/spinner.svg"
         alt="Loading..."
-        width={24}
-        height={24}
+        width={h}
+        height={w}
       />
     </div>
   )

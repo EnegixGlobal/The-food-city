@@ -1,8 +1,8 @@
 import Container from "./Container";
-import Chinese from "./categories/Chinese";
-import Indian from "./categories/Indian";
-import SouthIndian from "./categories/SouthIndian";
-import Tandoor from "./categories/Tandoor";
+import ChineseServer from "./server-components/ChineseServer";
+import IndianServer from "./server-components/IndianServer";
+import SouthIndianServer from "./server-components/SouthIndianServer";
+import TandoorServer from "./server-components/TandoorServer";
 
 function Items() {
   return (
@@ -13,11 +13,10 @@ function Items() {
             Our Menu
           </h2>
         </div>
-
-        <Indian />
-        <Chinese />
-        <SouthIndian />
-        <Tandoor />
+        <IndianServer />
+        <ChineseServer />
+        <SouthIndianServer />
+        <TandoorServer />
       </Container>
     </div>
   );

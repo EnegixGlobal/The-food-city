@@ -25,12 +25,10 @@ const userSchema = new Schema(
         "Please provide a valid email address",
       ],
     },
-    address: [
+    addresses: [
       {
-        fullAddress: {
-          type: String,
-          trim: true,
-        },
+        type: Schema.Types.ObjectId,
+        ref: "Address",
       },
     ],
   },

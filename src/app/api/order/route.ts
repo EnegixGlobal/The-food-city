@@ -5,9 +5,18 @@ import { apiResponse } from "@/app/lib/apiResponse";
 import { asyncHandler } from "@/app/lib/asyncHandler";
 import Order from "@/app/models/Order";
 import generateOrderId from "@/app/utils/generateOrderId";
+import { authenticateUser } from "@/app/utils/authMiddleware";
 
 export const POST = asyncHandler(async (req) => {
   connectDb();
+
+  // Authenticate user first
+  const authResult = await authenticateUser(req);
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
+  const user = authResult.user!; // TypeScript knows this exists when success is true
   const orderData = await req.json();
 
   // Validate required fields
@@ -22,9 +31,7 @@ export const POST = asyncHandler(async (req) => {
   }
 
   // validate customerInfo
-
   const { customerInfo } = orderData;
-
   const requiredCustomerFields = ["name", "phone", "address", "pincode"];
 
   for (const field of requiredCustomerFields) {
@@ -47,9 +54,10 @@ export const POST = asyncHandler(async (req) => {
   // generating order ID
   const orderId = generateOrderId();
 
-  // creating order document
+  // creating order document with user information
   const order = new Order({
     orderId,
+    userId: user.id, // Associate order with authenticated user
     items: orderData.items,
     customerInfo: orderData.customerInfo,
     totalAmount: orderData.totalAmount,
@@ -69,51 +77,75 @@ export const POST = asyncHandler(async (req) => {
 export const GET = asyncHandler(async (req) => {
   connectDb();
 
+  const authResult = await authenticateUser(req);
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
+  const user = authResult.user!;
+
   const { searchParams } = new URL(req.url);
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "10");
   const status = searchParams.get("status");
-  const orderId = searchParams.get("orderId");
   const sortBy = searchParams.get("sortBy") || "orderDate";
   const sortOrder = searchParams.get("sortOrder") || "desc";
 
-  const matchStage: any = {};
+  // Build query filter
+  const queryFilter: any = {
+    userId: user.id, // Only fetch orders for the authenticated user
+  };
 
   if (status) {
-    matchStage.status = status;
+    queryFilter.status = status;
   }
 
-  if (orderId) {
-    matchStage.orderId = orderId;
+  // Build sort object
+  const sortObject: any = {};
+  sortObject[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+  // const result = await Order.aggregate(aggregation);
+
+  const result = await Order.find(queryFilter)
+    .select({
+      orderId: 1,
+      orderDate: 1,
+      status: 1,
+      paymentStatus: 1,
+      totalAmount: 1,
+      'items.title': 1,
+      'items.price': 1,
+      'items.quantity': 1,
+      'items.imageUrl': 1,
+      'addons.name': 1,
+      'addons.price': 1,
+      'addons.quantity': 1,
+      'customerInfo.name': 1,
+      'customerInfo.phone': 1,
+      'customerInfo.address': 1,
+      deliveryCharge: 1,
+      subtotal: 1,
+      onlineDiscount: 1,
+      trackingInfo: 1
+    })
+    .sort(sortObject)
+    .limit(limit)
+    .skip((page - 1) * limit);
+
+  if (!result || result.length === 0) {
+    return apiResponse(200, "No orders found for this user", {
+      orders: [],
+      totalCount: 0,
+      currentPage: page,
+      totalPages: 0,
+    });
   }
 
-  const sortStage: any = {};
+  // Get total count for pagination
+  const totalCount = await Order.countDocuments(queryFilter);
 
-  sortStage[sortBy] = sortOrder === "asc" ? 1 : -1;
-
-  const skip = (page - 1) * limit;
-
-  const aggregation = [
-    { $match: matchStage },
-    {
-      $facet: {
-        data: [{ $sort: sortStage }, { $skip: skip }, { $limit: limit }],
-        totalCount: [{ $count: "count" }],
-      },
-    },
-  ];
-
-  const result = await Order.aggregate(aggregation);
-
-  if (result.length === 0) {
-    return apiResponse(404, "No orders found");
-  }
-
-  const orders = result[0].data;
-  const totalCount = result[0].totalCount[0]?.count || 0;
-
-  return apiResponse(200, "Orders Fetched Successfully!", {
-    orders,
+  return apiResponse(200, "Orders fetched successfully", {
+    orders: result,
     totalCount,
     currentPage: page,
     totalPages: Math.ceil(totalCount / limit),

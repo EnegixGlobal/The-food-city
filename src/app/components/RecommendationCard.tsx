@@ -19,7 +19,7 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
   return (
     <div
       key={item.id}
-      className=" flex  my-2 md:px-20 overflow-hidden border-t border-gray-300 py-6 transition">
+      className=" flex  my-2 md:px-20 overflow-hidden border-t border-gray-300 py-4 transition">
       <div className="md:p-4 p-2 flex-8">
         {item.isVeg && (
           <span className=" text-green-800 rounded-full text-xs font-medium">
@@ -35,7 +35,7 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
         <h3 className="font-bold text-gray-800 mb-1">{item.name}</h3>
         <div className="  items-center">
           <span className="text-red-600 font-bold">
-            ${item.price.toFixed(2)}
+            ₹{item.price.toFixed(2)}
           </span>
           <div className="flex items-center">
             <FiStar className="text-yellow-400 mr-1" />

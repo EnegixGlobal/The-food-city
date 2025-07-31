@@ -32,12 +32,6 @@ export const GET = async (
         },
       },
       {
-        $unwind: {
-          path: "$addOns",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
         $project: {
           _id: 1,
           title: 1,
@@ -53,11 +47,20 @@ export const GET = async (
           spicyLevel: 1,
           prepTime: 1,
           addOns: {
-            _id: "$addOns._id",
-            name: "$addOns.name",
-            price: "$addOns.price",
-            description: "$addOns.description",
-            imageUrl: "$addOns.imageUrl",
+            $map: {
+              input: "$addOns",
+              as: "addon",
+              in: {
+                _id: "$$addon._id",
+                title: "$$addon.title",
+                price: "$$addon.price",
+                description: "$$addon.description",
+                imageUrl: "$$addon.imageUrl",
+                rating : "$$addon.rating",
+                isVeg : "$$addon.isVeg",
+                ratingCount: "$$addon.ratingCount",
+              },
+            },
           },
           rating: 1,
           createdAt: 1,
@@ -66,11 +69,11 @@ export const GET = async (
       },
     ]);
 
-    if (!product) {
+    if (!product || product.length === 0) {
       return apiResponse(404, "Product not found");
     }
 
-    return apiResponse(200, "Product fetched successfully", product);
+    return apiResponse(200, "Product fetched successfully", product[0]);
   } catch (error) {
     console.error("Error fetching product:", error);
     return apiResponse(500, "Internal server error");

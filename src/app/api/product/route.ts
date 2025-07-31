@@ -88,8 +88,9 @@ export const GET = asyncHandler(async (req) => {
   const category = searchParams.get("category");
   const isVeg = searchParams.get("isVeg");
   const isBestSeller = searchParams.get("isBestSeller");
-  const spicyLevel = searchParams.get("spicyLevel");
-  const prepTime = searchParams.get("prepTime");
+  const minPrice = searchParams.get("minPrice");
+  const maxPrice = searchParams.get("maxPrice");
+  const minRating = searchParams.get("minRating");
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "10");
   const sortBy = searchParams.get("sortBy") || "createdAt";
@@ -97,20 +98,35 @@ export const GET = asyncHandler(async (req) => {
 
   const matchStage: any = {};
 
+  // Category filter
   if (category) {
     matchStage.category = category;
   }
+
+  // Veg filter
   if (isVeg) {
     matchStage.isVeg = isVeg === "true";
   }
+
+  // Bestseller filter
   if (isBestSeller) {
     matchStage.isBestSeller = isBestSeller === "true";
   }
-  if (spicyLevel) {
-    matchStage.spicyLevel = spicyLevel;
+
+  // Price range filter
+  if (minPrice || maxPrice) {
+    matchStage.price = {};
+    if (minPrice) {
+      matchStage.price.$gte = parseFloat(minPrice);
+    }
+    if (maxPrice) {
+      matchStage.price.$lte = parseFloat(maxPrice);
+    }
   }
-  if (prepTime) {
-    matchStage.prepTime = prepTime;
+
+  // Rating filter
+  if (minRating) {
+    matchStage.rating = { $gte: parseFloat(minRating) };
   }
 
   const sortStage: any = {};

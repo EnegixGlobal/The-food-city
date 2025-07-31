@@ -7,7 +7,7 @@ type InputProps = {
   disabled?: boolean;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-};
+} & React.InputHTMLAttributes<HTMLInputElement>;
 
 function Input({
   placeholder,

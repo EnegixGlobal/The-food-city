@@ -19,6 +19,7 @@ export const POST = asyncHandler(async (req) => {
     endDate,
     usageLimit,
     isActive,
+    offerImage,
   } = body;
 
   const requiredFields = {
@@ -60,6 +61,7 @@ export const POST = asyncHandler(async (req) => {
     startDate,
     endDate,
     usageLimit,
+    offerImage,
     isActive: isActive || true, // default to true if not provided
   });
 
@@ -70,4 +72,57 @@ export const POST = asyncHandler(async (req) => {
   }
 
   return apiResponse(201, "Coupon created successfully", savedCoupon);
+});
+
+// get all coupons
+export const GET = asyncHandler(async (_req) => {
+  connectDb();
+
+  const coupons = await Coupon.aggregate([
+    {
+      $match: {
+        isActive: true, // Only fetch active coupons
+        endDate: { $gte: new Date() }, // Ensure the coupon is still valid
+      },
+    },
+    {
+      $lookup: {
+        from: "products", // Assuming the products collection is named "products"
+        localField: "applicableItems",
+        foreignField: "_id",
+        as: "applicableProducts",
+      },
+    },
+    {
+      $project: {
+        code: 1,
+        discountType: 1,
+        discountValue: 1,
+        applicableItems: 1,
+        startDate: 1,
+        endDate: 1,
+        usageLimit: 1,
+        isActive: 1,
+        offerImage: 1,
+        applicableProducts: {
+          $map: {
+            input: "$applicableProducts",
+            as: "product",
+            in: {
+              title: "$$product.title",
+              price: "$$product.price",
+              imageUrl: "$$product.imageUrl",
+              _id: "$$product._id",
+            }
+          }
+        },
+      },
+    },
+  ]);
+
+  if (!coupons || coupons.length === 0) {
+    return apiResponse(404, "No active coupons found");
+  }
+
+  return apiResponse(200, "Coupons fetched successfully", coupons);
 });

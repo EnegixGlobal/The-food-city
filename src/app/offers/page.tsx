@@ -1,206 +1,335 @@
 "use client";
 
-import React from "react";
-import { FiClock, FiTag, FiPercent, FiShoppingBag } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
+import { FiClock, FiTag, FiPercent, FiShoppingBag, FiChevronRight, FiLoader } from "react-icons/fi";
 import Container from "../components/Container";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Image from "next/image";
 
+interface ApplicableProduct {
+  _id: string;
+  title: string;
+  price: number;
+  imageUrl: string;
+}
+
+interface Coupon {
+  _id: string;
+  code: string;
+  discountType: "fixed" | "percentage";
+  discountValue: number;
+  applicableItems: string[];
+  startDate: string;
+  endDate: string;
+  usageLimit: number;
+  isActive: boolean;
+  applicableProducts: ApplicableProduct[];
+}
+
+interface ApiResponse {
+  success: boolean;
+  message: string;
+  data: Coupon[];
+}
+
 const OffersPage = () => {
-  // Sample offers data
-  const offers = [
-    {
-      id: 1,
-      title: "Weekend Special",
-      description: "Get 30% off on all South Indian dishes this weekend",
-      code: "WEEKEND30",
-      validUntil: "2023-12-31",
-      discount: "30%",
-      category: "south-indian",
-      image:
-        "https://images.unsplash.com/photo-1635667839851-9ae595677a2f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-    {
-      id: 2,
-      title: "First Order Bonus",
-      description: "Get ₹100 off on your first order above ₹300",
-      code: "NEW100",
-      validUntil: "2023-12-31",
-      discount: "₹100",
-      category: "all",
-      image:
-        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-    {
-      id: 3,
-      title: "Combo Deal",
-      description: "Buy any 2 main course dishes and get 1 dessert free",
-      code: "COMBO2PLUS1",
-      validUntil: "2023-12-15",
-      discount: "Free Dessert",
-      category: "combo",
-      image:
-        "https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80",
-    },
-    {
-      id: 4,
-      title: "Family Pack",
-      description: "20% off on all family packs (min 4 items)",
-      code: "FAMILY20",
-      validUntil: "2023-12-25",
-      discount: "20%",
-      category: "family",
-      image:
-        "https://images.unsplash.com/photo-1606787366850-de6330128bfc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-    {
-      id: 5,
-      title: "Happy Hours",
-      description: "15% off on all orders between 2PM-5PM",
-      code: "HAPPY15",
-      validUntil: "2023-12-31",
-      discount: "15%",
-      category: "all",
-      image:
-        "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-    {
-      id: 6,
-      title: "Tandoori Special",
-      description: "Buy any 3 tandoori items and get 1 free",
-      code: "TANDOORI3PLUS1",
-      validUntil: "2023-12-20",
-      discount: "1 Free Item",
-      category: "tandoor",
-      image:
-        "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    },
-  ];
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [expandedOffers, setExpandedOffers] = useState<{ [key: string]: boolean }>({});
 
-  // Categories for filtering
-  const categories = [
-    { id: "all", name: "All Offers" },
-    { id: "south-indian", name: "South Indian" },
-    { id: "tandoor", name: "Tandoor Specials" },
-    { id: "combo", name: "Combo Deals" },
-    { id: "family", name: "Family Packs" },
-  ];
+  // Fetch coupons data
+  const fetchCoupons = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch('/api/coupon');
+      const data: ApiResponse = await response.json();
+      
+      if (data.success) {
+        setCoupons(data.data);
+      } else {
+        setError(data.message || "Failed to fetch offers");
+      }
+    } catch (err) {
+      setError("Failed to fetch offers");
+      console.error("Error fetching coupons:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const [activeCategory, setActiveCategory] = React.useState("all");
+  useEffect(() => {
+    fetchCoupons();
+  }, []);
 
-  const filteredOffers =
-    activeCategory === "all"
-      ? offers
-      : offers.filter((offer) => offer.category === activeCategory);
+  const toggleExpanded = (couponId: string) => {
+    setExpandedOffers(prev => ({
+      ...prev,
+      [couponId]: !prev[couponId]
+    }));
+  };
+
+  const copyToClipboard = (code: string) => {
+    navigator.clipboard.writeText(code);
+    // You can add a toast notification here
+    alert(`Coupon code "${code}" copied to clipboard!`);
+  };
+
+  const formatDiscount = (type: string, value: number) => {
+    return type === "fixed" ? `₹${value}` : `${value}%`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  // Loading Component
+  const LoadingSkeleton = () => (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
+            <div className="h-48 md:h-64 bg-gray-200 animate-pulse"></div>
+            <div className="p-4">
+              <div className="h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse mb-4"></div>
+              <div className="flex justify-between mb-4">
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Error Component
+  const ErrorComponent = () => (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+      <div className="text-center py-12">
+        <div className="text-6xl text-red-500 mb-4">😕</div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Failed to Load Offers</h2>
+        <p className="text-gray-600 mb-4">{error}</p>
+        <button 
+          onClick={fetchCoupons}
+          className="bg-red-900 text-white px-6 py-2 rounded-lg hover:bg-red-800 transition"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-gradient-to-b from-red-50 to-white">
+          <div className="bg-gradient-to-r from-red-600 via-red-700 to-red-800 text-white mt-10 md:py-16 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto text-center">
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">
+                🎉 Special Offers & Deals
+              </h1>
+              <p className="md:text-xl text-lg max-w-3xl mx-auto opacity-90">
+                Loading amazing deals just for you...
+              </p>
+            </div>
+          </div>
+          <LoadingSkeleton />
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-gradient-to-b from-red-50 to-white">
+          <div className="bg-gradient-to-r from-red-600 via-red-700 to-red-800 text-white mt-10 md:py-16 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto text-center">
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">
+                🎉 Special Offers & Deals
+              </h1>
+              <p className="md:text-xl text-lg max-w-3xl mx-auto opacity-90">
+                Discover amazing deals and discounts on your favorite dishes
+              </p>
+            </div>
+          </div>
+          <ErrorComponent />
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-gradient-to-b from-red-50 to-white">
         {/* Hero Section */}
-        <div className="bg-green-700 text-white mt-10 md:py-12 py-10 px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-r from-red-600 via-red-700 to-red-800 text-white mt-10 md:py-16 py-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto text-center">
-            <h1 className="text-2xl md:text-3xl font-bold mb-4">
-              Special Offers
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              🎉 Special Offers & Deals
             </h1>
-            <p className="md:text-xl text-md max-w-3xl mx-auto">
-              Discover amazing deals and discounts on your favorite dishes.
-              Limited time offers!
+            <p className="md:text-xl text-lg max-w-3xl mx-auto opacity-90">
+              Save big on your favorite dishes with our exclusive offers.
+              Limited time deals you can&apos;t resist!
             </p>
+            <div className="mt-6 flex justify-center">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-2 text-sm font-medium">
+                {coupons.length} Active Offers Available
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Category Filter */}
-        <Container>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setActiveCategory(category.id)}
-                className={`px-4 py-2 rounded-full font-medium ${
-                  activeCategory === category.id
-                    ? "bg-red-900 text-white"
-                    : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                }`}>
-                {category.name}
-              </button>
-            ))}
-          </div>
-        </Container>
-
         {/* Offers Grid */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 md:gap-6 gap-2">
-            {filteredOffers.map((offer) => (
-              <div
-                key={offer.id}
-                className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition">
-                <div className="relative h-48 md:h-64">
-                  <Image
-                    width={600}
-                    height={400}
-                    src={offer.image}
-                    alt={offer.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-2 right-2 bg-red-900 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center">
-                    <FiPercent className="mr-1" />
-                    {offer.discount}
-                  </div>
-                </div>
-
-                <div className="p-3">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {offer.title}
-                  </h3>
-                  <p className="text-gray-600 text-xs md:text-sm mb-4">
-                    {offer.description}
-                  </p>
-
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center text-gray-500 text-sm">
-                      <FiClock className="mr-1" />
-                      <span>
-                        Valid until:{" "}
-                        {new Date(offer.validUntil).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center text-gray-500 text-sm">
-                      <FiShoppingBag className="mr-1" />
-                      <span className="capitalize">
-                        {offer.category.replace("-", " ")}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 flex rounded-lg p-2 md:flex-row flex-wrap items-center justify-between">
-                    <div className="flex items-center">
-                      <FiTag className="text-red-900 mr-2" />
-                      <span className="font-mono font-medium">
-                        {offer.code}
-                      </span>
-                    </div>
-                    <button className="text-red-900 text-sm hover:underline">
-                      Copy Code
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {filteredOffers.length === 0 && (
-            <div className="text-center py-12">
-              <div className="mx-auto h-24 w-24 text-gray-400 mb-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {coupons.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="mx-auto h-24 w-24 text-gray-300 mb-6">
                 <FiTag className="w-full h-full" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-1">
-                No offers available
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                No Active Offers
               </h3>
-              <p className="text-gray-500">
-                There are no offers in this category at the moment.
+              <p className="text-gray-600 text-lg">
+                Check back soon for amazing deals and discounts!
               </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {coupons.map((coupon) => (
+                <div
+                  key={coupon._id}
+                  className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl hover:scale-105 transition-all duration-300"
+                >
+                  {/* Offer Header */}
+                  <div className="bg-gradient-to-r from-green-500 to-green-600 p-4 text-white">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-sm font-bold">
+                        <FiPercent className="inline mr-1" />
+                        {formatDiscount(coupon.discountType, coupon.discountValue)} OFF
+                      </div>
+                      <div className="text-sm opacity-90">
+                        <FiClock className="inline mr-1" />
+                        Valid till {formatDate(coupon.endDate)}
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold mb-1">
+                      Save {formatDiscount(coupon.discountType, coupon.discountValue)}
+                    </h3>
+                    <p className="text-sm opacity-90">
+                      On {coupon.applicableProducts.length} selected items
+                    </p>
+                  </div>
+
+                  {/* Product Preview */}
+                  <div className="p-4">
+                    <div className="mb-4">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <FiShoppingBag className="mr-2 text-red-600" />
+                        Applicable Items ({coupon.applicableProducts.length})
+                      </h4>
+                      
+                      {/* Show first 3 products */}
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        {coupon.applicableProducts.slice(0, 3).map((product) => (
+                          <div key={product._id} className="text-center">
+                            <div className="w-full h-16 bg-gray-100 rounded-lg mb-2 overflow-hidden">
+                              <Image
+                                src={product.imageUrl || '/placeholder-food.svg'}
+                                alt={product.title}
+                                width={80}
+                                height={64}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <p className="text-xs text-gray-600 font-medium line-clamp-2">
+                              {product.title}
+                            </p>
+                            <p className="text-xs text-red-600 font-bold">
+                              ₹{product.price}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Show more button if there are more than 3 products */}
+                      {coupon.applicableProducts.length > 3 && (
+                        <button
+                          onClick={() => toggleExpanded(coupon._id)}
+                          className="w-full text-center text-red-600 text-sm font-medium hover:text-red-700 transition flex items-center justify-center"
+                        >
+                          {expandedOffers[coupon._id] ? 'Show Less' : `+${coupon.applicableProducts.length - 3} More Items`}
+                          <FiChevronRight className={`ml-1 transition-transform ${expandedOffers[coupon._id] ? 'rotate-90' : ''}`} />
+                        </button>
+                      )}
+
+                      {/* Expanded products */}
+                      {expandedOffers[coupon._id] && coupon.applicableProducts.length > 3 && (
+                        <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100">
+                          {coupon.applicableProducts.slice(3).map((product) => (
+                            <div key={product._id} className="flex items-center space-x-2">
+                              <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                <Image
+                                  src={product.imageUrl || '/placeholder-food.svg'}
+                                  alt={product.title}
+                                  width={48}
+                                  height={48}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                                  {product.title}
+                                </p>
+                                <p className="text-sm text-red-600 font-bold">
+                                  ₹{product.price}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Coupon Code */}
+                    <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-4 border border-red-100">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <FiTag className="text-red-600 mr-2" />
+                          <span className="font-mono font-bold text-lg text-gray-900">
+                            {coupon.code}
+                          </span>
+                        </div>
+                        <button 
+                          onClick={() => copyToClipboard(coupon.code)}
+                          className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                        >
+                          Copy Code
+                        </button>
+                      </div>
+                      <div className="mt-2 text-xs text-gray-600">
+                        Usage limit: {coupon.usageLimit} • Status: {coupon.isActive ? 'Active' : 'Inactive'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

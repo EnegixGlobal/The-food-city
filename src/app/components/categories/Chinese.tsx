@@ -5,7 +5,7 @@ import Card from "../Card";
 import { FaArrowRight } from "react-icons/fa";
 import Link from "next/link";
 
-function Chinese() {
+function Chinese({ products }: { products: any[] }) {
   const chinese = [
     {
       id: 6,
@@ -83,54 +83,62 @@ function Chinese() {
         <h2 className="text-2xl md:text-3xl  font-bold text-red-800 mb-4">
           Chinese Cuisine
         </h2>
-        <Link href="/chienese">
-        <span className="flex items-center justify-center gap-3 font-bold text-red-800 hover:text-red-700 hover:transform hover:scale-102 transition cursor-pointer">
-          View All <FaArrowRight />
-        </span>
+        <Link href="/chinese">
+          <span className="flex items-center justify-center gap-3 font-bold text-red-800 hover:text-red-700 hover:transform hover:scale-102 transition cursor-pointer">
+            View All <FaArrowRight />
+          </span>
         </Link>
       </div>
-      <button
-        onClick={scrollLeft}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 transition transform hover:scale-110">
-        <svg
-          className="w-6 h-6 text-red-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-      </button>
+      {products.length >= 5 && (
+        <button
+          onClick={scrollLeft}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 transition transform hover:scale-110">
+          <svg
+            className="w-6 h-6 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+      )}
 
       <div
         ref={carouselRef}
         className="flex overflow-x-auto scroll-smooth  py-2 gap-4 scrollbar-hide"
         onScroll={(e) => setScrollPosition(e.currentTarget.scrollLeft)}>
-        {chinese.map((item) => (
-          <Card key={item.id} item={item}/>
-        ))}
+        {products.length === 0 ? (
+          <p className="text-center text-xl font-thin text-gray-500">
+            No items available for Chinese cuisine at the moment.
+          </p>
+        ) : (
+          products.map((product) => <Card key={product._id} item={product} />)
+        )}
       </div>
 
-      <button
-        onClick={scrollRight}
-        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 transition transform hover:scale-110">
-        <svg
-          className="w-6 h-6 text-red-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
-      </button>
+      {products.length >= 5 && (
+        <button
+          onClick={scrollRight}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 transition transform hover:scale-110">
+          <svg
+            className="w-6 h-6 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
