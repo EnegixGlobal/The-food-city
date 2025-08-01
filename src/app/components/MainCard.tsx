@@ -14,6 +14,8 @@ function MainCard({
   className?: string;
   category?: string; // Add category type
   item?: {
+    description: string;
+    imageUrl: string ;
     title: string;
     id: number;
     slug: string;
@@ -45,11 +47,11 @@ function MainCard({
       {...props}>
       {/* Item Image */}
       <Link href={`/${category}/${item.slug}`}>
-        <div className="relative h-48 overflow-hidden">
+        <div className="relative  h-54 overflow-hidden">
           <Image
-            src={item.image}
+            src={item.imageUrl}
             alt={item.name}
-            width={200}
+            width={350}
             height={200}
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
           />
@@ -90,7 +92,8 @@ function MainCard({
             {item.price.toFixed(2)}
           </span>
         </div>
-
+        
+        <p className="mb-2 text-sm text-gray-700 line-clamp-2">{item.description}</p>
         {/* Meta Info */}
         <div className="flex flex-wrap md:gap-4 gap-2 text-sm text-gray-600 mb-4">
           <div className="flex items-center">

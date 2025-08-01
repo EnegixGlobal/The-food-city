@@ -27,6 +27,7 @@ export const GET = asyncHandler(async (req) => {
       addresses: userData.address || []
     });
   } catch (error) {
+    console.error("Error fetching addresses:", error);
     return apiResponse(500, "Failed to fetch addresses");
   }
 });
@@ -81,6 +82,7 @@ export const POST = asyncHandler(async (req) => {
       addresses: userData.address
     });
   } catch (error) {
+    console.error("Error adding address:", error);
     return apiResponse(500, "Failed to add address");
   }
 });

@@ -56,7 +56,7 @@ function Card({ className = "", item, ...props }: CartProps) {
 
   return (
     <div
-      className={`w-full md:max-w-[260px]  max-w-[180px] 
+      className={`w-full md:max-w-[280px]  max-w-[180px] 
                  
                   flex-shrink-0 
                   bg-white rounded-xl shadow-md overflow-hidden 
@@ -67,13 +67,13 @@ function Card({ className = "", item, ...props }: CartProps) {
         href={`/${item.category}/${
           item.slug || item.name.toLowerCase().replace(/\s+/g, "-")
         }`}>
-        <div className="   overflow-hidden">
+        <div className="overflow-hidden">
           <Image
             src={item.imageUrl || item.image}
             alt={item.name}
             width={80}
             height={100}
-            className="w-full md:h-[200px] h-[180px] object-cover transition-transform duration-500 hover:scale-102"
+            className="w-full md:h-[210px] h-[180px] aspect-square object-cover transition-transform duration-500 hover:scale-102"
           />
         </div>
       </Link>

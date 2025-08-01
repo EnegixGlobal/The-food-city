@@ -25,6 +25,10 @@ const userSchema = new Schema(
         "Please provide a valid email address",
       ],
     },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
     addresses: [
       {
         type: Schema.Types.ObjectId,

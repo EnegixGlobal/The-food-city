@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FiClock, FiTag, FiPercent, FiShoppingBag, FiChevronRight, FiLoader } from "react-icons/fi";
-import Container from "../components/Container";
+import { FiClock, FiTag, FiPercent, FiShoppingBag, FiChevronRight } from "react-icons/fi";
+
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Image from "next/image";

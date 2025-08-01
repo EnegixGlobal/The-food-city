@@ -34,12 +34,6 @@ const ProductSchema = new mongoose.Schema(
     discountedPrice: {
       type: Number,
       min: [0, "Discounted price cannot be negative"],
-      validate: {
-        validator: function (value) {
-          return value <= this.price; // Ensure discounted price is not greater than original price
-        },
-        message: "Discounted price cannot be greater than the original price",
-      },
     },
     category: {
       type: String,

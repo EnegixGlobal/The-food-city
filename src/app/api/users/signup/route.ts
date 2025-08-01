@@ -4,10 +4,11 @@ import User from "@/app/models/User";
 import { apiResponse } from "@/app/lib/apiResponse";
 import { apiError } from "@/app/lib/ApiError";
 import { normalizePhoneNumber } from "@/app/utils/sendOtp";
+import { asyncHandler } from "@/app/lib";
 
-// Input validation schema
-export async function POST(request: NextRequest) {
-  const { phone, name, email } = await request.json();
+export const POST = asyncHandler(async (req) => {
+  await connectDb();
+  const { phone, name, email } = await req.json();
 
   console.log("Received data:", { phone, name, email });
 
@@ -27,33 +28,30 @@ export async function POST(request: NextRequest) {
   if (phone.length > 10) {
     return apiError(400, "Phone number should not exceed 10 digits!");
   }
+  if (phone.length < 10) {
+    return apiError(400, "Phone number should not be less than 10 digits!");
+  }
 
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validPhone = normalizePhoneNumber(phone);
   if (!isValidEmail) return apiError(400, "Invalid email format!");
 
-  try {
-    await connectDb();
+  // Check if user already exists
+  const existedUser = await User.findOne({
+    $or: [{ phone }, { email }],
+  });
 
-    // Check if user already exists
-    const existedUser = await User.findOne({
-      $or: [{ phone }, { email }],
-    });
-
-    if (existedUser) {
-      return apiError(400, "User already exists with this phone or email!");
-    }
-
-    const user = new User({
-      phone : validPhone,
-      name,
-      email,
-    });
-
-    const savedUser = await user.save();
-
-    return apiResponse(201, "User Created Successfully!", savedUser);
-  } catch (error) {
-    return apiError(500, "Failed to Create User");
+  if (existedUser) {
+    return apiError(400, "User already exists with this phone or email!");
   }
-}
+
+  const user = new User({
+    phone: validPhone,
+    name,
+    email,
+  });
+
+  const savedUser = await user.save();
+
+  return apiResponse(201, "User Created Successfully!", savedUser);
+});

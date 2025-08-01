@@ -15,17 +15,30 @@ import {
   X,
   Clock,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import Spinner from "../components/Spinner";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
+interface CompanyData {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address?: string;
+}
+
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
+  const [isLoadingCompany, setIsLoadingCompany] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const navigationItems = [
     {
@@ -47,6 +60,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       current: pathname === "/admin/customers",
     },
     {
+      name: "Add Ons",
+      href: "/admin/addons",
+      icon: Users,
+      current: pathname === "/admin/addons",
+    },
+    {
       name: "Menu Items",
       href: "/admin/products",
       icon: Utensils,
@@ -66,9 +85,71 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     },
   ];
 
-  const handleLogout = () => {
-    // Implement logout logic here
-    router.push("/admin-login");
+  // Fetch company details
+  useEffect(() => {
+    const fetchCompanyData = async () => {
+      try {
+        setIsLoadingCompany(true);
+        const response = await fetch("/api/company/6888be3b6db74d474efde7f1");
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          setCompanyData(data.data);
+        } else {
+          console.error("Failed to fetch company data:", data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching company data:", error);
+      } finally {
+        setIsLoadingCompany(false);
+      }
+    };
+
+    fetchCompanyData();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (profileDropdownOpen) {
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [profileDropdownOpen]);
+
+  const handleLogout = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/company/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Redirect to home page after successful logout
+        router.push("/");
+        setLoading(false);
+      } else {
+        console.error("Logout failed:", data.message);
+        // Still redirect even if API fails
+        router.push("/");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Redirect to home page even if there's an error
+      router.push("/");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -76,26 +157,33 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 lg:hidden"
+          className="fixed inset-0 z-50 lg:hidden "
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div className="fixed m-2 rounded-xl left-0">
+      <div className="fixed md:m-2 rounded-none left-0 z-30">
         <div
-          className={`rounded-xl min-h-screen max-h-screen inset-y-0 left-0 z-50 w-64 text-black bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+          className={`rounded-none inset-0 min-h-screen max-h-screen inset-y-0 left-0 z-[100] w-64 text-black bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}>
           <div className="flex items-center justify-between h-16 px-6 border-b border-red-800">
             <div className="flex items-center">
-              <Image
-                src="/logo.png"
-                alt="FoodExpress Admin"
-                width={150}
-                height={40}
-                className="h-14 -rotate-12 w-auto"
-              />
+              <div className="flex flex-col">
+                <Image
+                  src="/logo.png"
+                  alt="FoodExpress Admin"
+                  width={120}
+                  height={32}
+                  className="h-10 -rotate-12 w-auto"
+                />
+                {companyData && (
+                  <span className="text-xs text-gray-600 mt-1 font-medium">
+                    {companyData.name}
+                  </span>
+                )}
+              </div>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -110,7 +198,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`group flex items-center px-3 py-3 text-sm font-medium rounded-lg mb-1 transition-colors ${
+                  className={`group flex items-center px-3 py-3 text-sm font-medium rounded-none mb-1 transition-colors ${
                     item.current
                       ? "bg-red-800 text-white"
                       : "text-gray-800 hover:bg-red-800 hover:text-white!"
@@ -133,8 +221,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       {/* Main content */}
       <div className="flex-1 lg:ml-68 flex flex-col min-h-screen overflow-hidden">
         {/* Top bar */}
-        <div className="fixed w-[calc(100%-280px)] top-2 z-30 rounded-xl bg-white shadow-sm border-b border-gray-200 ">
-          <div className="flex items-center justify-between h-16 px-6">
+        <div className="fixed w-full lg:w-[calc(100%-280px)] md:top-2 left-0 lg:left-68 right-0 z-40 rounded-none bg-white shadow-sm border-b border-gray-200">
+          <div className="flex items-center justify-between h-16 px-4 sm:px-6">
             <div className="flex items-center">
               <button
                 onClick={() => setSidebarOpen(true)}
@@ -175,44 +263,109 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 </button>
               </div>
 
-              <div className="relative ml-4">
-                <div className="flex items-center space-x-2">
-                  <div className="text-right hidden sm:block">
-                    <p className="text-sm font-medium text-gray-900">
-                      Admin User
-                    </p>
-                    <p className="text-xs text-gray-500">Super Admin</p>
-                  </div>
-                  <div className="h-8 w-8 bg-red-900 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">A</span>
-                  </div>
-                </div>
-
-                {/* Dropdown menu */}
-                <div className="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                  <button
-                    onClick={handleLogout}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                    <div className="flex items-center">
-                      <LogOut className="h-4 w-4 mr-2 text-gray-500" />
-                      Sign out
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Mobile logout button (visible only on small screens) */}
+              {/* Logout Button */}
               <button
                 onClick={handleLogout}
-                className="md:hidden text-gray-500 hover:text-gray-700 ml-2">
-                <LogOut size={20} />
+                className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-none transition-colors duration-200"
+                title="Logout">
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">
+                  {loading ? <Spinner /> : "Logout"}
+                </span>
               </button>
+
+              <div className="relative ml-4">
+                <button
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="flex items-center space-x-2 focus:outline-none">
+                  <div className="text-right hidden sm:block">
+                    {isLoadingCompany ? (
+                      <div className="animate-pulse">
+                        <div className="h-4 bg-gray-300 rounded w-20 mb-1"></div>
+                        <div className="h-3 bg-gray-300 rounded w-16"></div>
+                      </div>
+                    ) : companyData ? (
+                      <>
+                        <p className="text-sm font-medium text-gray-900">
+                          {companyData.name}
+                        </p>
+                        <p className="text-xs text-gray-500">Admin Panel</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm font-medium text-gray-900">
+                          Admin User
+                        </p>
+                        <p className="text-xs text-gray-500">Super Admin</p>
+                      </>
+                    )}
+                  </div>
+                  <div className="h-8 w-8 bg-red-900 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-medium">
+                      {isLoadingCompany
+                        ? "..."
+                        : companyData?.name?.charAt(0)?.toUpperCase() || "A"}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Dropdown menu */}
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border">
+                    <div className="px-4 py-3 border-b">
+                      {isLoadingCompany ? (
+                        <div className="animate-pulse">
+                          <div className="h-4 bg-gray-300 rounded w-24 mb-2"></div>
+                          <div className="h-3 bg-gray-300 rounded w-32 mb-1"></div>
+                          <div className="h-3 bg-gray-300 rounded w-28"></div>
+                        </div>
+                      ) : companyData ? (
+                        <>
+                          <p className="text-sm font-medium text-gray-900">
+                            {companyData.name}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {companyData.email}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {companyData.phone}
+                          </p>
+                          {companyData.address && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {companyData.address}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm font-medium text-gray-900">
+                            Admin User
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            admin@example.com
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
+                      <div className="flex items-center">
+                        <LogOut className="h-4 w-4 mr-2 text-gray-500" />
+                        Sign out
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Page content - scrollable */}
-        <main className="flex-1 mr-2 mb-2 p-6 bg-white overflow-y-auto mt-20 rounded-xl">{children}</main>
+        <main className="flex-1 md:mx-2 mb-2 md:ml-2 lg:ml-0 md:p-6 p-2 bg-white overflow-y-auto mt-20 rounded-none">
+          {children}
+        </main>
       </div>
     </div>
   );

@@ -46,3 +46,14 @@ export const POST = asyncHandler(async (res) => {
 
   return apiResponse(201, "Add-on created successfully", savedAddon);
 });
+
+// fetch all addons
+export const GET = asyncHandler(async () => {
+  const addons = await AddOn.find({}).sort({ createdAt: -1 }).exec();
+
+  if (!addons || addons.length === 0) {
+    return apiResponse(404, "No add-ons found");
+  }
+
+  return apiResponse(200, "Add-ons fetched successfully", addons);
+});
