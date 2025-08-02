@@ -8,7 +8,6 @@ import Navbar from "../components/Navbar";
 import Container from "../components/Container";
 import MainCard from "../components/MainCard";
 import { useEffect, useState } from "react";
-import Spinner from "../components/Spinner";
 import MainCardSkeletonGrid from "../components/MainCardSkeleton";
 
 interface CategoryPageProps {
@@ -39,7 +38,7 @@ const menuDatabase = {
   },
 };
 
-const baseUrl = process.env.PUBLIC_URL || "http://localhost:3000";
+const baseUrl = process.env.PUBLIC_URL;
 
 export default function CategoryPage({ params }: CategoryPageProps) {
   const [category, setCategory] = useState<string>("");
@@ -58,7 +57,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     maxPrice: "",
     minRating: "",
     sortBy: "createdAt",
-    sortOrder: "desc"
+    sortOrder: "desc",
   });
 
   const [showFilters, setShowFilters] = useState(false);
@@ -75,16 +74,16 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   // Build query string with filters
   const buildQueryString = () => {
     const queryParams = new URLSearchParams({
-      category: category
+      category: category,
     });
 
-    if (filters.isVeg) queryParams.append('isVeg', 'true');
-    if (filters.isBestSeller) queryParams.append('isBestSeller', 'true');
-    if (filters.minPrice) queryParams.append('minPrice', filters.minPrice);
-    if (filters.maxPrice) queryParams.append('maxPrice', filters.maxPrice);
-    if (filters.minRating) queryParams.append('minRating', filters.minRating);
-    if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
-    if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
+    if (filters.isVeg) queryParams.append("isVeg", "true");
+    if (filters.isBestSeller) queryParams.append("isBestSeller", "true");
+    if (filters.minPrice) queryParams.append("minPrice", filters.minPrice);
+    if (filters.maxPrice) queryParams.append("maxPrice", filters.maxPrice);
+    if (filters.minRating) queryParams.append("minRating", filters.minRating);
+    if (filters.sortBy) queryParams.append("sortBy", filters.sortBy);
+    if (filters.sortOrder) queryParams.append("sortOrder", filters.sortOrder);
 
     return queryParams.toString();
   };
@@ -97,7 +96,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
       setLoading(true);
       try {
         const queryString = buildQueryString();
-        const res = await fetch(`${baseUrl}/api/product?${queryString}`);
+        const res = await fetch(`/api/product?${queryString}`, {
+          cache: "no-store",
+        });
         const data = await res.json();
         setProducts(data.data.products || []);
       } catch (error) {
@@ -113,9 +114,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
   // Handle filter changes
   const handleFilterChange = (filterKey: string, value: any) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [filterKey]: value
+      [filterKey]: value,
     }));
   };
 
@@ -128,7 +129,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
       maxPrice: "",
       minRating: "",
       sortBy: "createdAt",
-      sortOrder: "desc"
+      sortOrder: "desc",
     });
   };
 
@@ -172,14 +173,16 @@ export default function CategoryPage({ params }: CategoryPageProps) {
               <div className="relative group">
                 <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 transition">
                   <span>
-                    Sort: {
-                      {
-                        createdAt: "Latest",
-                        price: filters.sortOrder === "asc" ? "Price: Low to High" : "Price: High to Low",
-                        rating: "Rating",
-                        title: "Name"
-                      }[filters.sortBy] || "Latest"
-                    }
+                    Sort:{" "}
+                    {{
+                      createdAt: "Latest",
+                      price:
+                        filters.sortOrder === "asc"
+                          ? "Price: Low to High"
+                          : "Price: High to Low",
+                      rating: "Rating",
+                      title: "Name",
+                    }[filters.sortBy] || "Latest"}
                   </span>
                   <FiChevronDown className="transition-transform group-hover:rotate-180" />
                 </button>
@@ -188,18 +191,27 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                     {[
                       { value: "createdAt", label: "Latest", order: "desc" },
                       { value: "rating", label: "Rating", order: "desc" },
-                      { value: "price", label: "Price: Low to High", order: "asc" },
-                      { value: "price", label: "Price: High to Low", order: "desc" },
+                      {
+                        value: "price",
+                        label: "Price: Low to High",
+                        order: "asc",
+                      },
+                      {
+                        value: "price",
+                        label: "Price: High to Low",
+                        order: "desc",
+                      },
                       { value: "title", label: "Name", order: "asc" },
                     ].map((option, index) => (
                       <button
                         key={index}
                         onClick={() => {
-                          handleFilterChange('sortBy', option.value);
-                          handleFilterChange('sortOrder', option.order);
+                          handleFilterChange("sortBy", option.value);
+                          handleFilterChange("sortOrder", option.order);
                         }}
                         className={`block w-full text-left px-4 py-2 text-sm ${
-                          filters.sortBy === option.value && filters.sortOrder === option.order
+                          filters.sortBy === option.value &&
+                          filters.sortOrder === option.order
                             ? "bg-red-100 text-red-900"
                             : "text-gray-700 hover:bg-gray-100"
                         }`}>
@@ -210,10 +222,12 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={`border rounded-full h-10 w-10 flex items-center justify-center text-xl transition-colors ${
-                  showFilters ? 'bg-red-100 border-red-300 text-red-600' : 'hover:bg-gray-100'
+                  showFilters
+                    ? "bg-red-100 border-red-300 text-red-600"
+                    : "hover:bg-gray-100"
                 }`}>
                 <FiFilter />
               </button>
@@ -225,7 +239,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
             <div className="bg-white rounded-lg shadow-md p-6 mb-6 border">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">Filters</h3>
-                <button 
+                <button
                   onClick={resetFilters}
                   className="text-red-600 hover:text-red-700 text-sm font-medium">
                   Reset All
@@ -235,13 +249,17 @@ export default function CategoryPage({ params }: CategoryPageProps) {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {/* Quick Filters */}
                 <div>
-                  <h4 className="font-medium text-gray-700 mb-3">Quick Filters</h4>
+                  <h4 className="font-medium text-gray-700 mb-3">
+                    Quick Filters
+                  </h4>
                   <div className="space-y-2">
                     <label className="flex items-center">
                       <input
                         type="checkbox"
                         checked={filters.isVeg}
-                        onChange={(e) => handleFilterChange('isVeg', e.target.checked)}
+                        onChange={(e) =>
+                          handleFilterChange("isVeg", e.target.checked)
+                        }
                         className="rounded border-gray-300 text-red-600 focus:ring-red-500"
                       />
                       <span className="ml-2 text-sm">Vegetarian Only</span>
@@ -250,7 +268,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                       <input
                         type="checkbox"
                         checked={filters.isBestSeller}
-                        onChange={(e) => handleFilterChange('isBestSeller', e.target.checked)}
+                        onChange={(e) =>
+                          handleFilterChange("isBestSeller", e.target.checked)
+                        }
                         className="rounded border-gray-300 text-red-600 focus:ring-red-500"
                       />
                       <span className="ml-2 text-sm">Bestsellers Only</span>
@@ -260,20 +280,26 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
                 {/* Price Range */}
                 <div>
-                  <h4 className="font-medium text-gray-700 mb-3">Price Range (₹)</h4>
+                  <h4 className="font-medium text-gray-700 mb-3">
+                    Price Range (₹)
+                  </h4>
                   <div className="space-y-2">
                     <input
                       type="number"
                       placeholder="Min Price"
                       value={filters.minPrice}
-                      onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange("minPrice", e.target.value)
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
                     />
                     <input
                       type="number"
                       placeholder="Max Price"
                       value={filters.maxPrice}
-                      onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange("maxPrice", e.target.value)
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
                     />
                   </div>
@@ -281,10 +307,14 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
                 {/* Rating */}
                 <div>
-                  <h4 className="font-medium text-gray-700 mb-3">Minimum Rating</h4>
+                  <h4 className="font-medium text-gray-700 mb-3">
+                    Minimum Rating
+                  </h4>
                   <select
                     value={filters.minRating}
-                    onChange={(e) => handleFilterChange('minRating', e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("minRating", e.target.value)
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500">
                     <option value="">Any Rating</option>
                     <option value="4">4+ Stars</option>
@@ -296,7 +326,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
                 {/* Active Filters Summary */}
                 <div>
-                  <h4 className="font-medium text-gray-700 mb-3">Active Filters</h4>
+                  <h4 className="font-medium text-gray-700 mb-3">
+                    Active Filters
+                  </h4>
                   <div className="space-y-1">
                     {filters.isVeg && (
                       <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
@@ -310,7 +342,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                     )}
                     {(filters.minPrice || filters.maxPrice) && (
                       <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full ml-1">
-                        ₹{filters.minPrice || '0'} - ₹{filters.maxPrice || '∞'}
+                        ₹{filters.minPrice || "0"} - ₹{filters.maxPrice || "∞"}
                       </span>
                     )}
                     {filters.minRating && (
@@ -350,7 +382,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                 <p className="text-gray-500 mb-6">
                   Try adjusting your filters to see more options
                 </p>
-                <button 
+                <button
                   onClick={resetFilters}
                   className="bg-red-900 hover:bg-red-800 text-white px-6 py-3 rounded-full font-medium transition">
                   Reset All Filters
