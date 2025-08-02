@@ -2,27 +2,169 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+// Cart item types
+const ITEM_TYPES = {
+  PRODUCT: 'product',
+  ADDON: 'addon'
+};
+
 export const useCartStore = create(
   persist(
     (set, get) => ({
       cart: [],
 
-      // CREATE - Add item to cart
-      addToCart: (item) => {
+      // CREATE - Add product to cart
+      addProductToCart: (product, quantity = 1, selectedAddons = [], customization = null) => {
         try {
-          const existingItem = get().cart.find((i) => i.id === item.id);
+          // Create unique cart item ID by combining product ID, selected addons, and customization
+          const addonIds = selectedAddons.map(addon => addon._id).sort().join('-');
+          const customizationId = customization ? `-custom-${customization.option}` : '';
+          const cartItemId = `${product._id}${addonIds ? `-addons-${addonIds}` : ''}${customizationId}`;
+          
+          const existingItem = get().cart.find((item) => item.cartItemId === cartItemId);
+          
           if (existingItem) {
-            // If item exists, increase quantity
+            // If same product with same addons and customization exists, increase quantity
             set({
-              cart: get().cart.map((i) =>
-                i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+              cart: get().cart.map((item) =>
+                item.cartItemId === cartItemId 
+                  ? { ...item, quantity: item.quantity + quantity } 
+                  : item
               ),
             });
           } else {
-            // If item doesn't exist, add new item
+            // Create new cart item
+            const effectivePrice = product.discountedPrice || product.price;
+            const addonsPrice = selectedAddons.reduce((sum, addon) => sum + addon.price, 0);
+            const customizationPrice = customization ? customization.price - effectivePrice : 0;
+            const totalPrice = effectivePrice + addonsPrice + customizationPrice;
+            
+            const newCartItem = {
+              cartItemId,
+              type: ITEM_TYPES.PRODUCT,
+              // Product details
+              _id: product._id,
+              title: product.title,
+              slug: product.slug,
+              description: product.description,
+              price: product.price,
+              discountedPrice: product.discountedPrice,
+              effectivePrice,
+              category: product.category,
+              imageUrl: product.imageUrl,
+              isVeg: product.isVeg,
+              isBestSeller: product.isBestSeller,
+              spicyLevel: product.spicyLevel,
+              prepTime: product.prepTime,
+              rating: product.rating,
+              // Cart specific
+              quantity,
+              totalPrice,
+              // Associated addons
+              selectedAddons: selectedAddons.map(addon => ({
+                _id: addon._id,
+                title: addon.title,
+                description: addon.description,
+                price: addon.price,
+                imageUrl: addon.imageUrl,
+                isVeg: addon.isVeg,
+                rating: addon.rating
+              })),
+              // Customization
+              selectedCustomization: customization ? {
+                option: customization.option,
+                price: customization.price
+              } : null,
+              addedAt: new Date().toISOString()
+            };
+            
             set({ 
-              cart: [...get().cart, { ...item, quantity: 1 }] 
+              cart: [...get().cart, newCartItem] 
             });
+          }
+        } catch (error) {
+          console.error("Error adding product to cart:", error);
+        }
+      },
+
+      // CREATE - Add standalone addon to cart
+      addAddonToCart: (addon, quantity = 1) => {
+        try {
+          const cartItemId = `addon-${addon._id}`;
+          const existingItem = get().cart.find((item) => item.cartItemId === cartItemId);
+          
+          if (existingItem) {
+            // If addon exists, increase quantity
+            set({
+              cart: get().cart.map((item) =>
+                item.cartItemId === cartItemId 
+                  ? { ...item, quantity: item.quantity + quantity } 
+                  : item
+              ),
+            });
+          } else {
+            // Create new addon cart item
+            const newCartItem = {
+              cartItemId,
+              type: ITEM_TYPES.ADDON,
+              // Addon details
+              _id: addon._id,
+              title: addon.title,
+              description: addon.description,
+              price: addon.price,
+              effectivePrice: addon.price,
+              totalPrice: addon.price,
+              imageUrl: addon.imageUrl,
+              isVeg: addon.isVeg,
+              rating: addon.rating,
+              // Cart specific
+              quantity,
+              selectedAddons: [],
+              addedAt: new Date().toISOString()
+            };
+            
+            set({ 
+              cart: [...get().cart, newCartItem] 
+            });
+          }
+        } catch (error) {
+          console.error("Error adding addon to cart:", error);
+        }
+      },
+
+      // Legacy method for backward compatibility
+      addToCart: (item) => {
+        try {
+          // Check if it's a product or addon based on available fields
+          if (item.slug && item.category) {
+            // It's a product
+            get().addProductToCart(item, 1, item.selectedAddons || []);
+          } else if (item.title && item.price && !item.category) {
+            // It's an addon
+            get().addAddonToCart(item, 1);
+          } else {
+            // Fallback to old behavior for compatibility
+            const cartItemId = item.cartItemId || item._id || item.id;
+            const existingItem = get().cart.find((i) => (i.cartItemId || i._id || i.id) === cartItemId);
+            
+            if (existingItem) {
+              set({
+                cart: get().cart.map((i) =>
+                  (i.cartItemId || i._id || i.id) === cartItemId 
+                    ? { ...i, quantity: i.quantity + 1 } 
+                    : i
+                ),
+              });
+            } else {
+              set({ 
+                cart: [...get().cart, { 
+                  ...item, 
+                  cartItemId: cartItemId,
+                  quantity: 1,
+                  addedAt: new Date().toISOString()
+                }] 
+              });
+            }
           }
         } catch (error) {
           console.error("Error adding item to cart:", error);
@@ -33,20 +175,41 @@ export const useCartStore = create(
       getCartItems: () => get().cart,
 
       // READ - Get specific item from cart
-      getCartItem: (id) => get().cart.find((item) => item.id === id),
+      getCartItem: (cartItemId) => get().cart.find((item) => item.cartItemId === cartItemId),
+
+      // READ - Check if product with specific addons is in cart
+      isProductInCart: (productId, selectedAddonIds = []) => {
+        const addonIds = selectedAddonIds.sort().join('-');
+        const cartItemId = `${productId}${addonIds ? `-addons-${addonIds}` : ''}`;
+        return get().cart.some((item) => item.cartItemId === cartItemId);
+      },
+
+      // READ - Get products only from cart
+      getProducts: () => get().cart.filter(item => item.type === ITEM_TYPES.PRODUCT),
+
+      // READ - Get addons only from cart
+      getAddons: () => get().cart.filter(item => item.type === ITEM_TYPES.ADDON),
 
       // UPDATE - Update item quantity
-      updateQuantity: (id, quantity) => {
+      updateQuantity: (cartItemId, quantity) => {
         try {
           if (quantity <= 0) {
             // If quantity is 0 or negative, remove item
             set({
-              cart: get().cart.filter((item) => item.id !== id),
+              cart: get().cart.filter((item) => item.cartItemId !== cartItemId),
             });
           } else {
             set({
               cart: get().cart.map((item) =>
-                item.id === id ? { ...item, quantity: Math.max(1, quantity) } : item
+                item.cartItemId === cartItemId 
+                  ? { 
+                      ...item, 
+                      quantity: Math.max(1, quantity),
+                      totalPrice: (item.effectivePrice + 
+                        (item.selectedAddons?.reduce((sum, addon) => sum + addon.price, 0) || 0)
+                      ) * Math.max(1, quantity)
+                    } 
+                  : item
               ),
             });
           }
@@ -56,11 +219,19 @@ export const useCartStore = create(
       },
 
       // UPDATE - Increment quantity
-      incrementQuantity: (id) => {
+      incrementQuantity: (cartItemId) => {
         try {
           set({
             cart: get().cart.map((item) =>
-              item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+              item.cartItemId === cartItemId 
+                ? { 
+                    ...item, 
+                    quantity: item.quantity + 1,
+                    totalPrice: (item.effectivePrice + 
+                      (item.selectedAddons?.reduce((sum, addon) => sum + addon.price, 0) || 0)
+                    ) * (item.quantity + 1)
+                  } 
+                : item
             ),
           });
         } catch (error) {
@@ -69,14 +240,22 @@ export const useCartStore = create(
       },
 
       // UPDATE - Decrement quantity
-      decrementQuantity: (id) => {
+      decrementQuantity: (cartItemId) => {
         try {
           set({
-            cart: get().cart.map((item) =>
-              item.id === id 
-                ? { ...item, quantity: Math.max(1, item.quantity - 1) } 
-                : item
-            ).filter((item) => item.quantity > 0),
+            cart: get().cart.map((item) => {
+              if (item.cartItemId === cartItemId) {
+                const newQuantity = Math.max(1, item.quantity - 1);
+                return {
+                  ...item,
+                  quantity: newQuantity,
+                  totalPrice: (item.effectivePrice + 
+                    (item.selectedAddons?.reduce((sum, addon) => sum + addon.price, 0) || 0)
+                  ) * newQuantity
+                };
+              }
+              return item;
+            }).filter((item) => item.quantity > 0),
           });
         } catch (error) {
           console.error("Error decrementing quantity:", error);
@@ -84,10 +263,10 @@ export const useCartStore = create(
       },
 
       // DELETE - Remove specific item from cart
-      removeFromCart: (id) => {
+      removeFromCart: (cartItemId) => {
         try {
           set({ 
-            cart: get().cart.filter((item) => item.id !== id) 
+            cart: get().cart.filter((item) => item.cartItemId !== cartItemId) 
           });
         } catch (error) {
           console.error("Error removing item from cart:", error);
@@ -103,13 +282,23 @@ export const useCartStore = create(
         }
       },
 
-      // UTILITY - Check if item exists in cart
-      isInCart: (id) => get().cart.some((item) => item.id === id),
+      // UTILITY - Check if item exists in cart (legacy support)
+      isInCart: (id) => {
+        return get().cart.some((item) => 
+          item.cartItemId === id || item._id === id || item.id === id
+        );
+      },
 
       // UTILITY - Get total price of all items
       getTotalPrice: () => {
         try {
-          return get().cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+          return get().cart.reduce((acc, item) => {
+            const itemPrice = item.totalPrice || (
+              (item.effectivePrice || item.price) * item.quantity +
+              (item.selectedAddons?.reduce((sum, addon) => sum + addon.price, 0) || 0) * item.quantity
+            );
+            return acc + itemPrice;
+          }, 0);
         } catch (error) {
           console.error("Error calculating total price:", error);
           return 0;
@@ -139,9 +328,25 @@ export const useCartStore = create(
       // UTILITY - Get subtotal (price without tax/delivery)
       getSubtotal: () => {
         try {
-          return get().cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+          return get().getTotalPrice();
         } catch (error) {
           console.error("Error calculating subtotal:", error);
+          return 0;
+        }
+      },
+
+      // UTILITY - Get total discount amount
+      getTotalDiscount: () => {
+        try {
+          return get().cart.reduce((acc, item) => {
+            if (item.type === ITEM_TYPES.PRODUCT && item.discountedPrice && item.price > item.discountedPrice) {
+              const discount = (item.price - item.discountedPrice) * item.quantity;
+              return acc + discount;
+            }
+            return acc;
+          }, 0);
+        } catch (error) {
+          console.error("Error calculating total discount:", error);
           return 0;
         }
       },
@@ -158,7 +363,7 @@ export const useCartStore = create(
       },
 
       // UTILITY - Get total with tax and delivery fee
-      getTotalWithTaxAndDelivery: (taxRate = 0.1, deliveryFee = 2.99) => {
+      getTotalWithTaxAndDelivery: (taxRate = 0.1, deliveryFee = 40) => {
         try {
           const subtotal = get().getSubtotal();
           const tax = subtotal * taxRate;
@@ -168,6 +373,95 @@ export const useCartStore = create(
           return 0;
         }
       },
+
+      // UTILITY - Get cart summary
+      getCartSummary: () => {
+        try {
+          const cart = get().cart;
+          const subtotal = get().getSubtotal();
+          const discount = get().getTotalDiscount();
+          const tax = get().getTax();
+          const deliveryFee = subtotal > 0 ? 40 : 0; // Free delivery above certain amount
+          const total = subtotal + tax + deliveryFee;
+
+          return {
+            itemCount: get().getTotalItems(),
+            uniqueItemCount: get().getTotalUniqueItems(),
+            subtotal,
+            discount,
+            tax,
+            deliveryFee,
+            total,
+            products: get().getProducts(),
+            addons: get().getAddons(),
+            isEmpty: cart.length === 0
+          };
+        } catch (error) {
+          console.error("Error getting cart summary:", error);
+          return {
+            itemCount: 0,
+            uniqueItemCount: 0,
+            subtotal: 0,
+            discount: 0,
+            tax: 0,
+            deliveryFee: 0,
+            total: 0,
+            products: [],
+            addons: [],
+            isEmpty: true
+          };
+        }
+      },
+
+      // UTILITY - Format items for order API
+      formatForOrder: () => {
+        try {
+          const cart = get().cart;
+          const items = [];
+          const addons = [];
+
+          cart.forEach(cartItem => {
+            if (cartItem.type === ITEM_TYPES.PRODUCT) {
+              // Add main product
+              items.push({
+                productId: cartItem._id,
+                title: cartItem.title,
+                slug: cartItem.slug,
+                price: cartItem.effectivePrice,
+                quantity: cartItem.quantity,
+                imageUrl: cartItem.imageUrl
+              });
+
+              // Add associated addons to the addons array
+              if (cartItem.selectedAddons && cartItem.selectedAddons.length > 0) {
+                cartItem.selectedAddons.forEach(addon => {
+                  addons.push({
+                    addOnId: addon._id,
+                    name: addon.title,
+                    price: addon.price,
+                    quantity: cartItem.quantity, // Same quantity as parent product
+                    image: addon.imageUrl
+                  });
+                });
+              }
+            } else if (cartItem.type === ITEM_TYPES.ADDON) {
+              // Add standalone addon
+              addons.push({
+                addOnId: cartItem._id,
+                name: cartItem.title,
+                price: cartItem.price,
+                quantity: cartItem.quantity,
+                image: cartItem.imageUrl
+              });
+            }
+          });
+
+          return { items, addons };
+        } catch (error) {
+          console.error("Error formatting cart for order:", error);
+          return { items: [], addons: [] };
+        }
+      }
     }),
     {
       name: "cart-storage", // localStorage key

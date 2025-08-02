@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Card from "../Card";
 import { FaArrowRight } from "react-icons/fa";
 import Link from "next/link";
-import { div } from "framer-motion/client";
+import MainCard from "../MainCard";
 
 function Tandoor({ products }: { products: any[] }) {
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -87,7 +87,16 @@ function Tandoor({ products }: { products: any[] }) {
             No items available for Tandoor cuisine at the moment.
           </p>
         ) : (
-          products.map((product) => <Card key={product._id} item={product} />)
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-4 md:gap-6 gap-2">
+            {products?.map((product: any) => (
+              <MainCard
+                key={product._id}
+                item={product}
+                isOnHome={true}
+                category="tandoor"
+              />
+            ))}
+          </div>
         )}
       </div>
 

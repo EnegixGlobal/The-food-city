@@ -10,6 +10,8 @@ import React, { useState, useEffect } from "react";
 import { FaFire, FaLeaf } from "react-icons/fa";
 import { FiStar, FiClock, FiPlus, FiMinus } from "react-icons/fi";
 import { GiChickenOven, GiNoodles, GiIndiaGate } from "react-icons/gi";
+import { FaCartShopping, FaCartPlus } from "react-icons/fa6";
+import { useCartStore } from "@/app/zustand/cartStore";
 
 interface AddOn {
   rating: number;
@@ -59,6 +61,13 @@ function ProductPage({ params }: ProductPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [selectedAddons, setSelectedAddons] = useState<AddOn[]>([]);
+
+  // Cart store
+  const { 
+    addProductToCart, 
+    isProductInCart 
+  } = useCartStore();
 
   // Fetch product data
   const fetchProduct = async (slug: string) => {
@@ -90,6 +99,67 @@ function ProductPage({ params }: ProductPageProps) {
     };
     getParams();
   }, [params]);
+
+  // Handle addon selection
+  const handleAddonToggle = (addon: AddOn) => {
+    setSelectedAddons(prev => {
+      const exists = prev.find(a => a._id === addon._id);
+      if (exists) {
+        return prev.filter(a => a._id !== addon._id);
+      } else {
+        return [...prev, addon];
+      }
+    });
+  };
+
+  // Check if addon is selected
+  const isAddonSelected = (addonId: string) => {
+    return selectedAddons.some(addon => addon._id === addonId);
+  };
+
+  // Calculate total price including addons
+  const getTotalPrice = () => {
+    if (!product) return 0;
+    const basePrice = product.discountedPrice || product.price;
+    const addonsPrice = selectedAddons.reduce((sum, addon) => sum + addon.price, 0);
+    return basePrice + addonsPrice;
+  };
+
+  // Handle add to cart
+  const handleAddToCart = () => {
+    if (!product) return;
+    
+    try {
+      // Normalize product data for cart store
+      const normalizedProduct = {
+        _id: product._id,
+        title: product.title,
+        slug: product.slug,
+        description: product.description,
+        price: product.price,
+        discountedPrice: product.discountedPrice,
+        category: product.category,
+        imageUrl: product.imageUrl,
+        isVeg: product.isVeg,
+        isBestSeller: product.isBestSeller,
+        spicyLevel: product.spicyLevel,
+        prepTime: parseInt(product.prepTime) || 30, // Convert string to number
+        rating: product.rating
+      };
+
+      addProductToCart(normalizedProduct, quantity, selectedAddons);
+      
+      // Show success message or update UI
+      console.log(`Added ${quantity} ${product.title} to cart with ${selectedAddons.length} addons`);
+    } catch (error) {
+      console.error("Error adding product to cart:", error);
+    }
+  };
+
+  // Check if current product+addon combination is in cart
+  const isCurrentItemInCart = product 
+    ? isProductInCart(product._id, selectedAddons.map(addon => addon._id))
+    : false;
 
   // Mock data - in a real app, you would fetch this based on the productSlug
   // This is just an example - you should replace with your actual data fetching logic
@@ -150,16 +220,41 @@ function ProductPage({ params }: ProductPageProps) {
     },
   ];
 
-  const handleAddToCart = () => {
+  const handleAddtocart = () => {
     if (!product) return;
-    const totalPrice = (product.discountedPrice || product.price) * quantity;
     
-    console.log(`Added ${quantity} ${product.title} to cart with total price: ₹${totalPrice}`);
+    try {
+      // Normalize product data for cart store
+      const normalizedProduct = {
+        _id: product._id,
+        title: product.title,
+        slug: product.slug,
+        description: product.description,
+        price: product.price,
+        discountedPrice: product.discountedPrice,
+        category: product.category,
+        imageUrl: product.imageUrl,
+        isVeg: product.isVeg,
+        isBestSeller: product.isBestSeller,
+        spicyLevel: product.spicyLevel,
+        prepTime: parseInt(product.prepTime) || 30, // Convert string to number
+        rating: product.rating
+      };
+
+      addProductToCart(normalizedProduct, quantity, selectedAddons);
+      
+      // Show success message or update UI
+      console.log(`Added ${quantity} ${product.title} to cart with ${selectedAddons.length} addons`);
+    } catch (error) {
+      console.error("Error adding product to cart:", error);
+    }
   };
 
-  const getTotalPrice = () => {
+  const getTotalprice = () => {
     if (!product) return 0;
-    return product.discountedPrice || product.price;
+    const basePrice = product.discountedPrice || product.price;
+    const addonsPrice = selectedAddons.reduce((sum, addon) => sum + addon.price, 0);
+    return basePrice + addonsPrice;
   };
 
   const getCategoryIcon = () => {
@@ -375,6 +470,8 @@ function ProductPage({ params }: ProductPageProps) {
                   <p className="text-gray-600">{product.description}</p>
                 </div>
 
+              
+
                 {/* Quantity and Add to Cart */}
                 <div className="flex items-center justify-between border-t border-gray-200 pt-6">
                   <div className="flex items-center border border-gray-300 rounded-full">
@@ -393,9 +490,16 @@ function ProductPage({ params }: ProductPageProps) {
                     </button>
                   </div>
                   <Button
-                    onClick={handleAddToCart}
-                    className="flex-1 ml-4 py-2">
-                    ADD TO CART - ₹{(getTotalPrice() * quantity).toFixed(2)}
+                    onClick={handleAddtocart}
+                    className={`flex-1 ml-4 py-2 ${
+                      isCurrentItemInCart
+                        ? "bg-green-500 hover:bg-green-600"
+                        : "bg-red-900 hover:bg-red-800"
+                    }`}>
+                    <span className="flex items-center justify-center gap-2">
+                      {isCurrentItemInCart ? <FaCartShopping /> : <FaCartPlus />}
+                      {isCurrentItemInCart ? "ADDED TO CART" : "ADD TO CART"} - ₹{(getTotalprice() * quantity).toFixed(2)}
+                    </span>
                   </Button>
                 </div>
               </div>

@@ -16,6 +16,11 @@ import Container from "../components/Container";
 import Image from "next/image";
 import Button from "../components/Button";
 import { useCartStore } from "../zustand/cartStore";
+import useUserStore from "../zustand/userStore";
+import Link from "next/link";
+import { p } from "framer-motion/client";
+
+
 
 interface CartItem {
   id: number;
@@ -27,6 +32,7 @@ interface CartItem {
 
 const CheckoutPage = () => {
   const [isHydrated, setIsHydrated] = useState(false);
+  const user = useUserStore((state) => state.user);
 
   // Get cart data from Zustand store
   const {
@@ -112,7 +118,7 @@ const CheckoutPage = () => {
           </div>
           <div className="hover:text-yellow-500">
             <FaUser className="text-2xl  inline-block mr-2" />
-            <span className="font-bold">Rajiv</span>
+            <span className="font-bold">{user ? <Link href="/my-account">{user.name}</Link> : <p >Login</p>}</span>
           </div>
         </Container>
       </header>

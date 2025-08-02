@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FiEye,
   FiTrash2,
@@ -139,7 +139,7 @@ const AdminOrdersPage = () => {
   };
 
   // Fetch orders
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -177,7 +177,7 @@ const AdminOrdersPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, limit, searchTerm, statusFilter]);
 
   // Update order status
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -342,7 +342,7 @@ const AdminOrdersPage = () => {
   // Effects
   useEffect(() => {
     fetchOrders();
-  }, [currentPage, statusFilter]);
+  }, [currentPage, statusFilter, fetchOrders]);
 
   return (
     <div className="min-h-screen bg-gray-50 ">

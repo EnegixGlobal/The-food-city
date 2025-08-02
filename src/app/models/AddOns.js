@@ -34,6 +34,47 @@ const AddOnSchema = new mongoose.Schema(
     ratingCount: {
       type: Number,
     },
+    
+    // Customizable options for addons
+    isCustomizable: {
+      type: Boolean,
+      default: false,
+    },
+    customizableOptions: [
+      {
+        label: {
+          type: String,
+          required: function() {
+            return this.parent().isCustomizable;
+          },
+          trim: true,
+          maxlength: [50, "Option label cannot exceed 50 characters"],
+        },
+        value: {
+          type: String,
+          required: function() {
+            return this.parent().isCustomizable;
+          },
+          trim: true,
+          maxlength: [100, "Option value cannot exceed 100 characters"],
+        },
+        price: {
+          type: Number,
+          required: function() {
+            return this.parent().isCustomizable;
+          },
+          min: [0, "Option price cannot be negative"],
+        },
+        isDefault: {
+          type: Boolean,
+          default: false,
+        },
+        isAvailable: {
+          type: Boolean,
+          default: true,
+        }
+      }
+    ],
   },
   {
     timestamps: true,

@@ -1,38 +1,184 @@
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
 import Button from "./Button";
 import { FiClock, FiStar } from "react-icons/fi";
-import { FaFire, FaRupeeSign } from "react-icons/fa";
+import { FaFire, FaRupeeSign, FaMinus, FaPlus } from "react-icons/fa";
+import { FaCartPlus } from "react-icons/fa6";
 import Link from "next/link";
+import { useCartStore } from "../zustand/cartStore.js";
+import CustomizationModal from "./CustomizationModal";
 
-function MainCard({
-  className = "",
-  item,
-  category, // Add category prop
-  ...props
-}: {
+interface MainCardProps {
   className?: string;
-  category?: string; // Add category type
+  category?: string;
+  isOnHome?: boolean;
   item?: {
+    _id?: string;
     description: string;
-    imageUrl: string ;
+    imageUrl: string;
     title: string;
-    id: number;
+    id?: number;
     slug: string;
-    name: string;
+    name?: string;
     price: number;
-    image: string;
+    discountedPrice?: number;
+    image?: string;
     rating: number;
     prepTime: string;
     spicyLevel: number;
     isVeg: boolean;
-    isBestseller: boolean;
+    isBestseller?: boolean;
+    isBestSeller?: boolean;
     ratingCount: number;
+    isCustomizable?: boolean;
+    customizableOptions?: Array<{
+      option: string;
+      price: number;
+    }>;
   };
-}) {
+}
+
+function MainCard({
+  className = "",
+  item,
+  category,
+  isOnHome,
+  ...props
+}: MainCardProps) {
+  const {
+    addProductToCart,
+    addToCart,
+    isInCart, // Legacy fallback
+    incrementQuantity,
+    decrementQuantity,
+    removeFromCart,
+    cart,
+  } = useCartStore();
+
+  const [showCustomizationModal, setShowCustomizationModal] = useState(false);
+
   if (!item) {
     return null; // or render a fallback UI
   }
+
+  // Normalize item data
+  const normalizedItem = {
+    _id: item._id || String(item.id) || `item-${Date.now()}`,
+    title: item.title || item.name || "Untitled Item",
+    slug: item.slug,
+    price: item.price,
+    discountedPrice: item.discountedPrice,
+    category: category || "general",
+    imageUrl: item.imageUrl || item.image || "/placeholder-food.svg",
+    isVeg: item.isVeg,
+    isBestSeller: item.isBestseller || item.isBestSeller,
+    rating: item.rating,
+    prepTime:
+      typeof item.prepTime === "string"
+        ? parseInt(item.prepTime) || 0
+        : item.prepTime || 0,
+    spicyLevel: item.spicyLevel,
+    description: item.description,
+    isCustomizable: item.isCustomizable || false,
+    customizableOptions: item.customizableOptions || [],
+  };
+
+  const handleAddToCart = () => {
+    try {
+      // Check if item is customizable
+      if (
+        normalizedItem.isCustomizable &&
+        normalizedItem.customizableOptions &&
+        normalizedItem.customizableOptions.length > 0
+      ) {
+        // Show customize modal for customizable items
+        setShowCustomizationModal(true);
+        return;
+      }
+
+      // Use new cart store method if item has MongoDB structure
+      if (item._id || (item.title && category)) {
+        addProductToCart(normalizedItem, 1, []); // Add product with no addons
+      } else {
+        // Fallback to legacy method
+        addToCart({
+          id: item.id,
+          name: item.name || item.title,
+          price: item.price,
+          rating: item.rating,
+          slug: item.slug,
+          imageUrl: normalizedItem.imageUrl,
+          category: category || "general",
+          isVeg: item.isVeg,
+        });
+      }
+    } catch (error) {
+      console.error("Error adding item to cart:", error);
+    }
+  };
+
+  const handleCustomizationAdd = (selectedOption: any) => {
+    try {
+      addProductToCart(normalizedItem, 1, [], selectedOption);
+    } catch (error) {
+      console.error("Error adding customized item to cart:", error);
+    }
+  };
+
+  // Check if any variant of this product (with any customization) is in cart
+  const isItemInCart = item._id
+    ? cart.some((cartItem: any) => cartItem._id === normalizedItem._id) // Check if base product is in cart
+    : isInCart(String(item.id));
+
+  // Get the first cart item for this product (there might be multiple with different customizations)
+  const cartItem = item._id
+    ? cart.find((cartItem: any) => cartItem._id === normalizedItem._id)
+    : cart.find((cartItem: any) => cartItem.id === String(item.id));
+
+  const itemQuantity = cartItem ? cartItem.quantity : 0;
+
+  // Debug logging
+  console.log(`Product: ${normalizedItem.title}`);
+  console.log(`Product ID: ${normalizedItem._id}`);
+  console.log(
+    `Cart items:`,
+    cart.map((item: any) => ({
+      id: item._id,
+      title: item.title,
+      cartItemId: item.cartItemId,
+    }))
+  );
+  console.log(`Is in cart: ${isItemInCart}`);
+  console.log(`Cart item found:`, cartItem);
+  console.log(`Item quantity: ${itemQuantity}`);
+
+  // Check if item is customizable
+  const isCustomizable = normalizedItem.isCustomizable;
+
+  const handleIncrement = () => {
+    try {
+      if (cartItem && cartItem.cartItemId) {
+        incrementQuantity(cartItem.cartItemId);
+      }
+    } catch (error) {
+      console.error("Error incrementing quantity:", error);
+    }
+  };
+
+  const handleDecrement = () => {
+    try {
+      if (cartItem && cartItem.cartItemId) {
+        if (itemQuantity <= 1) {
+          // Remove item if quantity is 1 or less
+          removeFromCart(cartItem.cartItemId);
+        } else {
+          decrementQuantity(cartItem.cartItemId);
+        }
+      }
+    } catch (error) {
+      console.error("Error decrementing quantity:", error);
+    }
+  };
 
   const spiceLevels = [
     { level: 0, label: "Mild", color: "bg-green-100 text-green-800" },
@@ -49,8 +195,8 @@ function MainCard({
       <Link href={`/${category}/${item.slug}`}>
         <div className="relative  h-54 overflow-hidden">
           <Image
-            src={item.imageUrl}
-            alt={item.name}
+            src={normalizedItem.imageUrl}
+            alt={normalizedItem.title}
             width={350}
             height={200}
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
@@ -58,7 +204,7 @@ function MainCard({
 
           {/* Badges */}
           <div className="absolute top-0 left-0 flex gap-2">
-            {item.isBestseller && (
+            {normalizedItem.isBestSeller && (
               <span className="bg-yellow-400 text-red-900 px-2 py-1 rounded-br-2xl text-xs font-bold flex items-center">
                 <FiStar size={12} className="mr-1" />
                 Bestseller
@@ -85,15 +231,31 @@ function MainCard({
       <div className="md:p-3 p-2">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-sm md:text-[16px] line-clamp-1 max-w-[170px] font-bold text-gray-800">
-            {item.title}
+            {normalizedItem.title}
           </h3>
-          <span className="text-red-600 flex items-center font-bold text-sm md:text-md">
-            <FaRupeeSign className="h-3" />
-            {item.price.toFixed(2)}
-          </span>
+          <div className="flex flex-col items-end">
+            {normalizedItem.isCustomizable ? (
+              <>
+                <span className="text-red-600 flex items-center font-bold text-sm md:text-md">
+                  <FaRupeeSign className="h-3" />
+                  {normalizedItem.customizableOptions[0].price.toFixed(2)}
+                </span>
+              </>
+            ) : (
+              <span className="text-red-600 flex items-center font-bold text-sm md:text-md">
+                <FaRupeeSign className="h-3" />
+                {normalizedItem.price.toFixed(2)}
+              </span>
+            )}
+          </div>
         </div>
-        
-        <p className="mb-2 text-sm text-gray-700 line-clamp-2">{item.description}</p>
+
+        {!isOnHome && (
+          <p className="mb-2 text-sm text-gray-700 line-clamp-2">
+            {item.description}
+          </p>
+        )}
+
         {/* Meta Info */}
         <div className="flex flex-wrap md:gap-4 gap-2 text-sm text-gray-600 mb-4">
           <div className="flex items-center">
@@ -112,9 +274,56 @@ function MainCard({
           </div>
         </div>
 
-        {/* Add to Cart Button */}
-        <Button className="w-full text-sm ">ADD TO CART</Button>
+        {isItemInCart ? (
+          // Quantity Controls for items already in cart
+          <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md p-2">
+            <button
+              onClick={handleDecrement}
+              className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
+              <FaMinus className="text-xs" />
+            </button>
+
+            <div className="flex flex-col items-center mx-3">
+              <span className="text-lg font-bold text-green-700">
+                {itemQuantity}
+              </span>
+            </div>
+
+            <button
+              onClick={handleIncrement}
+              className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
+              <FaPlus className="text-xs" />
+            </button>
+          </div>
+        ) : (
+          // Regular Add to Cart Button
+          <Button
+            onClick={handleAddToCart}
+            className={`w-full rounded-md  bg-white! border!  text-green-600! hover:bg-green-50 transition-colors `}>
+            <span className="flex items-center justify-center gap-2">
+              {isCustomizable ? (
+                <>
+                  <FaCartPlus />
+                  ADD
+                </>
+              ) : (
+                <>
+                  <FaCartPlus />
+                  ADD TO CART
+                </>
+              )}
+            </span>
+          </Button>
+        )}
       </div>
+
+      {/* Customization Modal */}
+      <CustomizationModal
+        isOpen={showCustomizationModal}
+        onClose={() => setShowCustomizationModal(false)}
+        item={normalizedItem}
+        onAddToCart={handleCustomizationAdd}
+      />
     </div>
   );
 }

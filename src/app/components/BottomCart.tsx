@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useCartStore } from "../zustand/cartStore";
+import { useCartStore } from "@/app/zustand/cartStore";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { FaCartShopping } from "react-icons/fa6";

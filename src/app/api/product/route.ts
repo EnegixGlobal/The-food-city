@@ -21,16 +21,19 @@ export const POST = asyncHandler(async (req) => {
     spicyLevel,
     prepTime,
     addOns,
+    isCustomizable,
+    customizableOptions,
   } = body;
 
   const requiredFields = {
     title,
     description,
-    price,
     imageUrl,
     cloudinaryPublicId,
     category,
   };
+
+  console.log(body);
 
   const missingFields = Object.entries(requiredFields)
     .filter(([, value]) => !value)
@@ -54,6 +57,34 @@ export const POST = asyncHandler(async (req) => {
     return apiResponse(400, "Product with this slug already exists");
   }
 
+  // Validate customizable options if product is customizable
+  if (
+    isCustomizable &&
+    (!customizableOptions ||
+      !Array.isArray(customizableOptions) ||
+      customizableOptions.length === 0)
+  ) {
+    return apiResponse(
+      400,
+      "Customizable options are required when product is customizable"
+    );
+  }
+
+  if (isCustomizable && customizableOptions) {
+    // Validate each customizable option
+    for (const option of customizableOptions) {
+      if (!option.option || typeof option.price !== "number") {
+        return apiResponse(
+          400,
+          "Each customizable option must have option name and price"
+        );
+      }
+      if (option.price < 0) {
+        return apiResponse(400, "Customizable option price cannot be negative");
+      }
+    }
+  }
+
   const product = new Product({
     title,
     slug,
@@ -68,6 +99,8 @@ export const POST = asyncHandler(async (req) => {
     spicyLevel,
     prepTime,
     addOns,
+    isCustomizable: isCustomizable || false,
+    customizableOptions: isCustomizable ? customizableOptions : [],
   });
 
   await product.save();

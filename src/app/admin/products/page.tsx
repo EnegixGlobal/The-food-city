@@ -35,6 +35,11 @@ interface Product {
   prepTime: string;
   addOns: string[];
   discountPercentage?: number;
+  isCustomizable?: boolean;
+  customizableOptions?: Array<{
+    option: string;
+    price: number;
+  }>;
 }
 
 interface AddOn {
@@ -59,6 +64,11 @@ interface ProductFormData {
   spicyLevel: number;
   prepTime: string;
   addOns: string[];
+  isCustomizable: boolean;
+  customizableOptions: Array<{
+    option: string;
+    price: number;
+  }>;
 }
 
 const ProductsPage = () => {
@@ -83,6 +93,8 @@ const ProductsPage = () => {
     spicyLevel: 0,
     prepTime: "30 min",
     addOns: [],
+    isCustomizable: false,
+    customizableOptions: [],
   });
 
   const categories = [
@@ -208,6 +220,8 @@ const ProductsPage = () => {
       spicyLevel: formData.spicyLevel,
       prepTime: formData.prepTime,
       addOns: formData.addOns.filter((id) => id.trim() !== ""),
+      isCustomizable: formData.isCustomizable,
+      customizableOptions: formData.isCustomizable ? formData.customizableOptions : [],
     };
 
     try {
@@ -300,6 +314,11 @@ const ProductsPage = () => {
       spicyLevel: product.spicyLevel,
       prepTime: product.prepTime,
       addOns: product.addOns || [],
+      isCustomizable: product.isCustomizable || false,
+      customizableOptions: (product.customizableOptions || []).map(option => ({
+        option: option.option,
+        price: option.price,
+      })),
     });
     setShowForm(true);
   };
@@ -319,6 +338,8 @@ const ProductsPage = () => {
       spicyLevel: 0,
       prepTime: "30 min",
       addOns: [],
+      isCustomizable: false,
+      customizableOptions: [],
     });
     setEditingProduct(null);
     setShowForm(false);
@@ -416,7 +437,9 @@ const ProductsPage = () => {
               disabled={loading}>
               {category.label}{" "}
               {`${
-                activeTab === category.key ? `(${filteredProducts.length})` : " "
+                activeTab === category.key
+                  ? `(${filteredProducts.length})`
+                  : " "
               }`}
             </button>
           ))}
@@ -555,6 +578,8 @@ const ProductsPage = () => {
                       <div className="space-y-4">
                         <div className="flex items-center justify-center">
                           <Image
+                            height={100}
+                            width={100}
                             src={formData.imageUrl}
                             alt="Product preview"
                             className="max-h-32 w-auto rounded-none object-cover"
@@ -710,6 +735,143 @@ const ProductsPage = () => {
                   </label>
                 </div>
 
+                {/* Customizable Options Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="block text-sm font-semibold text-gray-800">
+                      Customizable Options
+                    </label>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="isCustomizable"
+                        checked={formData.isCustomizable}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            isCustomizable: e.target.checked,
+                            customizableOptions: e.target.checked
+                              ? formData.customizableOptions
+                              : [],
+                          })
+                        }
+                        className="mr-2"
+                      />
+                      <label htmlFor="isCustomizable" className="text-sm font-medium text-gray-700 cursor-pointer">
+                        Enable customizable options for this product
+                      </label>
+                    </div>
+                  </div>
+
+                  {formData.isCustomizable && (
+                    <div className="border border-gray-300 rounded-none p-4 bg-gray-50">
+                      <div className="mb-4">
+                        <h4 className="text-sm font-semibold text-gray-800 mb-2">
+                          Customization Options
+                        </h4>
+                        <p className="text-xs font-medium text-gray-600 mb-3">
+                          Add customizable options with their additional prices (e.g., &quot;With Rabri&quot; - ₹20).
+                        </p>
+                      </div>
+
+                      {formData.customizableOptions.map((option, index) => (
+                        <div
+                          key={index}
+                          className="bg-white border border-gray-200 rounded-none p-4 mb-3">
+                          <div className="flex items-center justify-between mb-3">
+                            <h5 className="text-sm font-semibold text-gray-800">
+                              Option {index + 1}
+                            </h5>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updatedOptions = formData.customizableOptions.filter(
+                                  (_, i) => i !== index
+                                );
+                                setFormData({
+                                  ...formData,
+                                  customizableOptions: updatedOptions,
+                                });
+                              }}
+                              className="text-red-600 hover:text-red-800 text-sm font-medium">
+                              Remove
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                                Option *
+                              </label>
+                              <input
+                                type="text"
+                                value={option.option}
+                                onChange={(e) => {
+                                  const updatedOptions = [...formData.customizableOptions];
+                                  updatedOptions[index] = {
+                                    ...option,
+                                    option: e.target.value,
+                                  };
+                                  setFormData({
+                                    ...formData,
+                                    customizableOptions: updatedOptions,
+                                  });
+                                }}
+                                placeholder="e.g., With Rabri"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-none text-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                                Additional Price (₹)
+                              </label>
+                              <input
+                                type="number"
+                                value={option.price}
+                                onChange={(e) => {
+                                  const updatedOptions = [...formData.customizableOptions];
+                                  updatedOptions[index] = {
+                                    ...option,
+                                    price: parseFloat(e.target.value) || 0,
+                                  };
+                                  setFormData({
+                                    ...formData,
+                                    customizableOptions: updatedOptions,
+                                  });
+                                }}
+                                placeholder="0"
+                                min="0"
+                                step="0.01"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-none text-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            customizableOptions: [
+                              ...formData.customizableOptions,
+                              {
+                                option: '',
+                                price: 0,
+                              },
+                            ],
+                          });
+                        }}
+                        className="w-full py-2 border-2 border-dashed border-gray-300 rounded-none font-medium text-gray-700 hover:border-gray-400 hover:text-gray-800 text-sm">
+                        + Add New Option
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 {addOns.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -847,6 +1009,8 @@ const ProductsPage = () => {
                           <Image
                             src={product.imageUrl}
                             alt={product.title}
+                            height={48}
+                            width={48}
                             className="w-12 h-12 rounded-none object-cover mr-3"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src =

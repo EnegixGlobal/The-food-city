@@ -28,7 +28,6 @@ const ProductSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      required: [true, "Product price is required"],
       min: [0, "Product price cannot be negative"],
     },
     discountedPrice: {
@@ -82,6 +81,33 @@ const ProductSchema = new mongoose.Schema(
       type: String,
       default: "30 min",
     },
+
+    // Customizable options for products
+    isCustomizable: {
+      type: Boolean,
+      default: false,
+    },
+    customizableOptions: [
+      {
+        option: {
+          type: String,
+          required: function () {
+            return this.parent()?.isCustomizable === true;
+          },
+          trim: true,
+          maxlength: [50, "Option cannot exceed 50 characters"],
+        },
+        price: {
+          type: Number,
+          required: function () {
+            return this.parent()?.isCustomizable === true;
+          },
+          min: [0, "Option price cannot be negative"],
+          default: 0,
+        },
+      },
+    ],
+
     addOns: [
       {
         type: Schema.Types.ObjectId,
@@ -102,6 +128,49 @@ ProductSchema.index({ rating: -1 }); // top rated
 ProductSchema.index({ isBestSeller: -1 }); // top sellers
 ProductSchema.index({ createdAt: -1 }); // latest dishes
 ProductSchema.index({ category: 1, isVeg: 1, isAvailable: 1 }); // veg filtering combo
+
+// Pre-save middleware to handle data migration from old structure
+ProductSchema.pre('save', function(next) {
+  if (this.customizableOptions && Array.isArray(this.customizableOptions)) {
+    this.customizableOptions = this.customizableOptions.map(option => {
+      // Convert old structure to new structure
+      if (option.label !== undefined || option.value !== undefined) {
+        return {
+          option: option.label || option.value || '',
+          price: option.price || 0,
+        };
+      }
+      // Keep new structure as is
+      return {
+        option: option.option || '',
+        price: option.price || 0,
+      };
+    });
+  }
+  next();
+});
+
+// Pre-update middleware for findOneAndUpdate operations
+ProductSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], function(next) {
+  const update = this.getUpdate();
+  if (update && update.customizableOptions && Array.isArray(update.customizableOptions)) {
+    update.customizableOptions = update.customizableOptions.map(option => {
+      // Convert old structure to new structure
+      if (option.label !== undefined || option.value !== undefined) {
+        return {
+          option: option.label || option.value || '',
+          price: option.price || 0,
+        };
+      }
+      // Keep new structure as is
+      return {
+        option: option.option || '',
+        price: option.price || 0,
+      };
+    });
+  }
+  next();
+});
 
 // Virtual for discount percentage
 ProductSchema.virtual("discountPercentage").get(function () {

@@ -46,6 +46,8 @@ export const GET = async (
           isBestSeller: 1,
           spicyLevel: 1,
           prepTime: 1,
+          isCustomizable: 1,
+          customizableOptions: 1,
           addOns: {
             $map: {
               input: "$addOns",
@@ -73,7 +75,26 @@ export const GET = async (
       return apiResponse(404, "Product not found");
     }
 
-    return apiResponse(200, "Product fetched successfully", product[0]);
+    // Clean up customizable options data structure for consistent frontend handling
+    const cleanedProduct = product[0];
+    if (cleanedProduct.customizableOptions && Array.isArray(cleanedProduct.customizableOptions)) {
+      cleanedProduct.customizableOptions = cleanedProduct.customizableOptions.map((option: any) => {
+        // Convert old structure to new structure if needed
+        if (option.label !== undefined || option.value !== undefined) {
+          return {
+            option: option.label || option.value || option.option || '',
+            price: option.price || 0,
+          };
+        }
+        // Keep new structure as is
+        return {
+          option: option.option || '',
+          price: option.price || 0,
+        };
+      });
+    }
+
+    return apiResponse(200, "Product fetched successfully", cleanedProduct);
   } catch (error) {
     console.error("Error fetching product:", error);
     return apiResponse(500, "Internal server error");
@@ -106,6 +127,24 @@ export const PATCH = async (
       body.slug = title.toLowerCase().replace(/ /g, "-");
     }
 
+    // Clean up customizable options data structure if needed
+    if (body.customizableOptions && Array.isArray(body.customizableOptions)) {
+      body.customizableOptions = body.customizableOptions.map((option: any) => {
+        // If it has the old structure (label, value), convert to new structure (option, price)
+        if (option.label !== undefined || option.value !== undefined) {
+          return {
+            option: option.label || option.value || option.option || '',
+            price: option.price || 0,
+          };
+        }
+        // If it already has the new structure, keep as is
+        return {
+          option: option.option || '',
+          price: option.price || 0,
+        };
+      });
+    }
+
     const product = await Product.findOneAndUpdate({ slug }, body, {
       new: true,
       runValidators: true,
@@ -117,7 +156,7 @@ export const PATCH = async (
 
     return apiResponse(200, "Product updated successfully", product);
   } catch (error) {
-    console.error("Error fetching product:", error);
+    console.error("Error updating product:", error);
     return apiResponse(500, "Internal server error");
   }
 };
