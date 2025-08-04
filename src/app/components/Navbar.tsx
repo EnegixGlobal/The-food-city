@@ -12,6 +12,7 @@ import { useCartStore } from "../zustand/cartStore";
 import useUserStore from "../zustand/userStore";
 import { useAlertStore } from "../zustand/alertStore";
 import SideLogin from "./SideLogin";
+import { useRouter } from "next/navigation";
 
 function Navbar() {
   const [userHoverOpen, setUserHoverOpen] = useState(false);
@@ -20,6 +21,7 @@ function Navbar() {
   const [openLogin, setOpenLogin] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const getTotalItems = useCartStore((state) => state.getTotalItems);
+  const router = useRouter();
 
   // Get user from userStore instead of cartStore
   const user = useUserStore((state) => state.user);
@@ -39,6 +41,7 @@ function Navbar() {
         message: 'You have been logged out of your account.',
         duration: 4000
       });
+      router.push("/")
     } catch (error) {
       console.error('Logout error:', error);
       addAlert({

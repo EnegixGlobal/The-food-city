@@ -191,6 +191,7 @@ function MainCard({
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
           />
 
+
           {/* Badges */}
           <div className="absolute top-0 left-0 flex gap-2">
             {normalizedItem.isBestSeller && (
@@ -300,11 +301,11 @@ function MainCard({
               {isCustomizable ? (
                 <>
                   <FaCartPlus />
-                  ADD
+                  ADD TO CART
                 </>
               ) : (
                 <>
-                  <FaCartPlus />
+                  <FaCartPlus />  
                   ADD TO CART
                 </>
               )}
