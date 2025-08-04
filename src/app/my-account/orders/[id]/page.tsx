@@ -85,7 +85,6 @@ interface OrderDetails {
   cancellationReason?: string;
 }
 
-
 const getPaymentStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case "paid":
@@ -235,12 +234,7 @@ export default function OrderDetailsPage() {
           </div>
 
           <div className="flex flex-wrap gap-2 sm:gap-3">
-            {/* <span
-              className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium border ${getStatusColor(
-                order.status
-              )}`}>
-              {order.status.replace("_", " ").toUpperCase()}
-            </span> */}
+
             <span
               className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium border ${getPaymentStatusColor(
                 order.paymentStatus

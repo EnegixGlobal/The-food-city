@@ -10,6 +10,7 @@ import Image from "next/image";
 import axios from "axios";
 import { useCartStore } from "../zustand/cartStore";
 import useUserStore from "../zustand/userStore";
+import { useAlertStore } from "../zustand/alertStore";
 import SideLogin from "./SideLogin";
 
 function Navbar() {
@@ -23,12 +24,30 @@ function Navbar() {
   // Get user from userStore instead of cartStore
   const user = useUserStore((state) => state.user);
   const clearUser = useUserStore((state) => state.clearUser);
+  const addAlert = useAlertStore((state) => state.addAlert);
 
   const handleLogout = async () => {
-    await axios.post("/api/users/logout").then(() => {
+    try {
+      await axios.post("/api/users/logout");
       clearUser();
       setUserHoverOpen(false);
-    });
+      
+      // Show success alert
+      addAlert({
+        type: 'success',
+        title: 'Logged out successfully',
+        message: 'You have been logged out of your account.',
+        duration: 4000
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      addAlert({
+        type: 'error',
+        title: 'Logout failed',
+        message: 'There was an error logging you out. Please try again.',
+        duration: 4000
+      });
+    }
   };
 
   // Handle hydration to prevent mismatch

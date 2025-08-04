@@ -87,7 +87,7 @@ function Indian({ products }: { products: any[] }) {
             No items available for Indian cuisine at the moment.
           </p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-4 md:gap-6 gap-2">
+          <>
             {products?.map((product: any) => (
               <MainCard
                 key={product._id}
@@ -96,7 +96,7 @@ function Indian({ products }: { products: any[] }) {
                 category="indian"
               />
             ))}
-          </div>
+          </>
         )}
       </div>
 

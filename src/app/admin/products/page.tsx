@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FaRupeeSign,
   FaSearch,
@@ -163,7 +163,7 @@ const ProductsPage = () => {
   };
 
   // Fetch products by category
-  const fetchProducts = async (category: string, page: number = 1) => {
+  const fetchProducts = useCallback(async (category: string, page: number = 1) => {
     try {
       setLoading(true);
       const response = await fetch(`/api/product?category=${category}&page=${page}&limit=${pageSize}`);
@@ -192,10 +192,10 @@ const ProductsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pageSize]);
 
   // Fetch addons
-  const fetchAddOns = async () => {
+  const fetchAddOns = useCallback(async () => {
     try {
       const response = await fetch("/api/addons");
       const data = await response.json();
@@ -206,7 +206,7 @@ const ProductsPage = () => {
     } catch (error) {
       console.error("Error fetching addons:", error);
     }
-  };
+  }, []);
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -386,7 +386,7 @@ const ProductsPage = () => {
     if (addOns.length === 0) {
       fetchAddOns();
     }
-  }, [activeTab, addOns.length, fetchProducts]);
+  }, [activeTab, addOns.length, fetchProducts, fetchAddOns]);
 
   // Load data when page changes
   useEffect(() => {

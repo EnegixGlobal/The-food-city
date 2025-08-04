@@ -137,21 +137,6 @@ function MainCard({
 
   const itemQuantity = cartItem ? cartItem.quantity : 0;
 
-  // Debug logging
-  console.log(`Product: ${normalizedItem.title}`);
-  console.log(`Product ID: ${normalizedItem._id}`);
-  console.log(
-    `Cart items:`,
-    cart.map((item: any) => ({
-      id: item._id,
-      title: item.title,
-      cartItemId: item.cartItemId,
-    }))
-  );
-  console.log(`Is in cart: ${isItemInCart}`);
-  console.log(`Cart item found:`, cartItem);
-  console.log(`Item quantity: ${itemQuantity}`);
-
   // Check if item is customizable
   const isCustomizable = normalizedItem.isCustomizable;
 
@@ -189,7 +174,11 @@ function MainCard({
 
   return (
     <div
-      className={`bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${className}`}
+      className={`w-full md:max-w-[270px] max-w-[180px] 
+                  flex-shrink-0 
+                  bg-white rounded-xl shadow-md overflow-hidden 
+                  hover:shadow-xl transition-all duration-300 
+                  ${className}`}
       {...props}>
       {/* Item Image */}
       <Link href={`/${category}/${item.slug}`}>
@@ -208,6 +197,13 @@ function MainCard({
               <span className="bg-yellow-400 text-red-900 px-2 py-1 rounded-br-2xl text-xs font-bold flex items-center">
                 <FiStar size={12} className="mr-1" />
                 Bestseller
+              </span>
+            )}
+          </div>
+          <div className="absolute bottom-0 left-0 flex gap-2">
+            {normalizedItem.isCustomizable && (
+              <span className=" text-gray-300 font-light px-2 py-1 rounded-br-2xl text-xs md:text-sm  flex items-center">
+                Customizable
               </span>
             )}
           </div>
