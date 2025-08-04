@@ -1,6 +1,7 @@
 import connectDb from "@/app/db/connectDb";
 import { apiError, apiResponse } from "@/app/lib";
 import Order from "@/app/models/Order";
+import User from "@/app/models/User"; // Import User model for populate to work
 import { getCompanyIdFromToken } from "@/app/utils/getCompanyIdFromToken";
 import { NextRequest } from "next/server";
 
@@ -56,17 +57,20 @@ export const GET = async (req: NextRequest) => {
         subtotal: 1,
         deliveryCharge: 1,
         onlineDiscount: 1,
+        tax: 1,
         'items.title': 1,
         'items.price': 1,
         'items.quantity': 1,
         'items.imageUrl': 1,
         'items.productId': 1,
         'items.slug': 1,
+        'items.selectedCustomization': 1,
         'addons.name': 1,
         'addons.price': 1,
         'addons.quantity': 1,
         'addons.image': 1,
         'addons.addOnId': 1,
+        'addons.selectedCustomization': 1,
         'customerInfo.name': 1,
         'customerInfo.phone': 1,
         'customerInfo.address': 1,

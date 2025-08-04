@@ -94,7 +94,7 @@ export async function sendOTP(phoneNumber, otp) {
     // }
 
     // const result = await response.json();
-    console.log(`✅ WhatsApp OTP sent successfully to ${normalizedPhone}`);
+    console.log(`✅ WhatsApp OTP sent successfully to ${normalizedPhone} and otp is ${otp}`);
     // console.log(`📊 Response:`, result);
 
     return {

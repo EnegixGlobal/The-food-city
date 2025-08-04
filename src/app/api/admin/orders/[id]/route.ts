@@ -1,6 +1,7 @@
 import connectDb from "@/app/db/connectDb";
 import { apiError, apiResponse } from "@/app/lib";
 import Order from "@/app/models/Order";
+import User from "@/app/models/User"; // Import User model for populate to work
 import { getCompanyIdFromToken } from "@/app/utils/getCompanyIdFromToken";
 import { NextRequest } from "next/server";
 

@@ -30,6 +30,16 @@ const orderItemSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  selectedCustomization: {
+    option: {
+      type: String,
+      trim: true,
+    },
+    price: {
+      type: Number,
+      min: 0,
+    },
+  },
 });
 
 const orderAddOnSchema = new mongoose.Schema({
@@ -57,6 +67,16 @@ const orderAddOnSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  selectedCustomization: {
+    option: {
+      type: String,
+      trim: true,
+    },
+    price: {
+      type: Number,
+      min: 0,
+    },
+  },
 });
 
 const customerInfoSchema = new mongoose.Schema({
@@ -75,10 +95,10 @@ const customerInfoSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
-  pincode : {
+  pincode: {
     type: String,
     match: [/^\d{6}$/, "Please enter a valid pincode"],
-  }
+  },
 });
 
 const orderSchema = new mongoose.Schema(
@@ -118,6 +138,11 @@ const orderSchema = new mongoose.Schema(
       min: 0,
     },
     onlineDiscount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    tax: {
       type: Number,
       default: 0,
       min: 0,

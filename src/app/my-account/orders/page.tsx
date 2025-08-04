@@ -10,12 +10,20 @@ interface OrderItem {
   price: number;
   quantity: number;
   imageUrl: string;
+  selectedCustomization?: {
+    option: string;
+    price: number;
+  };
 }
 
 interface Addon {
   name: string;
   price: number;
   quantity: number;
+  selectedCustomization?: {
+    option: string;
+    price: number;
+  };
 }
 
 interface CustomerInfo {
@@ -295,6 +303,11 @@ export default function OrdersPage() {
                         <p className="text-sm sm:text-base font-medium text-gray-900 truncate">
                           {order.items[0]?.title}
                         </p>
+                        {order.items[0]?.selectedCustomization && (
+                          <p className="text-xs text-blue-600 font-medium truncate">
+                            {order.items[0].selectedCustomization.option}
+                          </p>
+                        )}
                         {order.items.length > 1 && (
                           <p className="text-xs sm:text-sm text-gray-600">
                             +{order.items.length - 1} more item{order.items.length > 2 ? 's' : ''}

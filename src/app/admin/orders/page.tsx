@@ -20,6 +20,10 @@ interface OrderItem {
   price: number;
   quantity: number;
   imageUrl: string;
+  selectedCustomization?: {
+    option: string;
+    price: number;
+  };
 }
 
 interface OrderAddOn {
@@ -28,6 +32,10 @@ interface OrderAddOn {
   price: number;
   quantity: number;
   image: string;
+  selectedCustomization?: {
+    option: string;
+    price: number;
+  };
 }
 
 interface CustomerInfo {
@@ -550,6 +558,11 @@ const AdminOrdersPage = () => {
                               <p className="text-sm font-medium text-gray-900 truncate">
                                 {item.title}
                               </p>
+                              {item.selectedCustomization && (
+                                <p className="text-xs text-blue-600 font-medium truncate">
+                                  {item.selectedCustomization.option}
+                                </p>
+                              )}
                               <p className="text-xs text-gray-600">
                                 Qty: {item.quantity} ×{" "}
                                 {formatCurrency(item.price)}
@@ -896,6 +909,11 @@ const AdminOrdersPage = () => {
                                   <p className="text-sm font-medium text-gray-900">
                                     {item.title}
                                   </p>
+                                  {item.selectedCustomization && (
+                                    <p className="text-sm text-blue-600 font-medium">
+                                      {item.selectedCustomization.option}
+                                    </p>
+                                  )}
                                   <p className="text-sm text-gray-500">
                                     {item.slug}
                                   </p>
@@ -956,9 +974,16 @@ const AdminOrdersPage = () => {
                                       className="w-10 h-10 object-cover mr-3 bg-gray-200"
                                     />
                                   )}
-                                  <p className="text-sm font-medium text-gray-900">
-                                    {addon.name}
-                                  </p>
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-900">
+                                      {addon.name}
+                                    </p>
+                                    {addon.selectedCustomization && (
+                                      <p className="text-sm text-blue-600 font-medium">
+                                        {addon.selectedCustomization.option}
+                                      </p>
+                                    )}
+                                  </div>
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-sm text-gray-900">

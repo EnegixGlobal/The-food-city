@@ -80,6 +80,13 @@ const ProductsPage = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  
   const [formData, setFormData] = useState<ProductFormData>({
     title: "",
     description: "",
@@ -156,25 +163,32 @@ const ProductsPage = () => {
   };
 
   // Fetch products by category
-  const fetchProducts = async (category: string) => {
+  const fetchProducts = async (category: string, page: number = 1) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/product?category=${category}`);
+      const response = await fetch(`/api/product?category=${category}&page=${page}&limit=${pageSize}`);
       const data = await response.json();
 
       if (response.ok && data.success) {
         setProducts(data.data.products || []);
+        setTotalCount(data.data.totalCount || 0);
+        setCurrentPage(data.data.currentPage || 1);
+        setTotalPages(data.data.totalPages || 1);
       } else {
         showAlert.error(
           "Fetch Failed",
           data.message || "Failed to fetch products"
         );
         setProducts([]);
+        setTotalCount(0);
+        setTotalPages(1);
       }
     } catch (error) {
       console.error("Error fetching products:", error);
       showAlert.error("Network Error", "Failed to fetch products");
       setProducts([]);
+      setTotalCount(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -198,21 +212,21 @@ const ProductsPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.description || !formData.price) {
-      showAlert.error("Missing Fields", "Please fill in all required fields");
+    if (!formData.title || !formData.description) {
+      showAlert.error("Missing Fields", "Please fill in the title and description fields");
       return;
     }
 
     const productData = {
       title: formData.title,
       description: formData.description,
-      price: parseFloat(formData.price),
+      price: formData.price ? parseFloat(formData.price) : 0,
       discountedPrice: formData.discountedPrice
         ? parseFloat(formData.discountedPrice)
         : undefined,
       category: formData.category,
       imageUrl:
-        formData.imageUrl || "https://source.unsplash.com/featured/?food",
+        formData.imageUrl || "/placeholder-food.svg",
       cloudinaryPublicId:
         formData.cloudinaryPublicId || `product_${Date.now()}`,
       isVeg: formData.isVeg,
@@ -254,7 +268,7 @@ const ProductsPage = () => {
             : "Product created successfully!"
         );
         resetForm();
-        fetchProducts(activeTab);
+        fetchProducts(activeTab, currentPage);
       } else {
         showAlert.error(
           "Save Failed",
@@ -283,7 +297,7 @@ const ProductsPage = () => {
 
       if (response.ok && data.success) {
         showAlert.success("Product Deleted", "Product deleted successfully!");
-        fetchProducts(activeTab);
+        fetchProducts(activeTab, currentPage);
       } else {
         showAlert.error(
           "Delete Failed",
@@ -352,13 +366,46 @@ const ProductsPage = () => {
       product.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Handle search with debouncing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchTerm) {
+        // For search, we'll use client-side filtering for now
+        // In a real app, you might want to implement server-side search
+        setCurrentPage(1);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
   // Load data on mount and tab change
   useEffect(() => {
-    fetchProducts(activeTab);
+    setCurrentPage(1); // Reset to first page when changing tabs
+    fetchProducts(activeTab, 1);
     if (addOns.length === 0) {
       fetchAddOns();
     }
-  }, [activeTab]);
+  }, [activeTab, addOns.length, fetchProducts]);
+
+  // Load data when page changes
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchProducts(activeTab, currentPage);
+    }
+  }, [currentPage, activeTab, fetchProducts]);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+    fetchProducts(activeTab, 1);
+  };
 
   // Utility components
   const StatusBadge = ({ available }: { available: boolean }) => (
@@ -379,17 +426,32 @@ const ProductsPage = () => {
     />
   );
 
-  const SpicyBadge = ({ level }: { level: number }) => (
-    <div className="flex items-center">
-      {[...Array(3)].map((_, i) => (
-        <span
-          key={i}
-          className={`text-xs ${i < level ? "text-red-500" : "text-gray-300"}`}>
-          🌶️
+  const SpicyBadge = ({ level }: { level: number }) => {
+    const spiceIcons = ['🌶️', '🌶️', '🌶️'];
+    
+    if (level === 0) {
+      return (
+        <div className="flex items-center">
+          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+            No Spice
+          </span>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="flex items-center">
+        {spiceIcons.slice(0, level).map((_, i) => (
+          <span key={i} className="text-xs text-red-500">
+            🌶️
+          </span>
+        ))}
+        <span className="text-xs text-gray-500 ml-1">
+          Level {level}
         </span>
-      ))}
-    </div>
-  );
+      </div>
+    );
+  };
 
   return (
     <div className="">
@@ -438,7 +500,7 @@ const ProductsPage = () => {
               {category.label}{" "}
               {`${
                 activeTab === category.key
-                  ? `(${filteredProducts.length})`
+                  ? `(${totalCount})`
                   : " "
               }`}
             </button>
@@ -518,11 +580,10 @@ const ProductsPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Price (₹) *
+                      Price (₹)
                     </label>
                     <Input
                       type="number"
-                      required
                       min="0"
                       step="0.01"
                       className="rounded-none"
@@ -980,115 +1041,162 @@ const ProductsPage = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
                     Product
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
                     Details
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                     Price
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                     Properties
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                     Status
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredProducts.length > 0 ? (
-                  filteredProducts.map((product) => (
-                    <tr key={product._id} className="hover:bg-gray-50">
-                      <td className="px-3 py-4">
-                        <div className="flex items-center">
-                          <Image
-                            src={product.imageUrl}
-                            alt={product.title}
-                            height={48}
-                            width={48}
-                            className="w-12 h-12 rounded-none object-cover mr-3"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                "https://source.unsplash.com/featured/?food";
-                            }}
-                          />
-                          <div>
-                            <div className="text-sm font-medium line-clamp-2 text-gray-900">
+                {(searchTerm ? filteredProducts : products).length > 0 ? (
+                  (searchTerm ? filteredProducts : products).map((product) => (
+                    <tr key={product._id} className="hover:bg-gray-50 transition-colors">
+                      {/* Product Info */}
+                      <td className="px-4 py-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-shrink-0">
+                            <Image
+                              src={product.imageUrl}
+                              alt={product.title}
+                              height={56}
+                              width={56}
+                              className="w-14 h-14 rounded-lg object-cover border border-gray-200"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src =
+                                  "/placeholder-food.svg";
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-gray-900 truncate">
                               {product.title}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 truncate">
                               {product.slug}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-4">
-                        <div className="text-sm text-gray-500 max-w-xs">
-                          <p className="line-clamp-2 mb-1">
+
+                      {/* Details */}
+                      <td className="px-4 py-4">
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
                             {product.description}
                           </p>
-                          <div className="flex items-center text-xs">
-                            <FiClock className="mr-1" />
-                            {product.prepTime}
+                          
+                          <div className="flex items-center text-xs text-gray-500">
+                            <FiClock className="mr-1 flex-shrink-0" />
+                            <span>{product.prepTime}</span>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-3 py-4">
-                        <div className="text-sm">
-                          <div className="flex items-center font-medium text-gray-900">
-                            <FaRupeeSign
-                              className="text-gray-500 mr-1"
-                              size={12}
-                            />
-                            {product.discountedPrice || product.price}
-                          </div>
-                          {product.discountedPrice && (
-                            <div className="flex items-center text-xs text-gray-500">
-                              <span className="line-through mr-1">
-                                ₹{product.price}
-                              </span>
-                              <span className="text-green-600 font-medium">
-                                {product.discountPercentage}% off
-                              </span>
+                          
+                          {product.isCustomizable && product.customizableOptions && product.customizableOptions.length > 0 && (
+                            <div className="mt-2 p-2 bg-orange-50 rounded-md border border-orange-100">
+                              <div className="text-xs font-medium text-orange-700 mb-1">
+                                Customizable Options ({product.customizableOptions.length})
+                              </div>
+                              <div className="space-y-1">
+                                {product.customizableOptions.slice(0, 2).map((option, idx) => (
+                                  <div key={idx} className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-600 truncate pr-2">{option.option}</span>
+                                    <span className="text-orange-600 font-medium whitespace-nowrap">
+                                      +₹{option.price}
+                                    </span>
+                                  </div>
+                                ))}
+                                {product.customizableOptions.length > 2 && (
+                                  <div className="text-xs text-orange-500 font-medium">
+                                    +{product.customizableOptions.length - 2} more options
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-4">
-                        <div className="flex items-center space-x-2">
-                          <VegBadge isVeg={product.isVeg} />
-                          <SpicyBadge level={product.spicyLevel} />
-                          {product.isBestSeller && (
-                            <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full flex items-center">
-                              <FaStar className="mr-1" size={10} />
-                              Best
-                            </span>
+
+                      {/* Price */}
+                      <td className="px-4 py-4">
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-gray-900 flex items-center justify-end">
+                            <FaRupeeSign className="text-sm mr-1" />
+                            {product.discountedPrice || product.price}
+                          </div>
+                          {product.discountedPrice && (
+                            <div className="space-y-1">
+                              <div className="text-sm text-gray-500 line-through flex items-center justify-end">
+                                <FaRupeeSign className="text-xs mr-1" />
+                                {product.price}
+                              </div>
+                              <div className="text-xs text-green-600 font-medium">
+                                {product.discountPercentage}% OFF
+                              </div>
+                            </div>
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-4">
+
+                      {/* Properties */}
+                      <td className="px-4 py-4">
+                        <div className="space-y-2">
+                          {/* Veg/Non-Veg & Spicy Level */}
+                          <div className="flex items-center space-x-2">
+                            <VegBadge isVeg={product.isVeg} />
+                            <SpicyBadge level={product.spicyLevel} />
+                          </div>
+                          
+                          {/* Additional Properties */}
+                          <div className="flex flex-wrap gap-1">
+                            {product.isBestSeller && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                <FaStar className="mr-1" size={8} />
+                                Best Seller
+                              </span>
+                            )}
+                            {product.isCustomizable && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-600">
+                                Customizable
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-4 py-4">
                         <StatusBadge available={product.isAvailable} />
                       </td>
-                      <td className="px-3 py-4">
-                        <div className="flex items-center space-x-2">
+
+                      {/* Actions */}
+                      <td className="px-4 py-4">
+                        <div className="flex items-center justify-end space-x-2">
                           <button
                             onClick={() => handleEdit(product)}
-                            className="text-red-900 hover:text-red-700 p-1"
+                            className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
                             disabled={loading}
-                            title="Edit">
-                            <FaEdit />
+                            title="Edit Product">
+                            <FaEdit size={14} />
                           </button>
                           <button
                             onClick={() => handleDelete(product)}
-                            className="text-gray-500 hover:text-red-600 p-1"
+                            className="inline-flex items-center justify-center w-8 h-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                             disabled={loading}
-                            title="Delete">
-                            <FaTrash />
+                            title="Delete Product">
+                            <FaTrash size={14} />
                           </button>
                         </div>
                       </td>
@@ -1096,18 +1204,28 @@ const ProductsPage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="px-3 py-8 text-center text-sm text-gray-500">
-                      {searchTerm ? (
-                        <>No products found matching &quot;{searchTerm}&quot;</>
-                      ) : (
-                        <>
-                          No products found in{" "}
-                          {categories.find((c) => c.key === activeTab)?.label}{" "}
-                          category
-                        </>
-                      )}
+                    <td colSpan={6} className="px-4 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <div className="text-4xl text-gray-300">🍽️</div>
+                        <div className="text-sm text-gray-500">
+                          {searchTerm ? (
+                            <>No products found matching &ldquo;<span className="font-medium">{searchTerm}</span>&rdquo;</>
+                          ) : (
+                            <>No products found in <span className="font-medium">{categories.find((c) => c.key === activeTab)?.label}</span> category</>
+                          )}
+                        </div>
+                        {!searchTerm && totalCount === 0 && (
+                          <button
+                            onClick={() => {
+                              setFormData({ ...formData, category: activeTab });
+                              setShowForm(true);
+                            }}
+                            className="mt-4 inline-flex items-center px-4 py-2 bg-red-900 text-white text-sm font-medium rounded-md hover:bg-red-800 transition-colors">
+                            <FaPlus className="mr-2" />
+                            Add Your First Product
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -1117,12 +1235,97 @@ const ProductsPage = () => {
         )}
       </div>
 
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-4 rounded-none shadow-sm">
+          <div className="flex-1 flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-700">
+                Showing <span className="font-medium">{((currentPage - 1) * pageSize) + 1}</span> to{" "}
+                <span className="font-medium">
+                  {Math.min(currentPage * pageSize, totalCount)}
+                </span>{" "}
+                of <span className="font-medium">{totalCount}</span> results
+              </span>
+              
+              <select
+                value={pageSize}
+                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                className="ml-4 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                <option value={5}>5 per page</option>
+                <option value={10}>10 per page</option>
+                <option value={20}>20 per page</option>
+                <option value={50}>50 per page</option>
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              {/* Previous Button */}
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                Previous
+              </button>
+
+              {/* Page Numbers */}
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`relative inline-flex items-center px-3 py-2 border text-sm font-medium rounded-md ${
+                        currentPage === pageNum
+                          ? 'z-10 bg-red-50 border-red-500 text-red-600'
+                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                      }`}>
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                
+                {totalPages > 5 && currentPage < totalPages - 2 && (
+                  <>
+                    <span className="text-gray-500">...</span>
+                    <button
+                      onClick={() => handlePageChange(totalPages)}
+                      className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-white hover:bg-gray-50">
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Next Button */}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
         <div className="bg-white p-4 rounded-none shadow-sm border">
           <h3 className="text-sm font-medium text-gray-500">Total Products</h3>
           <p className="text-2xl font-bold text-gray-900 mt-1">
-            {products.length}
+            {totalCount}
           </p>
         </div>
         <div className="bg-white p-4 rounded-none shadow-sm border">

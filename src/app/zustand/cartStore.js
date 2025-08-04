@@ -245,17 +245,17 @@ export const useCartStore = create(
           set({
             cart: get().cart.map((item) => {
               if (item.cartItemId === cartItemId) {
-                const newQuantity = Math.max(1, item.quantity - 1);
+                const newQuantity = item.quantity - 1;
                 return {
                   ...item,
                   quantity: newQuantity,
                   totalPrice: (item.effectivePrice + 
                     (item.selectedAddons?.reduce((sum, addon) => sum + addon.price, 0) || 0)
-                  ) * newQuantity
+                  ) * Math.max(0, newQuantity) // Prevent negative prices
                 };
               }
               return item;
-            }).filter((item) => item.quantity > 0),
+            }).filter((item) => item.quantity > 0), // Remove items with 0 or negative quantity
           });
         } catch (error) {
           console.error("Error decrementing quantity:", error);
@@ -293,10 +293,19 @@ export const useCartStore = create(
       getTotalPrice: () => {
         try {
           return get().cart.reduce((acc, item) => {
-            const itemPrice = item.totalPrice || (
-              (item.effectivePrice || item.price) * item.quantity +
-              (item.selectedAddons?.reduce((sum, addon) => sum + addon.price, 0) || 0) * item.quantity
-            );
+            let itemPrice = 0;
+            
+            if (item.totalPrice && item.totalPrice > 0) {
+              itemPrice = item.totalPrice;
+            } else {
+              // Calculate price with customization
+              const basePrice = item.selectedCustomization 
+                ? item.selectedCustomization.price 
+                : (item.effectivePrice || item.price);
+              const addonsPrice = (item.selectedAddons?.reduce((sum, addon) => sum + addon.price, 0) || 0) * item.quantity;
+              itemPrice = (basePrice * item.quantity) + addonsPrice;
+            }
+            
             return acc + itemPrice;
           }, 0);
         } catch (error) {

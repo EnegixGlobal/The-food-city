@@ -58,9 +58,28 @@ export const GET = async (
                 price: "$$addon.price",
                 description: "$$addon.description",
                 imageUrl: "$$addon.imageUrl",
-                rating : "$$addon.rating",
-                isVeg : "$$addon.isVeg",
+                rating: "$$addon.rating",
+                isVeg: "$$addon.isVeg",
                 ratingCount: "$$addon.ratingCount",
+                isCustomizable: "$$addon.isCustomizable",
+                customizableOptions: {
+                  $ifNull: [
+                    {
+                      $map: {
+                        input: "$$addon.customizableOptions",
+                        as: "option",
+                        in: {
+                          option: "$$option.option",
+                          price: "$$option.price",
+                          isDefault: "$$option.isDefault",
+                          isAvailable: "$$option.isAvailable",
+                          _id: "$$option._id",
+                        },
+                      },
+                    },
+                    []
+                  ]
+                },
               },
             },
           },
@@ -71,27 +90,33 @@ export const GET = async (
       },
     ]);
 
+  
+
     if (!product || product.length === 0) {
       return apiResponse(404, "Product not found");
     }
 
     // Clean up customizable options data structure for consistent frontend handling
     const cleanedProduct = product[0];
-    if (cleanedProduct.customizableOptions && Array.isArray(cleanedProduct.customizableOptions)) {
-      cleanedProduct.customizableOptions = cleanedProduct.customizableOptions.map((option: any) => {
-        // Convert old structure to new structure if needed
-        if (option.label !== undefined || option.value !== undefined) {
+    if (
+      cleanedProduct.customizableOptions &&
+      Array.isArray(cleanedProduct.customizableOptions)
+    ) {
+      cleanedProduct.customizableOptions =
+        cleanedProduct.customizableOptions.map((option: any) => {
+          // Convert old structure to new structure if needed
+          if (option.label !== undefined || option.value !== undefined) {
+            return {
+              option: option.label || option.value || option.option || "",
+              price: option.price || 0,
+            };
+          }
+          // Keep new structure as is
           return {
-            option: option.label || option.value || option.option || '',
+            option: option.option || "",
             price: option.price || 0,
           };
-        }
-        // Keep new structure as is
-        return {
-          option: option.option || '',
-          price: option.price || 0,
-        };
-      });
+        });
     }
 
     return apiResponse(200, "Product fetched successfully", cleanedProduct);
@@ -133,13 +158,13 @@ export const PATCH = async (
         // If it has the old structure (label, value), convert to new structure (option, price)
         if (option.label !== undefined || option.value !== undefined) {
           return {
-            option: option.label || option.value || option.option || '',
+            option: option.label || option.value || option.option || "",
             price: option.price || 0,
           };
         }
         // If it already has the new structure, keep as is
         return {
-          option: option.option || '',
+          option: option.option || "",
           price: option.price || 0,
         };
       });
@@ -189,5 +214,3 @@ export const DELETE = async (
     return apiResponse(500, "Internal server error");
   }
 };
-
-

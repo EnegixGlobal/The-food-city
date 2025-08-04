@@ -1,9 +1,16 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { format } from 'date-fns';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { format } from "date-fns";
+
+// Declare Razorpay global
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface OrderItem {
   title: string;
@@ -47,42 +54,16 @@ interface Order {
   trackingInfo: TrackingInfo;
 }
 
-interface OrdersResponse {
-  orders: Order[];
-  totalCount: number;
-  currentPage: number;
-  totalPages: number;
-}
-
-const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'confirmed':
-      return 'bg-blue-100 text-blue-800';
-    case 'preparing':
-      return 'bg-orange-100 text-orange-800';
-    case 'out_for_delivery':
-      return 'bg-purple-100 text-purple-800';
-    case 'delivered':
-      return 'bg-green-100 text-green-800';
-    case 'cancelled':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
-
 const getPaymentStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
-    case 'paid':
-      return 'bg-green-100 text-green-800';
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'failed':
-      return 'bg-red-100 text-red-800';
+    case "paid":
+      return "bg-green-100 text-green-800";
+    case "pending":
+      return "bg-yellow-100 text-yellow-800";
+    case "failed":
+      return "bg-red-100 text-red-800";
     default:
-      return 'bg-gray-100 text-gray-800';
+      return "bg-gray-100 text-gray-800";
   }
 };
 
@@ -92,38 +73,39 @@ export default function OrdersPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
-  
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+
   const router = useRouter();
 
-  const fetchOrders = async (page: number = 1, status: string = '') => {
+  const fetchOrders = async (page: number = 1, status: string = "") => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams({
         page: page.toString(),
-        limit: '10',
-        ...(status && { status })
+        limit: "10",
+        ...(status && { status }),
       });
-      
+
       const response = await fetch(`/api/order?${queryParams}`, {
-        credentials: 'include'
+        credentials: "include",
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch orders');
+        throw new Error("Failed to fetch orders");
       }
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setOrders(data.data.orders);
         setCurrentPage(data.data.currentPage);
         setTotalPages(data.data.totalPages);
       } else {
-        setError(data.message || 'Failed to fetch orders');
+        setError(data.message || "Failed to fetch orders");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -132,6 +114,100 @@ export default function OrdersPage() {
   useEffect(() => {
     fetchOrders(currentPage, selectedStatus);
   }, [currentPage, selectedStatus]);
+
+  // Load Razorpay script
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  // Process payment for pending order
+  const processPayment = async (order: Order) => {
+    try {
+      setProcessingPayment(order._id);
+
+      // Load Razorpay script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        alert('Failed to load payment gateway. Please try again.');
+        return;
+      }
+
+      // Create payment order
+      const response = await fetch('/api/payment/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ orderId: order.orderId })
+      });
+
+      const paymentData = await response.json();
+      if (!response.ok || !paymentData.success) {
+        throw new Error(paymentData.message || 'Failed to create payment');
+      }
+
+      // Configure Razorpay options
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: paymentData.data.amount,
+        currency: paymentData.data.currency,
+        name: 'The Food City',
+        description: `Payment for Order #${order.orderId}`,
+        order_id: paymentData.data.razorpayOrderId,
+        handler: async (response: any) => {
+          try {
+            // Verify payment
+            const verifyResponse = await fetch('/api/payment/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                orderId: order.orderId
+              })
+            });
+
+            const verifyData = await verifyResponse.json();
+            if (verifyResponse.ok && verifyData.success) {
+              alert('Payment successful! Your order has been confirmed.');
+              // Refresh orders to show updated payment status
+              fetchOrders(currentPage, selectedStatus);
+            } else {
+              throw new Error(verifyData.message || 'Payment verification failed');
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            alert('Payment verification failed. Please contact support.');
+          } finally {
+            setProcessingPayment(null);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setProcessingPayment(null);
+          }
+        },
+        theme: {
+          color: '#f97316' // orange-500
+        }
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+
+    } catch (error) {
+      console.error('Payment processing error:', error);
+      alert(error instanceof Error ? error.message : 'Payment processing failed');
+      setProcessingPayment(null);
+    }
+  };
 
   const handleStatusFilter = (status: string) => {
     setSelectedStatus(status);
@@ -178,8 +254,7 @@ export default function OrdersPage() {
               <p className="text-gray-600">{error}</p>
               <button
                 onClick={() => fetchOrders(currentPage, selectedStatus)}
-                className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-none hover:bg-orange-600 transition-colors"
-              >
+                className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-none hover:bg-orange-600 transition-colors">
                 Try Again
               </button>
             </div>
@@ -194,31 +269,37 @@ export default function OrdersPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-none shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">My Orders</h1>
-          
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+            My Orders
+          </h1>
+
           {/* Filter Buttons */}
           <div className="flex flex-wrap gap-1 sm:gap-2 mb-4">
             <button
-              onClick={() => handleStatusFilter('')}
+              onClick={() => handleStatusFilter("")}
               className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors ${
-                selectedStatus === '' 
-                ? 'bg-orange-500 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
+                selectedStatus === ""
+                  ? "bg-orange-500 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}>
               All Orders
             </button>
-            {['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered'].map((status) => (
+            {[
+              "pending",
+              "confirmed",
+              "preparing",
+              "out_for_delivery",
+              "delivered",
+            ].map((status) => (
               <button
                 key={status}
                 onClick={() => handleStatusFilter(status)}
                 className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors capitalize ${
-                  selectedStatus === status 
-                  ? 'bg-orange-500 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {status.replace('_', ' ')}
+                  selectedStatus === status
+                    ? "bg-orange-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}>
+                {status.replace("_", " ")}
               </button>
             ))}
           </div>
@@ -229,14 +310,17 @@ export default function OrdersPage() {
           <div className="bg-white rounded-none shadow-sm p-6 sm:p-8">
             <div className="text-center">
               <div className="text-gray-400 text-6xl mb-4">🍽️</div>
-              <h3 className="text-xl font-medium text-gray-900 mb-2">No Orders Found</h3>
+              <h3 className="text-xl font-medium text-gray-900 mb-2">
+                No Orders Found
+              </h3>
               <p className="text-gray-600 mb-4">
-                {selectedStatus ? `No ${selectedStatus} orders found.` : "You haven't placed any orders yet."}
+                {selectedStatus
+                  ? `No ${selectedStatus} orders found.`
+                  : "You haven't placed any orders yet."}
               </p>
               <button
-                onClick={() => router.push('/')}
-                className="px-6 py-3 bg-orange-500 text-white rounded-none hover:bg-orange-600 transition-colors"
-              >
+                onClick={() => router.push("/")}
+                className="px-6 py-3 bg-orange-500 text-white rounded-none hover:bg-orange-600 transition-colors">
                 Start Ordering
               </button>
             </div>
@@ -247,14 +331,18 @@ export default function OrdersPage() {
               <div
                 key={order._id}
                 onClick={() => handleOrderClick(order._id)}
-                className="bg-white rounded-none shadow-sm p-4 sm:p-6 cursor-pointer hover:shadow-md transition-all duration-200 border border-gray-100 hover:border-orange-200"
-              >
+                className="bg-white rounded-none shadow-sm p-4 sm:p-6 cursor-pointer hover:shadow-md transition-all duration-200 border border-gray-100 hover:border-orange-200">
                 {/* Order Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
                   <div className="mb-2 sm:mb-0">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">#{order.orderId}</h3>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                      #{order.orderId}
+                    </h3>
                     <p className="text-xs sm:text-sm text-gray-600">
-                      {format(new Date(order.orderDate), 'MMM dd, yyyy • hh:mm a')}
+                      {format(
+                        new Date(order.orderDate),
+                        "MMM dd, yyyy • hh:mm a"
+                      )}
                     </p>
                   </div>
                   <div className="flex flex-col sm:items-end">
@@ -262,11 +350,16 @@ export default function OrdersPage() {
                       {/* <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                         {order.status.replace('_', ' ').toUpperCase()}
                       </span> */}
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(order.paymentStatus)}`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
+                          order.paymentStatus
+                        )}`}>
                         {order.paymentStatus.toUpperCase()}
                       </span>
                     </div>
-                    <div className="text-base sm:text-lg font-bold text-gray-900">₹{order.totalAmount}</div>
+                    <div className="text-base sm:text-lg font-bold text-gray-900">
+                      ₹{order.totalAmount}
+                    </div>
                   </div>
                 </div>
 
@@ -297,22 +390,48 @@ export default function OrdersPage() {
                         </p>
                         {order.items.length > 1 && (
                           <p className="text-xs sm:text-sm text-gray-600">
-                            +{order.items.length - 1} more item{order.items.length > 2 ? 's' : ''}
+                            +{order.items.length - 1} more item
+                            {order.items.length > 2 ? "s" : ""}
                           </p>
                         )}
                       </div>
-                      
+
                       {/* Customer Info */}
                       <div className="text-xs sm:text-sm text-gray-600">
                         <p className="truncate">{order.customerInfo.name}</p>
                         <p className="truncate">{order.customerInfo.address}</p>
                       </div>
+                      
+                      {/* Pay Now Button */}
+                      {order.paymentStatus === 'pending' && (
+                        <div className="mt-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              processPayment(order);
+                            }}
+                            disabled={processingPayment === order._id}
+                            className="md:px-4 px-3 py-2 bg-green-500 text-white rounded-none hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                          >
+                            {processingPayment === order._id ? 'Processing...' : 'Pay to Confirm Order'}
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Arrow */}
                     <div className="flex-shrink-0 text-gray-400">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
                       </svg>
                     </div>
                   </div>
@@ -321,7 +440,8 @@ export default function OrdersPage() {
                   {order.addons.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-gray-100">
                       <p className="text-xs sm:text-sm text-gray-600">
-                        <span className="font-medium">Add-ons:</span> {order.addons.map(addon => addon.name).join(', ')}
+                        <span className="font-medium">Add-ons:</span>{" "}
+                        {order.addons.map((addon) => addon.name).join(", ")}
                       </p>
                     </div>
                   )}
@@ -336,34 +456,35 @@ export default function OrdersPage() {
           <div className="bg-white rounded-none shadow-sm p-3 sm:p-4 mt-4 sm:mt-6">
             <div className="flex justify-center items-center space-x-1 sm:space-x-2">
               <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="px-3 sm:px-4 py-2 rounded-none border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
+                className="px-3 sm:px-4 py-2 rounded-none border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
                 Previous
               </button>
-              
+
               <div className="flex space-x-0.5 sm:space-x-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`px-2 sm:px-3 py-2 rounded-none text-xs sm:text-sm font-medium ${
-                      currentPage === page
-                        ? 'bg-orange-500 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-2 sm:px-3 py-2 rounded-none text-xs sm:text-sm font-medium ${
+                        currentPage === page
+                          ? "bg-orange-500 text-white"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}>
+                      {page}
+                    </button>
+                  )
+                )}
               </div>
-              
+
               <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages}
-                className="px-3 sm:px-4 py-2 rounded-none border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
+                className="px-3 sm:px-4 py-2 rounded-none border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
                 Next
               </button>
             </div>

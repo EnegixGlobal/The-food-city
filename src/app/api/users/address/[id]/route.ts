@@ -56,11 +56,15 @@ export const PATCH = async (
       return apiResponse(400, "Full address is required");
     }
 
+    console.log(body);
+
     const address = await Address.findOneAndUpdate(
       { _id: id },
       {
         fullAddress: body.fullAddress.trim(),
         pincode: body.pincode ? body.pincode.trim() : undefined,
+        doorOrFlatNo: body.doorOrFlat ? body.doorOrFlat.trim() : undefined,
+        landmark: body.landmark ? body.landmark.trim() : undefined,
       },
       {
         new: true,

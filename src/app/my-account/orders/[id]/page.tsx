@@ -12,6 +12,10 @@ interface OrderItem {
   price: number;
   quantity: number;
   imageUrl: string;
+  selectedCustomization?: {
+    option: string;
+    price: number;
+  };
 }
 
 interface Addon {
@@ -20,6 +24,10 @@ interface Addon {
   price: number;
   quantity: number;
   image?: string;
+  selectedCustomization?: {
+    option: string;
+    price: number;
+  };
 }
 
 interface CustomerInfo {
@@ -65,6 +73,7 @@ interface OrderDetails {
   subtotal: number;
   deliveryCharge: number;
   onlineDiscount: number;
+  tax: number;
   status: string;
   paymentStatus: string;
   paymentMethod: string;
@@ -76,24 +85,6 @@ interface OrderDetails {
   cancellationReason?: string;
 }
 
-const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
-    case "pending":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    case "confirmed":
-      return "bg-blue-100 text-blue-800 border-blue-200";
-    case "preparing":
-      return "bg-orange-100 text-orange-800 border-orange-200";
-    case "out_for_delivery":
-      return "bg-purple-100 text-purple-800 border-purple-200";
-    case "delivered":
-      return "bg-green-100 text-green-800 border-green-200";
-    case "cancelled":
-      return "bg-red-100 text-red-800 border-red-200";
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
-  }
-};
 
 const getPaymentStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
@@ -390,6 +381,11 @@ export default function OrderDetailsPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-medium text-gray-900">{item.title}</h3>
+                    {item.selectedCustomization && (
+                      <p className="text-sm text-blue-600 font-medium">
+                        {item.selectedCustomization.option}
+                      </p>
+                    )}
                     <p className="text-sm text-gray-600">
                       Quantity: {item.quantity}
                     </p>
@@ -417,6 +413,11 @@ export default function OrderDetailsPage() {
                         <p className="text-sm font-medium text-gray-700">
                           {addon.name}
                         </p>
+                        {addon.selectedCustomization && (
+                          <p className="text-xs text-blue-600 font-medium">
+                            {addon.selectedCustomization.option}
+                          </p>
+                        )}
                         <p className="text-xs text-gray-500">
                           Qty: {addon.quantity}
                         </p>
@@ -457,6 +458,12 @@ export default function OrderDetailsPage() {
                     <span className="text-green-600">
                       -₹{order.onlineDiscount}
                     </span>
+                  </div>
+                )}
+                {order.tax > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Tax</span>
+                    <span className="text-gray-900">₹{order.tax}</span>
                   </div>
                 )}
                 <div className="border-t pt-3">

@@ -5,14 +5,20 @@ import AddOn from "@/app/models/AddOns";
 export const POST = asyncHandler(async (res) => {
   const body = await res.json();
 
-  const { title, price, description, imageUrl, isVeg, imagePublicId } = body;
+  const {
+    title,
+    price,
+    description,
+    imageUrl,
+    isVeg,
+    imagePublicId,
+    isCustomizable,
+    customizableOptions,
+  } = body;
 
   const requiredFields = {
     title,
-    description,
-    price,
     imageUrl,
-    isVeg,
     imagePublicId,
   };
 
@@ -29,14 +35,36 @@ export const POST = asyncHandler(async (res) => {
     );
   }
 
-  const addons = new AddOn({
+  // Validate customizable options if provided
+  if (isCustomizable && customizableOptions) {
+    for (const option of customizableOptions) {
+      if (!option.option || option.option.trim() === "") {
+        return apiResponse(
+          400,
+          "Each customizable option must have a valid option name"
+        );
+      }
+      if (option.price === undefined || option.price < 0) {
+        return apiResponse(
+          400,
+          "Each customizable option must have a valid price (0 or greater)"
+        );
+      }
+    }
+  }
+
+  const addonData = {
     title,
     price,
     description,
     imageUrl,
     isVeg,
     imagePublicId,
-  });
+    isCustomizable: isCustomizable || false,
+    customizableOptions: isCustomizable ? customizableOptions || [] : [],
+  };
+
+  const addons = new AddOn(addonData);
 
   const savedAddon = await addons.save();
 

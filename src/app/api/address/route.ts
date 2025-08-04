@@ -17,14 +17,14 @@ export const GET = asyncHandler(async (req) => {
   const user = authResult.user!;
 
   try {
-    const userData = await User.findById(user.id).select('address');
-    
+    const userData = await User.findById(user.id).select("address");
+
     if (!userData) {
       return apiResponse(404, "User not found");
     }
 
     return apiResponse(200, "Addresses fetched successfully", {
-      addresses: userData.address || []
+      addresses: userData.address || [],
     });
   } catch (error) {
     console.error("Error fetching addresses:", error);
@@ -43,10 +43,10 @@ export const POST = asyncHandler(async (req) => {
   }
 
   const user = authResult.user!;
-  const { fullAddress, pincode } = await req.json();
+  const { fullAddress, pincode, doorOfFlat, landmark } = await req.json();
 
   // Validate required fields
-  if (!fullAddress || fullAddress.trim() === '') {
+  if (!fullAddress || fullAddress.trim() === "") {
     return apiResponse(400, "Full address is required");
   }
 
@@ -57,7 +57,7 @@ export const POST = asyncHandler(async (req) => {
 
   try {
     const userData = await User.findById(user.id);
-    
+
     if (!userData) {
       return apiResponse(404, "User not found");
     }
@@ -70,16 +70,18 @@ export const POST = asyncHandler(async (req) => {
     // Create new address object
     const newAddress = {
       fullAddress: fullAddress.trim(),
-      ...(pincode && { pincode: pincode.trim() })
+      ...(pincode && { pincode: pincode.trim() }),
+      ...(doorOfFlat && { doorOrFlatNo: doorOfFlat.trim() }),
+      ...(landmark && { landmark: landmark.trim() }),
     };
 
     // Add new address
     userData.address.push(newAddress);
-    
+
     await userData.save();
 
     return apiResponse(201, "Address added successfully", {
-      addresses: userData.address
+      addresses: userData.address,
     });
   } catch (error) {
     console.error("Error adding address:", error);

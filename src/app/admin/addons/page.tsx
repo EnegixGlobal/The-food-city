@@ -27,6 +27,11 @@ interface AddOn {
   rating?: number;
   ratingCount?: number;
   isVeg: boolean;
+  isCustomizable?: boolean;
+  customizableOptions?: Array<{
+    option: string;
+    price: number;
+  }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,6 +43,11 @@ interface AddOnFormData {
   imageUrl: string;
   imagePublicId: string;
   isVeg: boolean;
+  isCustomizable: boolean;
+  customizableOptions: Array<{
+    option: string;
+    price: string;
+  }>;
 }
 
 const AddOnsPage = () => {
@@ -54,6 +64,8 @@ const AddOnsPage = () => {
     imageUrl: "",
     imagePublicId: "",
     isVeg: true,
+    isCustomizable: false,
+    customizableOptions: [],
   });
 
   // Image upload handler
@@ -136,8 +148,8 @@ const AddOnsPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.description || !formData.price) {
-      showAlert.error("Missing Fields", "Please fill in all required fields");
+    if (!formData.title) {
+      showAlert.error("Missing Fields", "Please fill in the title field");
       return;
     }
 
@@ -146,17 +158,64 @@ const AddOnsPage = () => {
       return;
     }
 
+    // Validate customization options if enabled
+    if (formData.isCustomizable) {
+      if (formData.customizableOptions.length === 0) {
+        showAlert.error(
+          "Missing Options",
+          "Please add at least one customization option"
+        );
+        return;
+      }
+
+      for (let i = 0; i < formData.customizableOptions.length; i++) {
+        const option = formData.customizableOptions[i];
+        if (!option.option || option.option.trim() === "") {
+          showAlert.error(
+            "Invalid Option",
+            `Option ${i + 1}: Please provide a valid option name`
+          );
+          return;
+        }
+        if (
+          !option.price ||
+          option.price.trim() === "" ||
+          parseFloat(option.price) < 0
+        ) {
+          showAlert.error(
+            "Invalid Price",
+            `Option ${i + 1}: Please provide a valid price (0 or greater)`
+          );
+          return;
+        }
+      }
+    }
+
     const addOnData = {
       title: formData.title,
       description: formData.description,
-      price: parseFloat(formData.price),
+      price: formData.price ? parseFloat(formData.price) : 0,
       imageUrl: formData.imageUrl,
       imagePublicId: formData.imagePublicId,
       isVeg: formData.isVeg,
+      isCustomizable: formData.isCustomizable,
+      customizableOptions: formData.isCustomizable
+        ? formData.customizableOptions
+            .filter(
+              (option) =>
+                option.option.trim() !== "" && option.price.trim() !== ""
+            )
+            .map((option) => ({
+              option: option.option.trim(),
+              price: parseFloat(option.price),
+            }))
+        : [],
     };
 
     try {
-      const url = editingAddOn ? `/api/addons/${editingAddOn._id}` : "/api/addons";
+      const url = editingAddOn
+        ? `/api/addons/${editingAddOn._id}`
+        : "/api/addons";
       const method = editingAddOn ? "PATCH" : "POST";
 
       const response = await fetch(url, {
@@ -179,7 +238,8 @@ const AddOnsPage = () => {
       } else {
         showAlert.error(
           editingAddOn ? "Update Failed" : "Creation Failed",
-          data.message || `Failed to ${editingAddOn ? "update" : "create"} add-on`
+          data.message ||
+            `Failed to ${editingAddOn ? "update" : "create"} add-on`
         );
       }
     } catch (error) {
@@ -198,6 +258,13 @@ const AddOnsPage = () => {
       imageUrl: addOn.imageUrl,
       imagePublicId: addOn.imagePublicId,
       isVeg: addOn.isVeg,
+      isCustomizable: addOn.isCustomizable || false,
+      customizableOptions: addOn.customizableOptions
+        ? addOn.customizableOptions.map((option) => ({
+            option: option.option,
+            price: option.price.toString(),
+          }))
+        : [],
     });
     setShowForm(true);
   };
@@ -219,7 +286,10 @@ const AddOnsPage = () => {
         showAlert.success("Add-on Deleted", data.message);
         fetchAddOns();
       } else {
-        showAlert.error("Delete Failed", data.message || "Failed to delete add-on");
+        showAlert.error(
+          "Delete Failed",
+          data.message || "Failed to delete add-on"
+        );
       }
     } catch (error) {
       console.error("Error deleting add-on:", error);
@@ -236,15 +306,51 @@ const AddOnsPage = () => {
       imageUrl: "",
       imagePublicId: "",
       isVeg: true,
+      isCustomizable: false,
+      customizableOptions: [],
     });
     setEditingAddOn(null);
     setShowForm(false);
   };
 
+  // Handle customization options
+  const addCustomizationOption = () => {
+    setFormData({
+      ...formData,
+      customizableOptions: [
+        ...formData.customizableOptions,
+        { option: "", price: "" },
+      ],
+    });
+  };
+
+  const removeCustomizationOption = (index: number) => {
+    setFormData({
+      ...formData,
+      customizableOptions: formData.customizableOptions.filter(
+        (_, i) => i !== index
+      ),
+    });
+  };
+
+  const updateCustomizationOption = (
+    index: number,
+    field: "option" | "price",
+    value: string
+  ) => {
+    const updatedOptions = [...formData.customizableOptions];
+    updatedOptions[index] = { ...updatedOptions[index], [field]: value };
+    setFormData({
+      ...formData,
+      customizableOptions: updatedOptions,
+    });
+  };
+
   // Filter add-ons based on search term
-  const filteredAddOns = addOns.filter((addOn) =>
-    addOn.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    addOn.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAddOns = addOns.filter(
+    (addOn) =>
+      addOn.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      addOn.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   useEffect(() => {
@@ -267,8 +373,7 @@ const AddOnsPage = () => {
             </div>
             <button
               onClick={() => setShowForm(true)}
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-none flex items-center gap-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-none flex items-center gap-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl">
               <FaPlus /> Add New Add-on
             </button>
           </div>
@@ -293,7 +398,9 @@ const AddOnsPage = () => {
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <FiLoader className="animate-spin text-4xl text-orange-500" />
-              <span className="ml-3 text-lg text-gray-600">Loading add-ons...</span>
+              <span className="ml-3 text-lg text-gray-600">
+                Loading add-ons...
+              </span>
             </div>
           ) : filteredAddOns.length === 0 ? (
             <div className="text-center py-12">
@@ -309,8 +416,7 @@ const AddOnsPage = () => {
               {!searchTerm && (
                 <button
                   onClick={() => setShowForm(true)}
-                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-none flex items-center gap-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl mx-auto"
-                >
+                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-none flex items-center gap-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl mx-auto">
                   <FaPlus /> Add Your First Add-on
                 </button>
               )}
@@ -348,7 +454,9 @@ const AddOnsPage = () => {
                 {/* Table Body */}
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredAddOns.map((addOn) => (
-                    <tr key={addOn._id} className="hover:bg-gray-50 transition-colors duration-200">
+                    <tr
+                      key={addOn._id}
+                      className="hover:bg-gray-50 transition-colors duration-200">
                       {/* Image */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex-shrink-0 h-16 w-16">
@@ -367,10 +475,36 @@ const AddOnsPage = () => {
                         <div className="max-w-xs">
                           <div className="text-sm font-medium text-gray-900 mb-1">
                             {addOn.title}
+                            {addOn.isCustomizable && (
+                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                Customizable
+                              </span>
+                            )}
                           </div>
-                          <div className="text-sm text-gray-500 line-clamp-2">
+                          <div className="text-sm text-gray-500 line-clamp-2 mb-2">
                             {addOn.description}
                           </div>
+                          {addOn.isCustomizable && addOn.customizableOptions && addOn.customizableOptions.length > 0 && (
+                            <div className="text-xs text-gray-600">
+                              <div className="font-medium mb-1">Options:</div>
+                              <div className="space-y-1">
+                                {addOn.customizableOptions.slice(0, 2).map((option, idx) => (
+                                  <div key={idx} className="flex justify-between items-center bg-gray-50 px-2 py-1 rounded">
+                                    <span className="truncate">{option.option}</span>
+                                    <span className="text-orange-600 font-medium ml-2">
+                                      <FaRupeeSign className="inline text-xs" />
+                                      {option.price}
+                                    </span>
+                                  </div>
+                                ))}
+                                {addOn.customizableOptions.length > 2 && (
+                                  <div className="text-gray-400 text-center">
+                                    +{addOn.customizableOptions.length - 2} more
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </td>
 
@@ -382,14 +516,18 @@ const AddOnsPage = () => {
                               <div className="bg-green-500 text-white p-1 rounded-full mr-2">
                                 <FaLeaf className="text-xs" />
                               </div>
-                              <span className="text-sm text-green-600 font-medium">Veg</span>
+                              <span className="text-sm text-green-600 font-medium">
+                                Veg
+                              </span>
                             </div>
                           ) : (
                             <div className="flex items-center">
                               <div className="bg-red-500 text-white text-xs px-2 py-1 rounded mr-2 font-bold">
                                 N
                               </div>
-                              <span className="text-sm text-red-600 font-medium">Non-Veg</span>
+                              <span className="text-sm text-red-600 font-medium">
+                                Non-Veg
+                              </span>
                             </div>
                           )}
                         </div>
@@ -425,11 +563,14 @@ const AddOnsPage = () => {
                       {/* Created Date */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
-                          {new Date(addOn.createdAt).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
+                          {new Date(addOn.createdAt).toLocaleDateString(
+                            "en-IN",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
                         </div>
                       </td>
 
@@ -439,15 +580,13 @@ const AddOnsPage = () => {
                           <button
                             onClick={() => handleEdit(addOn)}
                             className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-none transition-colors duration-200 group"
-                            title="Edit Add-on"
-                          >
+                            title="Edit Add-on">
                             <FaEdit className="text-sm" />
                           </button>
                           <button
                             onClick={() => handleDelete(addOn)}
                             className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-none transition-colors duration-200 group"
-                            title="Delete Add-on"
-                          >
+                            title="Delete Add-on">
                             <FaTrash className="text-sm" />
                           </button>
                         </div>
@@ -471,8 +610,7 @@ const AddOnsPage = () => {
               </h2>
               <button
                 onClick={resetForm}
-                className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
-              >
+                className="text-gray-500 hover:text-gray-700 transition-colors duration-200">
                 <FaTimes className="text-xl" />
               </button>
             </div>
@@ -496,10 +634,13 @@ const AddOnsPage = () => {
                       <button
                         type="button"
                         onClick={() =>
-                          setFormData({ ...formData, imageUrl: "", imagePublicId: "" })
+                          setFormData({
+                            ...formData,
+                            imageUrl: "",
+                            imagePublicId: "",
+                          })
                         }
-                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors duration-200"
-                      >
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors duration-200">
                         <FaTimes />
                       </button>
                     </div>
@@ -524,8 +665,7 @@ const AddOnsPage = () => {
                         htmlFor="image-upload"
                         className={`bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-none cursor-pointer transition-colors duration-200 ${
                           uploadingImage ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      >
+                        }`}>
                         {uploadingImage ? (
                           <>
                             <FiLoader className="inline animate-spin mr-2" />
@@ -545,7 +685,7 @@ const AddOnsPage = () => {
 
               {/* Title */}
               <Input
-              label="Title *"
+                label="Title *"
                 type="text"
                 value={formData.title}
                 onChange={(e) =>
@@ -558,7 +698,7 @@ const AddOnsPage = () => {
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description *
+                  Description
                 </label>
                 <textarea
                   value={formData.description}
@@ -568,13 +708,12 @@ const AddOnsPage = () => {
                   placeholder="Enter add-on description"
                   rows={3}
                   className="w-full border border-gray-300 rounded-none p-3 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none resize-none"
-                  required
                 />
               </div>
 
               {/* Price */}
               <Input
-              label="Price *"
+                label="Price"
                 type="number"
                 value={formData.price}
                 onChange={(e) =>
@@ -583,7 +722,6 @@ const AddOnsPage = () => {
                 placeholder="Enter price"
                 step="0.01"
                 min="0"
-                required
               />
 
               {/* Veg/Non-Veg */}
@@ -608,7 +746,9 @@ const AddOnsPage = () => {
                       type="radio"
                       name="isVeg"
                       checked={!formData.isVeg}
-                      onChange={() => setFormData({ ...formData, isVeg: false })}
+                      onChange={() =>
+                        setFormData({ ...formData, isVeg: false })
+                      }
                       className="mr-2 text-red-500 focus:ring-red-500"
                     />
                     <span className="bg-red-500 text-white text-xs px-2 py-1 rounded mr-1">
@@ -619,20 +759,121 @@ const AddOnsPage = () => {
                 </div>
               </div>
 
+              {/* Customization Options */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Customization Options
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.isCustomizable}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          isCustomizable: e.target.checked,
+                          customizableOptions: e.target.checked
+                            ? formData.customizableOptions
+                            : [],
+                        })
+                      }
+                      className="mr-2 text-orange-500 focus:ring-orange-500"
+                    />
+                    <span className="text-sm text-gray-600">
+                      Enable Customization
+                    </span>
+                  </label>
+                </div>
+
+                {formData.isCustomizable && (
+                  <div className="border border-gray-200 rounded-none p-4">
+                    <div className="space-y-3">
+                      {formData.customizableOptions.map((option, index) => (
+                        <div key={index} className="flex gap-3 items-end">
+                          <div className="flex-1">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Option Name
+                            </label>
+                            <input
+                              type="text"
+                              value={option.option}
+                              onChange={(e) =>
+                                updateCustomizationOption(
+                                  index,
+                                  "option",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="e.g., Regular Portion"
+                              className={`w-full border rounded-none p-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-sm ${
+                                option.option.trim() === ""
+                                  ? "border-red-300 bg-red-50"
+                                  : "border-gray-300"
+                              }`}
+                              required
+                            />
+                          </div>
+                          <div className="w-32">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Price
+                            </label>
+                            <input
+                              type="number"
+                              value={option.price}
+                              onChange={(e) =>
+                                updateCustomizationOption(
+                                  index,
+                                  "price",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="0.00"
+                              step="0.01"
+                              min="0"
+                              className={`w-full border rounded-none p-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-sm ${
+                                option.price.trim() === "" ||
+                                parseFloat(option.price) < 0
+                                  ? "border-red-300 bg-red-50"
+                                  : "border-gray-300"
+                              }`}
+                              required
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeCustomizationOption(index)}
+                            className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-none transition-colors duration-200"
+                            title="Remove Option">
+                            <FaTimes className="text-sm" />
+                          </button>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={addCustomizationOption}
+                        className="w-full bg-gray-100 hover:bg-gray-200 border-2 border-dashed border-gray-300 hover:border-gray-400 text-gray-600 py-3 rounded-none transition-colors duration-200 flex items-center justify-center gap-2">
+                        <FaPlus className="text-sm" />
+                        Add Customization Option
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Form Actions */}
               <div className="flex gap-4 pt-4">
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-none font-medium transition-colors duration-200"
-                >
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-none font-medium transition-colors duration-200">
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={uploadingImage || !formData.imageUrl}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-none font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-none font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                   {editingAddOn ? "Update Add-on" : "Create Add-on"}
                 </button>
               </div>

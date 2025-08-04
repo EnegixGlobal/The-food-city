@@ -7,11 +7,12 @@ import Navbar from "@/app/components/Navbar";
 import RecommendationCard from "@/app/components/RecommendationCard";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
-import { FaFire, FaLeaf } from "react-icons/fa";
+import { FaFire, FaLeaf, FaMinus, FaPlus } from "react-icons/fa";
 import { FiStar, FiClock, FiPlus, FiMinus } from "react-icons/fi";
 import { GiChickenOven, GiNoodles, GiIndiaGate } from "react-icons/gi";
 import { FaCartShopping, FaCartPlus } from "react-icons/fa6";
 import { useCartStore } from "@/app/zustand/cartStore";
+import { useAddonStore } from "@/app/zustand/addonStore";
 
 interface AddOn {
   rating: number;
@@ -21,6 +22,14 @@ interface AddOn {
   description: string;
   imageUrl: string;
   isVeg: boolean;
+  isCustomizable?: boolean;
+  customizableOptions?: Array<{
+    option: string;
+    price: number;
+    isDefault: boolean;
+    isAvailable: boolean;
+    _id: string;
+  }>;
 }
 
 interface Product {
@@ -66,8 +75,15 @@ function ProductPage({ params }: ProductPageProps) {
   // Cart store
   const { 
     addProductToCart, 
-    isProductInCart 
+    isProductInCart,
+    cart,
+    incrementQuantity,
+    decrementQuantity,
+    removeFromCart
   } = useCartStore();
+
+  // Addon store for debugging
+  const { addons } = useAddonStore();
 
   // Fetch product data
   const fetchProduct = async (slug: string) => {
@@ -156,13 +172,39 @@ function ProductPage({ params }: ProductPageProps) {
     }
   };
 
-  // Check if current product+addon combination is in cart
-  const isCurrentItemInCart = product 
-    ? isProductInCart(product._id, selectedAddons.map(addon => addon._id))
-    : false;
+  // Handle add to cart with quantity reset
+  const handleAddtocart = () => {
+    if (!product) return;
+    
+    try {
+      // Normalize product data for cart store
+      const normalizedProduct = {
+        _id: product._id,
+        title: product.title,
+        slug: product.slug,
+        description: product.description,
+        price: product.price,
+        discountedPrice: product.discountedPrice,
+        category: product.category,
+        imageUrl: product.imageUrl,
+        isVeg: product.isVeg,
+        isBestSeller: product.isBestSeller,
+        spicyLevel: product.spicyLevel,
+        prepTime: parseInt(product.prepTime) || 30, // Convert string to number
+        rating: product.rating
+      };
 
-  // Mock data - in a real app, you would fetch this based on the productSlug
-  // This is just an example - you should replace with your actual data fetching logic
+      addProductToCart(normalizedProduct, quantity, selectedAddons);
+      
+      // Reset quantity to 1 after adding to cart
+      setQuantity(1);
+      
+      // Show success message or update UI
+      console.log(`Added ${quantity} ${product.title} to cart with ${selectedAddons.length} addons`);
+    } catch (error) {
+      console.error("Error adding product to cart:", error);
+    }
+  };
 
   // Show loading state while productSlug is being resolved
   if (!productSlug) {
@@ -191,70 +233,105 @@ function ProductPage({ params }: ProductPageProps) {
       name: "Chicken Tikka",
       price: 13.99,
       rating: 4.6,
-      image:
-        "https://images.unsplash.com/photo-1601050690597-df0568f70950?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+      image: "/placeholder-food.svg",
       isVeg: false,
-      description:
-        "Succulent chicken pieces marinated in spices and grilled to perfection.",
+      description: "Succulent chicken pieces marinated in spices and grilled to perfection.",
+      isCustomizable: true,
+      customizableOptions: [
+        {
+          option: "Regular Portion",
+          price: 13.99
+        },
+        {
+          option: "Large Portion",
+          price: 17.99
+        },
+        {
+          option: "Family Pack",
+          price: 25.99
+        }
+      ]
     },
     {
       id: 354,
       name: "Seekh Kebab",
       price: 12.99,
       rating: 4.5,
-      image:
-        "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+      image: "/placeholder-food.svg",
       isVeg: false,
       description: "Spiced minced meat skewers, grilled to perfection.",
+      isCustomizable: true,
+      customizableOptions: [
+        {
+          option: "4 Pieces",
+          price: 12.99
+        },
+        {
+          option: "6 Pieces",
+          price: 18.99
+        },
+        {
+          option: "8 Pieces",
+          price: 24.99
+        }
+      ]
     },
     {
       id: 444,
       name: "Paneer Tikka",
       price: 11.99,
       rating: 4.4,
-      image:
-        "https://images.unsplash.com/photo-1559847844-5315695dadae?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1198&q=80",
+      image: "/placeholder-food.svg",
       isVeg: true,
-      description:
-        "Grilled paneer cubes marinated in spices, served with mint chutney.",
+      description: "Grilled paneer cubes marinated in spices, served with mint chutney.",
+      isCustomizable: false
     },
   ];
-
-  const handleAddtocart = () => {
-    if (!product) return;
-    
-    try {
-      // Normalize product data for cart store
-      const normalizedProduct = {
-        _id: product._id,
-        title: product.title,
-        slug: product.slug,
-        description: product.description,
-        price: product.price,
-        discountedPrice: product.discountedPrice,
-        category: product.category,
-        imageUrl: product.imageUrl,
-        isVeg: product.isVeg,
-        isBestSeller: product.isBestSeller,
-        spicyLevel: product.spicyLevel,
-        prepTime: parseInt(product.prepTime) || 30, // Convert string to number
-        rating: product.rating
-      };
-
-      addProductToCart(normalizedProduct, quantity, selectedAddons);
-      
-      // Show success message or update UI
-      console.log(`Added ${quantity} ${product.title} to cart with ${selectedAddons.length} addons`);
-    } catch (error) {
-      console.error("Error adding product to cart:", error);
-    }
-  };
 
   const getTotalprice = () => {
     if (!product) return 0;
     const basePrice = product.discountedPrice || product.price;
     const addonsPrice = selectedAddons.reduce((sum, addon) => sum + addon.price, 0);
     return basePrice + addonsPrice;
+  };
+
+  // Check if current product is in cart (any variant)
+  const isItemInCart = product 
+    ? cart.some((cartItem: any) => cartItem._id === product._id)
+    : false;
+
+  // Get the cart item for this product
+  const cartItem = product && isItemInCart
+    ? cart.find((cartItem: any) => cartItem._id === product._id)
+    : null;
+
+  const itemQuantityInCart = cartItem ? cartItem.quantity : 0;
+
+  // Handle increment quantity in cart
+  const handleIncrementCart = () => {
+    try {
+      if (cartItem && cartItem.cartItemId) {
+        incrementQuantity(cartItem.cartItemId);
+      }
+    } catch (error) {
+      console.error("Error incrementing quantity:", error);
+    }
+  };
+
+  // Handle decrement quantity in cart
+  const handleDecrementCart = () => {
+    try {
+      if (cartItem && cartItem.cartItemId) {
+        if (itemQuantityInCart <= 1) {
+          // Remove item if quantity is 1 or less
+          removeFromCart(cartItem.cartItemId);
+        } else {
+          decrementQuantity(cartItem.cartItemId);
+        }
+      }
+    } catch (error) {
+      console.error("Error decrementing quantity:", error);
+    }
   };
 
   const getCategoryIcon = () => {
@@ -368,6 +445,24 @@ function ProductPage({ params }: ProductPageProps) {
   return (
     <>
       <Navbar />
+      
+      {/* Debug Section - Show Addon Cart State */}
+      {addons.length > 0 && (
+        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mx-4 my-2">
+          <p className="font-bold">🛒 Addon Cart Debug ({addons.length} items):</p>
+          <ul className="list-disc list-inside">
+            {addons.map((addon: any) => (
+              <li key={addon.addonCartItemId}>
+                {addon.title} - ₹{addon.totalPrice} x{addon.quantity}
+                {addon.selectedCustomization && (
+                  <span className="text-sm"> ({addon.selectedCustomization.option})</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
       <div className="bg-gradient-to-b from-red-50 to-white min-h-screen pb-12">
         {/* Product Section */}
 
@@ -473,34 +568,58 @@ function ProductPage({ params }: ProductPageProps) {
               
 
                 {/* Quantity and Add to Cart */}
-                <div className="flex items-center justify-between border-t border-gray-200 pt-6">
-                  <div className="flex items-center border border-gray-300 rounded-full">
-                    <button
-                      onClick={() =>
-                        setQuantity((prev) => Math.max(1, prev - 1))
-                      }
-                      className="p-2 text-gray-600 hover:text-red-900">
-                      <FiMinus />
-                    </button>
-                    <span className="px-4 font-medium">{quantity}</span>
-                    <button
-                      onClick={() => setQuantity((prev) => prev + 1)}
-                      className="p-2 text-gray-600 hover:text-red-900">
-                      <FiPlus />
-                    </button>
-                  </div>
-                  <Button
-                    onClick={handleAddtocart}
-                    className={`flex-1 ml-4 py-2 ${
-                      isCurrentItemInCart
-                        ? "bg-green-500 hover:bg-green-600"
-                        : "bg-red-900 hover:bg-red-800"
-                    }`}>
-                    <span className="flex items-center justify-center gap-2">
-                      {isCurrentItemInCart ? <FaCartShopping /> : <FaCartPlus />}
-                      {isCurrentItemInCart ? "ADDED TO CART" : "ADD TO CART"} - ₹{(getTotalprice() * quantity).toFixed(2)}
-                    </span>
-                  </Button>
+                <div className="border-t border-gray-200 pt-6">
+                  {isItemInCart ? (
+                    // Quantity Controls for items already in cart
+                    <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md p-4">
+                      <button
+                        onClick={handleDecrementCart}
+                        className="flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
+                        <FaMinus className="text-sm" />
+                      </button>
+                      
+                      <div className="flex flex-col items-center mx-4">
+                        <span className="text-xs text-green-600 font-medium">In Cart</span>
+                        <span className="text-2xl font-bold text-green-700">{itemQuantityInCart}</span>
+                      </div>
+                      
+                      <button
+                        onClick={handleIncrementCart}
+                        className="flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
+                        <FaPlus className="text-sm" />
+                      </button>
+                    </div>
+                  ) : (
+                    // Regular quantity selector and add to cart
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center border border-gray-300 rounded-full">
+                          <button
+                            onClick={() =>
+                              setQuantity((prev) => Math.max(1, prev - 1))
+                            }
+                            className="p-2 text-gray-600 hover:text-red-900">
+                            <FiMinus />
+                          </button>
+                          <span className="px-4 font-medium">{quantity}</span>
+                          <button
+                            onClick={() => setQuantity((prev) => prev + 1)}
+                            className="p-2 text-gray-600 hover:text-red-900">
+                            <FiPlus />
+                          </button>
+                        </div>
+                        
+                        <Button
+                          onClick={handleAddtocart}
+                          className="flex-1 ml-4 py-2 bg-red-900 hover:bg-red-800">
+                          <span className="flex items-center justify-center gap-2">
+                            <FaCartPlus />
+                            ADD TO CART - ₹{(getTotalprice() * quantity).toFixed(2)}
+                          </span>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -525,17 +644,22 @@ function ProductPage({ params }: ProductPageProps) {
             </h2>
             <div className="">
               {product.addOns && product.addOns.length > 0 ? (
-                product.addOns.map((addon, index) => (
+                product.addOns.map((addon) => (
                   <RecommendationCard 
                     key={addon._id} 
                     item={{
-                      id: index + 1000, // Use index + offset to create unique number ID
+                      id: addon._id, // Use the actual _id from database
                       name: addon.title,
                       price: addon.price,
-                      rating: addon.rating, // Default rating for add-ons
+                      rating: addon.rating || 4.5, // Default rating for add-ons
                       image: addon.imageUrl,
                       isVeg: addon.isVeg,
                       description: addon.description,
+                      isCustomizable: addon.isCustomizable || false,
+                      customizableOptions: addon.customizableOptions?.filter(option => option.isAvailable).map(option => ({
+                        option: option.option,
+                        price: option.price
+                      })) || []
                     }}
                   />
                 ))

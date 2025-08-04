@@ -10,10 +10,18 @@ const AddressSchema = new mongoose.Schema({
     trim: true,
     required: [true, "Full address is required"],
   },
+  doorOrFlatNo: {
+    type: String,
+    trim: true,
+  },
   pincode: {
     type: String,
     match: [/^\d{6}$/, "Please enter a valid pincode"],
     required: [true, "Pincode is required"],
+  },
+  landmark: {
+    type: String,
+    trim: true,
   },
 });
 

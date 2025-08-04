@@ -2,13 +2,15 @@
 
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
-import toast from "react-hot-toast";
+import { showAlert } from "@/app/zustand/alertStore";
 import React, { useState, useEffect } from "react";
 
 interface Address {
   _id: string;
   fullAddress: string;
+  doorOrFlatNo?: string;
   pincode: string;
+  landmark?: string;
   user: string;
 }
 
@@ -20,8 +22,12 @@ export default function AddressesPage() {
   const [editingAddress, setEditingAddress] = useState<string | null>(null);
   const [newAddress, setNewAddress] = useState("");
   const [newPincode, setNewPincode] = useState("");
+  const [newDoorFlat, setNewDoorFlat] = useState("");
+  const [newLandmark, setNewLandmark] = useState("");
   const [editAddress, setEditAddress] = useState("");
   const [editPincode, setEditPincode] = useState("");
+  const [editDoorFlat, setEditDoorFlat] = useState("");
+  const [editLandmark, setEditLandmark] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const fetchAddresses = async () => {
@@ -54,7 +60,10 @@ export default function AddressesPage() {
 
     // Validate pincode format
     if (!/^\d{6}$/.test(newPincode.trim())) {
-      toast.error("Please enter a valid 6-digit pincode");
+      showAlert.error(
+        "Validation Error",
+        "Please enter a valid 6-digit pincode"
+      );
       return;
     }
 
@@ -69,6 +78,8 @@ export default function AddressesPage() {
         body: JSON.stringify({
           fullAddress: newAddress.trim(),
           pincode: newPincode.trim(),
+          doorOfFlat: newDoorFlat.trim() || undefined,
+          landmark: newLandmark.trim() || undefined,
         }),
       });
 
@@ -79,13 +90,24 @@ export default function AddressesPage() {
         await fetchAddresses();
         setNewAddress("");
         setNewPincode("");
+        setNewDoorFlat("");
+        setNewLandmark("");
         setIsAddingAddress(false);
-        toast.success("Address added successfully!");
+        showAlert.success(
+          "Address Added!",
+          "Your address has been added successfully"
+        );
       } else {
-        toast.error(data.message || "Failed to add address");
+        showAlert.error(
+          "Failed to Add",
+          data.message || "Failed to add address"
+        );
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to add address");
+      showAlert.error(
+        "Network Error",
+        err instanceof Error ? err.message : "Failed to add address"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -96,7 +118,10 @@ export default function AddressesPage() {
 
     // Validate pincode format
     if (!/^\d{6}$/.test(editPincode.trim())) {
-      toast.error("Please enter a valid 6-digit pincode");
+      showAlert.error(
+        "Validation Error",
+        "Please enter a valid 6-digit pincode"
+      );
       return;
     }
 
@@ -111,6 +136,8 @@ export default function AddressesPage() {
         body: JSON.stringify({
           fullAddress: editAddress.trim(),
           pincode: editPincode.trim(),
+          doorOrFlat: editDoorFlat.trim() || undefined,
+          landmark: editLandmark.trim() || undefined,
         }),
       });
 
@@ -122,12 +149,21 @@ export default function AddressesPage() {
         setEditingAddress(null);
         setEditAddress("");
         setEditPincode("");
-        toast.success("Address updated successfully!");
+        setEditDoorFlat("");
+        setEditLandmark("");
+        showAlert.success(
+          "Address Updated!",
+          "Your address has been updated successfully"
+        );
       } else {
-        toast.error(data.message || "Failed to update address");
+        showAlert.error(
+          "Update Failed",
+          data.message || "Failed to update address"
+        );
       }
     } catch (err) {
-      toast.error(
+      showAlert.error(
+        "Network Error",
         err instanceof Error ? err.message : "Failed to update address"
       );
     } finally {
@@ -150,12 +186,19 @@ export default function AddressesPage() {
       if (data.success) {
         // Refresh addresses list
         await fetchAddresses();
-        toast.success("Address deleted successfully!");
+        showAlert.success(
+          "Address Deleted!",
+          "Your address has been deleted successfully"
+        );
       } else {
-        toast.error(data.message || "Failed to delete address");
+        showAlert.error(
+          "Delete Failed",
+          data.message || "Failed to delete address"
+        );
       }
     } catch (err) {
-      toast.error(
+      showAlert.error(
+        "Network Error",
         err instanceof Error ? err.message : "Failed to delete address"
       );
     } finally {
@@ -167,12 +210,16 @@ export default function AddressesPage() {
     setEditingAddress(address._id);
     setEditAddress(address.fullAddress);
     setEditPincode(address.pincode || "");
+    setEditDoorFlat(address.doorOrFlatNo || "");
+    setEditLandmark(address.landmark || "");
   };
 
   const cancelEditing = () => {
     setEditingAddress(null);
     setEditAddress("");
     setEditPincode("");
+    setEditDoorFlat("");
+    setEditLandmark("");
   };
 
   useEffect(() => {
@@ -253,6 +300,11 @@ export default function AddressesPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-none   resize-none text-sm outline-none"
                   placeholder="Enter your complete address..."
                 />
+                {!newAddress.trim() && newAddress !== "" && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Full address is required
+                  </p>
+                )}
               </div>
               <div>
                 <label
@@ -269,6 +321,41 @@ export default function AddressesPage() {
                   className="w-full px-3 text-sm"
                   placeholder="Enter 6-digit pincode"
                 />
+                {newPincode && !/^\d{6}$/.test(newPincode) && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Please enter a valid 6-digit pincode
+                  </p>
+                )}
+              </div>
+              <div>
+                <label
+                  htmlFor="newDoorFlat"
+                  className="block text-sm font-medium text-gray-700 mb-2">
+                  Door/Flat Number
+                </label>
+                <Input
+                  id="newDoorFlat"
+                  type="text"
+                  value={newDoorFlat}
+                  onChange={(e) => setNewDoorFlat(e.target.value)}
+                  className="w-full px-3 text-sm"
+                  placeholder="Enter door/flat number (optional)"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="newLandmark"
+                  className="block text-sm font-medium text-gray-700 mb-2">
+                  Landmark
+                </label>
+                <Input
+                  id="newLandmark"
+                  type="text"
+                  value={newLandmark}
+                  onChange={(e) => setNewLandmark(e.target.value)}
+                  className="w-full px-3 text-sm"
+                  placeholder="Enter nearby landmark (optional)"
+                />
               </div>
               <div className="flex gap-3">
                 <button
@@ -284,6 +371,8 @@ export default function AddressesPage() {
                     setIsAddingAddress(false);
                     setNewAddress("");
                     setNewPincode("");
+                    setNewDoorFlat("");
+                    setNewLandmark("");
                   }}
                   disabled={submitting}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-none hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm">
@@ -303,8 +392,8 @@ export default function AddressesPage() {
                 No Addresses Found
               </h3>
               <p className="text-gray-600 mb-4">
-                You haven&apos;t added any addresses yet. Add your first address to
-                get started.
+                You haven&apos;t added any addresses yet. Add your first address
+                to get started.
               </p>
               <button
                 onClick={() => setIsAddingAddress(true)}
@@ -352,6 +441,36 @@ export default function AddressesPage() {
                         placeholder="Enter 6-digit pincode"
                       />
                     </div>
+                    <div>
+                      <label
+                        htmlFor={`editDoorFlat-${address._id}`}
+                        className="block text-sm font-medium text-gray-700 mb-2">
+                        Door/Flat Number
+                      </label>
+                      <Input
+                        id={`editDoorFlat-${address._id}`}
+                        type="text"
+                        value={editDoorFlat}
+                        onChange={(e) => setEditDoorFlat(e.target.value)}
+                        className="w-full px-3 text-sm"
+                        placeholder="Enter door/flat number (optional)"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor={`editLandmark-${address._id}`}
+                        className="block text-sm font-medium text-gray-700 mb-2">
+                        Landmark
+                      </label>
+                      <Input
+                        id={`editLandmark-${address._id}`}
+                        type="text"
+                        value={editLandmark}
+                        onChange={(e) => setEditLandmark(e.target.value)}
+                        className="w-full px-3 text-sm"
+                        placeholder="Enter nearby landmark (optional)"
+                      />
+                    </div>
                     <div className="flex gap-3">
                       <button
                         onClick={() => handleUpdateAddress(address._id)}
@@ -385,6 +504,18 @@ export default function AddressesPage() {
                           <p className="text-sm sm:text-base text-gray-900 leading-relaxed mb-1">
                             {address.fullAddress}
                           </p>
+                          {address.doorOrFlatNo && (
+                            <p className="text-xs sm:text-sm text-gray-600 mb-1">
+                              <span className="font-medium">Door/Flat:</span>{" "}
+                              {address.doorOrFlatNo}
+                            </p>
+                          )}
+                          {address.landmark && (
+                            <p className="text-xs sm:text-sm text-gray-600 mb-1">
+                              <span className="font-medium">Landmark:</span>{" "}
+                              {address.landmark}
+                            </p>
+                          )}
                           <p className="text-xs sm:text-sm text-gray-600">
                             <span className="font-medium">Pincode:</span>{" "}
                             {address.pincode}

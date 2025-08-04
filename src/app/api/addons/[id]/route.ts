@@ -45,6 +45,29 @@ export const PATCH = async (
 
     const body = await req.json();
 
+    // Validate customizable options if being updated
+    if (body.isCustomizable && body.customizableOptions) {
+      for (const option of body.customizableOptions) {
+        if (!option.option || option.option.trim() === '') {
+          return apiError(
+            400,
+            "Each customizable option must have a valid option name"
+          );
+        }
+        if (option.price === undefined || option.price < 0) {
+          return apiError(
+            400,
+            "Each customizable option must have a valid price (0 or greater)"
+          );
+        }
+      }
+    }
+
+    // If setting isCustomizable to false, clear customizableOptions
+    if (body.isCustomizable === false) {
+      body.customizableOptions = [];
+    }
+
     const addon = await AddOn.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,

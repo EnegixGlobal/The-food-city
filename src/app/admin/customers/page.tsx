@@ -40,7 +40,6 @@ const CustomersPage = () => {
       if (data.success) {
         setCustomers(data.data);
         setFilteredCustomers(data.data);
-        showAlert.success("Success", "Customers loaded successfully");
       } else {
         showAlert.error("Error", data.message || "Failed to fetch customers");
       }

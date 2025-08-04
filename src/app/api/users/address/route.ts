@@ -31,7 +31,7 @@ export const POST = asyncHandler(async (req) => {
     return apiResponse(401, "Authentication failed");
   }
 
-  const { fullAddress, pincode } = await req.json();
+  const { fullAddress, pincode, doorOfFlat, landmark } = await req.json();
 
   // Validate required fields
   if (!fullAddress || fullAddress.trim() === "") {
@@ -48,6 +48,8 @@ export const POST = asyncHandler(async (req) => {
       user: userId,
       fullAddress: fullAddress.trim(),
       pincode: pincode,
+      doorOrFlatNo: doorOfFlat ? doorOfFlat.trim() : undefined,
+      landmark: landmark ? landmark.trim() : undefined,
     });
 
     await newAddress.save();

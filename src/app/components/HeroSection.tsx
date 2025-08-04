@@ -21,29 +21,6 @@ interface Coupon {
 }
 
 function HeroSection() {
-  const [offers, setOffers] = useState<Coupon[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Fetch offers from API
-  useEffect(() => {
-    const fetchOffers = async () => {
-      try {
-        const response = await fetch('/api/coupon');
-        const data = await response.json();
-        
-        if (data.success && data.data) {
-          setOffers(data.data.slice(0, 3)); // Get only first 3 offers
-        }
-      } catch (error) {
-        console.error('Error fetching offers:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchOffers();
-  }, []);
-
   const categories = [
     {
       name: "Indian",
@@ -126,8 +103,6 @@ function HeroSection() {
                   <Button className="py-3! px-8! ">Order Now</Button>
                 </div>
               </div>
-
-              
             </div>
           </Container>
         </div>

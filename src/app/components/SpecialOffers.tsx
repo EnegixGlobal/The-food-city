@@ -93,7 +93,7 @@ const SpecialOffers = () => {
   const getOfferImage = (offer: Coupon) => {
     if (offer.offerImage) return offer.offerImage;
     if (offer.applicableProducts.length > 0) return offer.applicableProducts[0].imageUrl;
-    return 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80';
+    return '/placeholder-food.svg';
   };
 
   const isOfferExpiringSoon = (offer: Coupon) => {
@@ -185,7 +185,7 @@ const SpecialOffers = () => {
                 alt={getOfferTitle(currentOffer)}
                 className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                 onError={(e) => {
-                  e.currentTarget.src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80';
+                  e.currentTarget.src = '/placeholder-food.svg';
                 }}
               />
               
@@ -209,14 +209,12 @@ const SpecialOffers = () => {
                   {currentOffer.applicableProducts.slice(0, 3).map((product, index) => (
                     <div key={product._id} className="relative">
                       <Image
-                        src={product.imageUrl || 'https://source.unsplash.com/random/100x100/?food,indian'}
+                        src={product.imageUrl }
                         alt={product.title}
                         width={40}
                         height={40}
                         className="rounded-md border-2 border-white shadow-lg object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = 'https://source.unsplash.com/random/100x100/?food,indian';
-                        }}
+                        
                       />
                       {index === 2 && currentOffer.applicableProducts.length > 3 && (
                         <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">

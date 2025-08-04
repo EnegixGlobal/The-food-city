@@ -378,7 +378,9 @@ const SettingsPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Settings
+          </h1>
           <p className="text-sm sm:text-base text-gray-600 mt-1">
             Manage company and employee information
           </p>
@@ -601,6 +603,8 @@ const SettingsPage = () => {
                     {company.logo ? (
                       <div className="flex items-center gap-3">
                         <Image
+                          height={64}
+                          width={64}
                           src={company.logo}
                           alt="Company Logo"
                           className="w-12 h-12 sm:w-16 sm:h-16 object-cover border border-orange-300"
@@ -725,6 +729,8 @@ const SettingsPage = () => {
                       {employeeForm.avatar && (
                         <div className="w-16 h-16 border border-gray-300 overflow-hidden bg-gray-50">
                           <Image
+                            width={64}
+                            height={64}
                             src={employeeForm.avatar}
                             alt="Employee Avatar"
                             className="w-full h-full object-cover"
@@ -872,6 +878,8 @@ const SettingsPage = () => {
                               {employeeForm.avatar && (
                                 <div className="w-16 h-16 border border-gray-300 overflow-hidden bg-gray-50">
                                   <Image
+                                    width={64}
+                                    height={64}
                                     src={employeeForm.avatar}
                                     alt="Employee Avatar"
                                     className="w-full h-full object-cover"
@@ -954,12 +962,16 @@ const SettingsPage = () => {
                         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                           <div className="flex items-start gap-3 sm:gap-4 lg:gap-6">
                             <div className="relative group flex-shrink-0">
-                              <div 
+                              <div
                                 className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 font-bold flex items-center justify-center border-2 border-blue-300 shadow-lg cursor-pointer hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-                                onClick={() => employee.avatar && openImageModal(employee.avatar, employee.name)}
-                              >
+                                onClick={() =>
+                                  employee.avatar &&
+                                  openImageModal(employee.avatar, employee.name)
+                                }>
                                 {employee.avatar ? (
                                   <Image
+                                  width={64}
+                                  height={64}
                                     src={employee.avatar}
                                     alt={employee.name}
                                     className="w-full h-full object-cover pointer-events-none"
@@ -985,7 +997,8 @@ const SettingsPage = () => {
                                   {employee.name}
                                 </h3>
                                 <p className="text-xs sm:text-sm text-gray-500 font-medium">
-                                  Employee ID: {employee._id.slice(-8).toUpperCase()}
+                                  Employee ID:{" "}
+                                  {employee._id.slice(-8).toUpperCase()}
                                 </p>
                               </div>
 
@@ -1051,8 +1064,12 @@ const SettingsPage = () => {
 
                               <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-gray-50 border border-gray-200">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 gap-1">
-                                  <span>Joined: {formatDate(employee.createdAt)}</span>
-                                  <span>Updated: {formatDate(employee.updatedAt)}</span>
+                                  <span>
+                                    Joined: {formatDate(employee.createdAt)}
+                                  </span>
+                                  <span>
+                                    Updated: {formatDate(employee.updatedAt)}
+                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -1114,11 +1131,10 @@ const SettingsPage = () => {
             {/* Close Button */}
             <button
               onClick={closeImageModal}
-              className="absolute top-2 right-2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm text-gray-800 hover:bg-white transition-colors flex items-center justify-center shadow-lg rounded-full md:w-8 md:h-8 md:-top-2 md:-right-2 md:rounded-none"
-            >
+              className="absolute top-2 right-2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm text-gray-800 hover:bg-white transition-colors flex items-center justify-center shadow-lg rounded-full md:w-8 md:h-8 md:-top-2 md:-right-2 md:rounded-none">
               <X className="w-5 h-5 md:w-5 md:h-5" />
             </button>
-            
+
             {/* Image Container */}
             <div className="flex-1 flex items-center justify-center min-h-0">
               <Image
@@ -1127,7 +1143,7 @@ const SettingsPage = () => {
                 className="max-w-full max-h-full object-contain shadow-2xl rounded-lg md:rounded-none"
               />
             </div>
-            
+
             {/* Image Caption */}
             <div className="bg-white/95 backdrop-blur-sm px-4 py-3 mt-2 shadow-lg rounded-lg md:rounded-none">
               <p className="text-center text-gray-800 font-medium text-sm md:text-base">
