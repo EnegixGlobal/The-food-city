@@ -1178,7 +1178,7 @@ const CheckoutPage = () => {
           </div>
 
           {/* Right Column - Order Summary */}
-          <div className="lg:w-1/3">
+          <div className="lg:w-1/3 mb-20">
             <div className="bg-white shadow-sm p-6 sticky top-4">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 Order Summary
