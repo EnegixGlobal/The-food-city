@@ -50,6 +50,7 @@ interface Order {
   onlineDiscount: number;
   status: string;
   paymentStatus: string;
+  paymentMethod: string;
   orderDate: string;
   trackingInfo: TrackingInfo;
 }
@@ -83,7 +84,7 @@ export default function OrdersPage() {
       setLoading(true);
       const queryParams = new URLSearchParams({
         page: page.toString(),
-        limit: "10",
+        limit: "20",
         ...(status && { status }),
       });
 
@@ -326,57 +327,90 @@ export default function OrdersPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-4">
             {orders.map((order) => (
               <div
                 key={order._id}
                 onClick={() => handleOrderClick(order._id)}
-                className="bg-white rounded-none shadow-sm p-4 sm:p-6 cursor-pointer hover:shadow-md transition-all duration-200 border border-gray-100 hover:border-orange-200">
+                className="bg-white rounded-none shadow-sm p-4 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-orange-200 group">
                 {/* Order Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-                  <div className="mb-2 sm:mb-0">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                      #{order.orderId}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {format(
-                        new Date(order.orderDate),
-                        "MMM dd, yyyy • hh:mm a"
-                      )}
-                    </p>
+                  <div className="mb-3 sm:mb-0">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
+                        #{order.orderId}
+                      </h3>
+                      
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>
+                        {format(
+                          new Date(order.orderDate),
+                          "MMM dd, yyyy • hh:mm a"
+                        )}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex flex-col sm:items-end">
                     <div className="flex flex-wrap gap-1 sm:gap-2 mb-2">
-                      {/* <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                        {order.status.replace('_', ' ').toUpperCase()}
-                      </span> */}
+                      {/* Payment Status Badge */}
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
                           order.paymentStatus
                         )}`}>
                         {order.paymentStatus.toUpperCase()}
                       </span>
+                      
+                      {/* Payment Method Badge */}
+                      <div className="flex flex-wrap gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          order.paymentMethod === 'online' 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-orange-100 text-orange-800'
+                        }`}>
+                          {order.paymentMethod === 'online' ? 'ONLINE' : 'COD'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-base sm:text-lg font-bold text-gray-900">
-                      ₹{order.totalAmount}
+                    
+                    {/* Right side - Payment Status and Amount */}
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-gray-900 mb-1">
+                          ₹{order.totalAmount}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {order.items.length + order.addons.length} item{order.items.length + order.addons.length > 1 ? 's' : ''}
+                        </div>
+                      </div>
+
+                      {/* Arrow */}
+                      <div className="flex-shrink-0 text-gray-400 group-hover:text-orange-400 transition-colors">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Order Items */}
-                <div className="border-t pt-4">
+                <div className="border-t border-gray-100 pt-4">
                   <div className="flex items-start space-x-4">
                     {/* First Item Image */}
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 relative rounded-none overflow-hidden bg-gray-100 flex-shrink-0">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 relative rounded-none overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex-shrink-0 group-hover:shadow-md transition-shadow">
                       {order.items[0]?.imageUrl ? (
                         <Image
                           src={order.items[0].imageUrl}
                           alt={order.items[0].title}
                           fill
-                          className="object-cover"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl">
                           🍽️
                         </div>
                       )}
@@ -384,26 +418,38 @@ export default function OrdersPage() {
 
                     {/* Items Summary */}
                     <div className="flex-1 min-w-0">
-                      <div className="mb-2">
-                        <p className="text-sm sm:text-base font-medium text-gray-900 truncate">
+                      <div className="mb-3">
+                        <p className="text-base font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors">
                           {order.items[0]?.title}
                         </p>
                         {order.items.length > 1 && (
-                          <p className="text-xs sm:text-sm text-gray-600">
-                            +{order.items.length - 1} more item
-                            {order.items.length > 2 ? "s" : ""}
+                          <p className="text-sm text-gray-600 mt-1">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
+                              +{order.items.length - 1} more item{order.items.length > 2 ? "s" : ""}
+                            </span>
                           </p>
                         )}
                       </div>
 
                       {/* Customer Info */}
-                      <div className="text-xs sm:text-sm text-gray-600">
-                        <p className="truncate">{order.customerInfo.name}</p>
-                        <p className="truncate">{order.customerInfo.address}</p>
+                      <div className="space-y-1 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          <span className="font-medium">{order.customerInfo.name}</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span className="line-clamp-2">{order.customerInfo.address}</span>
+                        </div>
                       </div>
-                      
-                      {/* Pay Now Button */}
-                      {order.paymentStatus === 'pending' && (
+
+                      {/* Pay Online Button */}
+                      {order.paymentStatus === 'pending'  && (
                         <div className="mt-3">
                           <button
                             onClick={(e) => {
@@ -411,38 +457,43 @@ export default function OrdersPage() {
                               processPayment(order);
                             }}
                             disabled={processingPayment === order._id}
-                            className="md:px-4 px-3 py-2 bg-green-500 text-white rounded-none hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-none hover:from-blue-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm hover:shadow-md"
                           >
-                            {processingPayment === order._id ? 'Processing...' : 'Pay to Confirm Order'}
+                            {processingPayment === order._id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg>
+                                Pay Online
+                              </>
+                            )}
                           </button>
                         </div>
                       )}
-                    </div>
-
-                    {/* Arrow */}
-                    <div className="flex-shrink-0 text-gray-400">
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
                     </div>
                   </div>
 
                   {/* Add-ons Summary */}
                   {order.addons.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <p className="text-xs sm:text-sm text-gray-600">
-                        <span className="font-medium">Add-ons:</span>{" "}
-                        {order.addons.map((addon) => addon.name).join(", ")}
-                      </p>
+                    <div className="mt-4 pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span className="text-sm font-medium text-gray-700">Add-ons</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {order.addons.map((addon, index) => (
+                          <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-orange-50 text-orange-700 border border-orange-200">
+                            {addon.name}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -463,20 +514,31 @@ export default function OrdersPage() {
               </button>
 
               <div className="flex space-x-0.5 sm:space-x-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
                     <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-2 sm:px-3 py-2 rounded-none text-xs sm:text-sm font-medium ${
-                        currentPage === page
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-2 sm:px-3 py-2 rounded-none text-xs sm:text-sm font-medium transition-colors ${
+                        currentPage === pageNum
                           ? "bg-orange-500 text-white"
-                          : "text-gray-700 hover:bg-gray-100"
+                          : "text-gray-700 hover:bg-gray-100 border border-gray-300"
                       }`}>
-                      {page}
+                      {pageNum}
                     </button>
-                  )
-                )}
+                  );
+                })}
               </div>
 
               <button
@@ -487,6 +549,11 @@ export default function OrdersPage() {
                 className="px-3 sm:px-4 py-2 rounded-none border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
                 Next
               </button>
+            </div>
+            
+            {/* Pagination Info */}
+            <div className="text-center mt-3 text-sm text-gray-600">
+              Showing page {currentPage} of {totalPages}
             </div>
           </div>
         )}

@@ -102,6 +102,7 @@ export const GET = asyncHandler(async (_req) => {
         startDate: 1,
         endDate: 1,
         usageLimit: 1,
+        usedCount: 1,
         isActive: 1,
         offerImage: 1,
         applicableProducts: {
@@ -113,8 +114,8 @@ export const GET = asyncHandler(async (_req) => {
               price: "$$product.price",
               imageUrl: "$$product.imageUrl",
               _id: "$$product._id",
-            }
-          }
+            },
+          },
         },
       },
     },

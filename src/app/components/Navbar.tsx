@@ -20,6 +20,7 @@ function Navbar() {
   const menuRef = useRef<HTMLDivElement>(null);
   const [openLogin, setOpenLogin] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [hasActiveOffers, setHasActiveOffers] = useState(false);
   const getTotalItems = useCartStore((state) => state.getTotalItems);
   const router = useRouter();
 
@@ -33,22 +34,22 @@ function Navbar() {
       await axios.post("/api/users/logout");
       clearUser();
       setUserHoverOpen(false);
-      
+
       // Show success alert
       addAlert({
-        type: 'success',
-        title: 'Logged out successfully',
-        message: 'You have been logged out of your account.',
-        duration: 4000
+        type: "success",
+        title: "Logged out successfully",
+        message: "You have been logged out of your account.",
+        duration: 4000,
       });
-      router.push("/")
+      router.push("/");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       addAlert({
-        type: 'error',
-        title: 'Logout failed',
-        message: 'There was an error logging you out. Please try again.',
-        duration: 4000
+        type: "error",
+        title: "Logout failed",
+        message: "There was an error logging you out. Please try again.",
+        duration: 4000,
       });
     }
   };
@@ -56,7 +57,23 @@ function Navbar() {
   // Handle hydration to prevent mismatch
   useEffect(() => {
     setIsHydrated(true);
+    // Fetch offers when component mounts
+    fetchOffers();
   }, []);
+
+  // Function to fetch active offers
+  const fetchOffers = async () => {
+    try {
+      const response = await axios.get("/api/coupon");
+      if (response.data && response.data.success) {
+        const offers = response.data.data || [];
+        setHasActiveOffers(offers.length > 0);
+      }
+    } catch (error) {
+      console.error("Error fetching offers:", error);
+      setHasActiveOffers(false);
+    }
+  };
 
   // useEffect(() => {
   //   // Simulate a login state after 2 seconds
@@ -81,6 +98,36 @@ function Navbar() {
     };
   }, [isOpen]);
 
+  // Blinking Offer Icon Component
+  const BlinkingOfferIcon = () => (
+    <div className="relative">
+      <BiSolidOffer />
+      {hasActiveOffers && (
+        <>
+          {/* Blinking dot */}
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+          {/* Blinking ring animation */}
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping"></span>
+        </>
+      )}
+    </div>
+  );
+
+  // Mobile Blinking Offer Icon Component
+  const MobileBlinkingOfferIcon = () => (
+    <div className="relative inline-block">
+      <BiSolidOffer className="h-5 w-5 mr-2 text-gray-400" />
+      {hasActiveOffers && (
+        <>
+          {/* Blinking dot */}
+          <span className="absolute top-0 right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+          {/* Blinking ring animation */}
+          <span className="absolute top-0 right-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping"></span>
+        </>
+      )}
+    </div>
+  );
+
   const navlinks = [
     {
       name: "Search",
@@ -90,7 +137,7 @@ function Navbar() {
     {
       name: "Offers",
       href: "/offers",
-      icon: <BiSolidOffer />,
+      icon: <BlinkingOfferIcon />,
     },
   ];
 
@@ -124,7 +171,11 @@ function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="hover:text-yellow-300 py-6 transition font-bold flex items-center">
+                  className={`hover:text-yellow-300 py-6 transition font-bold flex items-center ${
+                    item.name === "Offers" && hasActiveOffers
+                      ? "text-white hover:text-yellow-100"
+                      : ""
+                  }`}>
                   <span className="h-6 w-6 flex font-bold items-center justify-center mr-1 text-gray-200">
                     {item.icon}
                   </span>
@@ -346,10 +397,12 @@ function Navbar() {
                   </div>
                   <div>
                     <p className="font-semibold">{user.name || "User"}</p>
-                    <p className="text-sm text-red-200">{user.phone || user.email}</p>
+                    <p className="text-sm text-red-200">
+                      {user.phone || user.email}
+                    </p>
                   </div>
                 </div>
-                
+
                 {/* User Menu Items */}
                 <Link
                   href="/my-account"
@@ -443,10 +496,21 @@ function Navbar() {
               </Link>
               <Link
                 href="/offers"
-                className="block px-6 py-3 border-t border-red-600 hover:bg-red-600 transition"
+                className={`block px-6 py-3 border-t border-red-600 hover:bg-red-600 transition ${
+                  hasActiveOffers ? "bg-red-800" : ""
+                }`}
                 onClick={() => setIsOpen(false)}>
-                <BiSolidOffer className="h-5 w-5 mr-2 text-gray-400 inline" />
-                Offers
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <MobileBlinkingOfferIcon />
+                    Offers
+                  </div>
+                  {hasActiveOffers && (
+                    <span className="text-xs bg-yellow-400 text-red-900 px-2 py-1 rounded-full font-bold animate-pulse">
+                      NEW
+                    </span>
+                  )}
+                </div>
               </Link>
               <Link href="/cart" onClick={() => setIsOpen(false)}>
                 <Button className="py-2 mt-2 px-20 ml-4">

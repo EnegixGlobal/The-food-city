@@ -71,20 +71,20 @@ const CartPage = () => {
   console.log(getTotalAddonPrice())
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
       {/* Container */}
       <Container>
         {/* Header */}
-        <div className="py-6">
+        <div className="py-4 md:py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Your Cart
+              <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">
+                Shopping Cart
               </h1>
-              <p className="text-gray-600">
+              <p className="text-sm md:text-base text-gray-600">
                 {cartSummary.totalItems}{" "}
-                {cartSummary.totalItems === 1 ? "item" : "items"} in your cart
+                {cartSummary.totalItems === 1 ? "item" : "items"}
               </p>
             </div>
             {!cartSummary.isEmpty && (
@@ -92,7 +92,7 @@ const CartPage = () => {
                 onClick={() => {
                   if (
                     window.confirm(
-                      "Are you sure you want to clear your entire cart?"
+                      "Clear entire cart?"
                     )
                   ) {
                     try {
@@ -102,23 +102,23 @@ const CartPage = () => {
                     }
                   }
                 }}
-                className="text-red-600 hover:text-red-800 underline text-sm">
+                className="text-red-500 hover:text-red-700 text-xs md:text-sm font-medium transition-colors">
                 Clear All
               </button>
             )}
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
           {/* Cart Items Section */}
           <div className="flex-7">
             {/* Product Cart Section */}
             {cart && cart.length > 0 && (
-              <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-                <div className="bg-gradient-to-r from-red-50 to-orange-50 px-6 py-4 border-b">
-                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-4 md:mb-6 border border-gray-100">
+                <div className="bg-gradient-to-r from-red-500 to-red-600 px-4 md:px-6 py-3 md:py-4">
+                  <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
                     🍽️ Food Items
-                    <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm">
+                    <span className="bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs md:text-sm font-medium">
                       {cart.length}
                     </span>
                   </h2>
@@ -129,40 +129,40 @@ const CartPage = () => {
                   return (
                   <div
                     key={item.cartItemId}
-                    className="border-b border-gray-100 last:border-0">
-                    <div className="flex md:p-6 p-3">
+                    className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+                    <div className="flex p-3 md:p-6">
                       {/* Item Image */}
-                      <div className="md:mr-4 mr-2 flex-shrink-0">
+                      <div className="mr-3 md:mr-4 flex-shrink-0">
                         <Image
-                          width={150}
-                          height={150}
+                          width={120}
+                          height={120}
                           src={item.imageUrl || "/placeholder-food.svg"}
                           alt={item.title || "Product"}
-                          className="md:w-48 md:h-32 h-24 w-36 object-cover rounded-lg"
+                          className="w-20 h-20 md:w-28 md:h-28 object-cover rounded-xl shadow-sm"
                         />
                       </div>
 
                       {/* Item Details */}
-                      <div className="w-full px-2">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="md:text-xl font-bold text-gray-800">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between h-full">
+                          <div className="flex-1 pr-2">
+                            <h3 className="text-sm md:text-lg font-bold text-gray-900 mb-1 md:mb-2 line-clamp-2">
                               {item.title || "Unknown Product"}
                             </h3>
 
                             {/* Selected Customization */}
                             {item.selectedCustomization && (
-                              <div className="mt-1">
-                                <div className="bg-gray-100  px-2 py-1 rounded text-xs inline-block">
+                              <div className="mb-2">
+                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
                                   {item.selectedCustomization.option}
-                                </div>
+                                </span>
                               </div>
                             )}
 
                             {/* Price Display */}
-                            <div className="mt-2">
-                              <span className="text-red-600 flex items-center font-bold">
-                                <FaRupeeSign />
+                            <div className="mt-auto">
+                              <span className="text-red-600 flex items-center font-bold text-sm md:text-base">
+                                <FaRupeeSign className="text-xs md:text-sm" />
                                 {(item.totalPrice && item.totalPrice > 0 
                                   ? item.totalPrice 
                                   : (item.selectedCustomization 
@@ -173,9 +173,9 @@ const CartPage = () => {
                             </div>
                           </div>
 
-                          <div className="flex flex-col items-end gap-3">
+                          <div className="flex flex-col items-end justify-between h-full">
                             {/* Quantity Controls */}
-                            <div className="flex items-center border border-gray-300 rounded-full">
+                            <div className="flex items-center bg-gray-100 rounded-full border">
                               <button
                                 onClick={() => {
                                   try {
@@ -187,10 +187,10 @@ const CartPage = () => {
                                     );
                                   }
                                 }}
-                                className="p-2 text-gray-600 hover:text-red-900 transition">
-                                <FiMinus size={14} />
+                                className="p-2 text-gray-600 hover:text-red-600 transition-colors rounded-full hover:bg-red-50">
+                                <FiMinus size={12} />
                               </button>
-                              <span className="px-3 py-1 font-medium min-w-[2rem] text-center">
+                              <span className="px-3 py-1 font-bold text-sm min-w-[2rem] text-center">
                                 {item.quantity || 0}
                               </span>
                               <button
@@ -204,8 +204,8 @@ const CartPage = () => {
                                     );
                                   }
                                 }}
-                                className="p-2 text-gray-600 hover:text-red-900 transition">
-                                <FiPlus size={14} />
+                                className="p-2 text-gray-600 hover:text-green-600 transition-colors rounded-full hover:bg-green-50">
+                                <FiPlus size={12} />
                               </button>
                             </div>
                           </div>
@@ -220,11 +220,11 @@ const CartPage = () => {
 
             {/* Addon Cart Section */}
             {addons && addons.length > 0 && (
-              <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b">
-                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-4 md:mb-6 border border-gray-100">
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 md:px-6 py-3 md:py-4">
+                  <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
                     🍟 Add-ons
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+                    <span className="bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs md:text-sm font-medium">
                       {addons.length}
                     </span>
                   </h2>
@@ -233,40 +233,40 @@ const CartPage = () => {
                 {addons.map((item: any) => (
                   <div
                     key={item.addonCartItemId}
-                    className="border-b border-gray-100 last:border-0">
-                    <div className="flex md:p-6 p-3">
+                    className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+                    <div className="flex p-3 md:p-6">
                       {/* Item Image */}
-                      <div className="md:mr-4 mr-2 flex-shrink-0">
+                      <div className="mr-3 md:mr-4 flex-shrink-0">
                         <Image
-                          width={150}
-                          height={150}
+                          width={120}
+                          height={120}
                           src={item.imageUrl || "/placeholder-food.svg"}
                           alt={item.title || "Addon"}
-                          className="md:w-48 md:h-32 h-24 w-36 object-cover rounded-lg"
+                          className="w-20 h-20 md:w-28 md:h-28 object-cover rounded-xl shadow-sm"
                         />
                       </div>
 
                       {/* Item Details */}
-                      <div className="w-full px-2">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="md:text-xl font-bold text-gray-800">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between h-full">
+                          <div className="flex-1 pr-2">
+                            <h3 className="text-sm md:text-lg font-bold text-gray-900 mb-1 md:mb-2 line-clamp-2">
                               {item.title || "Unknown Addon"}
                             </h3>
 
                             {/* Selected Customization */}
                             {item.selectedCustomization && (
-                              <div className="mt-1">
-                                <div className="bg-gray-100 px-3 py-2 rounded text-xs inline-block">
+                              <div className="mb-2">
+                                <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
                                   {item.selectedCustomization.option}
-                                </div>
+                                </span>
                               </div>
                             )}
 
                             {/* Price Display */}
-                            <div className="mt-2">
-                              <span className="text-red-600 flex items-center font-bold">
-                                <FaRupeeSign />
+                            <div className="mt-auto">
+                              <span className="text-red-600 flex items-center font-bold text-sm md:text-base">
+                                <FaRupeeSign className="text-xs md:text-sm" />
                                 {(item.totalPrice && item.totalPrice > 0 
                                   ? item.totalPrice 
                                   : (item.selectedCustomization 
@@ -277,9 +277,9 @@ const CartPage = () => {
                             </div>
                           </div>
 
-                          <div className="flex flex-col items-end gap-3">
+                          <div className="flex flex-col items-end justify-between h-full">
                             {/* Quantity Controls */}
-                            <div className="flex items-center border border-gray-300 rounded-full">
+                            <div className="flex items-center bg-gray-100 rounded-full border">
                               <button
                                 onClick={() => {
                                   try {
@@ -293,10 +293,10 @@ const CartPage = () => {
                                     );
                                   }
                                 }}
-                                className="p-2 text-gray-600 hover:text-red-900 transition">
-                                <FiMinus size={14} />
+                                className="p-2 text-gray-600 hover:text-red-600 transition-colors rounded-full hover:bg-red-50">
+                                <FiMinus size={12} />
                               </button>
-                              <span className="px-3 py-1 font-medium min-w-[2rem] text-center">
+                              <span className="px-3 py-1 font-bold text-sm min-w-[2rem] text-center">
                                 {item.quantity || 0}
                               </span>
                               <button
@@ -312,8 +312,8 @@ const CartPage = () => {
                                     );
                                   }
                                 }}
-                                className="p-2 text-gray-600 hover:text-red-900 transition">
-                                <FiPlus size={14} />
+                                className="p-2 text-gray-600 hover:text-green-600 transition-colors rounded-full hover:bg-green-50">
+                                <FiPlus size={12} />
                               </button>
                             </div>
                           </div>
@@ -327,21 +327,23 @@ const CartPage = () => {
 
             {/* Empty Cart State */}
             {loading ? (
-              <div className="bg-white rounded-xl shadow-md p-8">
+              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
                 <Spinner className="h-14!" />
               </div>
             ) : cartSummary.isEmpty ? (
-              <div className="bg-white rounded-xl shadow-md text-center py-16">
-                <FaCartShopping className="mx-auto text-6xl text-gray-300 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Your cart is empty
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Add some delicious items to get started!
-                </p>
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 text-center py-12 md:py-16">
+                <div className="mb-6">
+                  <FaCartShopping className="mx-auto text-4xl md:text-6xl text-gray-300 mb-4" />
+                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
+                    Your cart is empty
+                  </h3>
+                  <p className="text-sm md:text-base text-gray-600 mb-6">
+                    Add some delicious items to get started!
+                  </p>
+                </div>
                 <Link href="/">
-                  <Button className="bg-red-900 hover:bg-red-800">
-                    Continue Shopping
+                  <Button className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl shadow-lg">
+                    Start Shopping
                   </Button>
                 </Link>
               </div>
@@ -349,21 +351,21 @@ const CartPage = () => {
           </div>
           {/* Order Summary Section */}
           <div className="flex-3 mb-16 md:mb-0">
-            <div className="bg-white rounded-xl shadow-md md:p-6 sticky top-20 p-4">
-              <h2 className="md:text-2xl text-xl font-bold text-red-900 mb-6 border-b pb-2">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 md:p-6 sticky top-20">
+              <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 pb-2 border-b border-gray-200">
                 Order Summary
               </h2>
 
               {/* Pricing Breakdown */}
-              <div className="space-y-3 mb-6">
+              <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
                 {/* Products Subtotal */}
                 {cartSummary.productCount > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs md:text-sm text-gray-600">
                       🍽️ Food Items ({cartSummary.productCount})
                     </span>
-                    <span className="font-medium flex items-center">
-                      <FaRupeeSign />
+                    <span className="font-semibold text-sm md:text-base flex items-center">
+                      <FaRupeeSign className="text-xs" />
                       {cartSummary.productTotal?.toFixed(2) || "0.00"}
                     </span>
                   </div>
@@ -371,12 +373,12 @@ const CartPage = () => {
 
                 {/* Addons Subtotal */}
                 {cartSummary.addonCount > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs md:text-sm text-gray-600">
                       🍟 Add-ons ({cartSummary.addonCount})
                     </span>
-                    <span className="font-medium flex items-center">
-                      <FaRupeeSign />
+                    <span className="font-semibold text-sm md:text-base flex items-center">
+                      <FaRupeeSign className="text-xs" />
                       {cartSummary.addonTotal?.toFixed(2) || "0.00"}
                     </span>
                   </div>
@@ -385,84 +387,75 @@ const CartPage = () => {
                 {/* Subtotal */}
                 {(cartSummary.productCount > 0 ||
                   cartSummary.addonCount > 0) && (
-                  <div className="flex justify-between border-t pt-2">
-                    <span className="text-gray-700 font-medium">
-                      Subtotal ({cartSummary.totalUniqueItems} items)
+                  <div className="flex justify-between items-center border-t pt-2 mt-2">
+                    <span className="text-sm md:text-base text-gray-700 font-medium">
+                      Subtotal
                     </span>
-                    <span className="font-bold flex items-center">
-                      <FaRupeeSign />
+                    <span className="font-bold text-sm md:text-base flex items-center">
+                      <FaRupeeSign className="text-xs" />
                       {cartSummary.subtotal?.toFixed(2) || "0.00"}
                     </span>
                   </div>
                 )}
 
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Delivery Fee</span>
-                  <span className="font-medium text-green-500">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs md:text-sm text-gray-600">Delivery</span>
+                  <span className="font-medium text-xs md:text-sm text-green-600">
                     {cartSummary.deliveryFee === 0
                       ? "Free"
                       : `₹${cartSummary.deliveryFee?.toFixed(2) || "0.00"}`}
                   </span>
                 </div>
                 {cartSummary.discount > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Discount</span>
-                    <span className="font-medium text-green-600">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs md:text-sm text-gray-600">Discount</span>
+                    <span className="font-medium text-xs md:text-sm text-green-600">
                       -₹{cartSummary.discount?.toFixed(2) || "0.00"}
                     </span>
                   </div>
                 )}
-                {cartSummary.tax > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tax</span>
-                    <span className="font-medium flex items-center">
-                      <FaRupeeSign />
-                      {cartSummary.tax?.toFixed(2) || "0.00"}
-                    </span>
-                  </div>
-                )}
 
-                <div className="flex justify-between border-t pt-3 mt-2">
-                  <span className="text-gray-900 font-bold text-xl">
-                    Grand Total
+                <div className="flex justify-between items-center border-t pt-3 mt-3 bg-gray-50 -mx-4 md:-mx-6 px-4 md:px-6 py-3 rounded-b-2xl">
+                  <span className="text-gray-900 font-bold text-base md:text-xl">
+                    Total
                   </span>
-                  <span className="font-bold text-xl flex items-center text-red-600">
-                    <FaRupeeSign />
+                  <span className="font-bold text-lg md:text-2xl flex items-center text-red-600">
+                    <FaRupeeSign className="text-sm md:text-lg" />
                     {cartSummary.grandTotal?.toFixed(2) || "0.00"}
                   </span>
                 </div>
               </div>
 
-              <div className="flex flex-col items-center">
-                <Link href="/checkout" className="w-full">
+              <div className="space-y-3">
+                <Link href="/checkout" className="w-full block">
                   <Button
-                    className="w-full flex items-center justify-center gap-2 bg-red-900 hover:bg-red-800"
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-3 md:py-4 rounded-xl shadow-lg font-semibold text-sm md:text-base"
                     disabled={cartSummary.isEmpty}>
                     <FaCartShopping />
                     Place Order
                   </Button>
                 </Link>
 
-                <Link href="/">
-                  <div className="w-full underline text-lg mt-3 py-2 text-center text-red-900 hover:text-red-700">
+                <Link href="/" className="block">
+                  <div className="w-full text-center py-2 md:py-3 text-sm md:text-base text-red-600 hover:text-red-700 font-medium">
                     Continue Shopping
                   </div>
                 </Link>
               </div>
 
               {/* Mobile Bottom Bar */}
-              <div className="md:hidden bg-red-900 fixed w-full rounded-t-2xl bottom-0 left-0 z-50">
-                <div className="flex items-center justify-between w-full py-4 px-4 shadow-lg">
+              <div className="md:hidden bg-gradient-to-r from-red-500 to-red-600 fixed w-full bottom-0 left-0 z-50 shadow-2xl">
+                <div className="flex items-center justify-between w-full py-3 px-4">
                   <div className="text-white">
-                    <div className="text-sm">Total</div>
-                    <div className="text-xl flex items-center font-bold">
-                      <FaRupeeSign className="h-4" />
+                    <div className="text-xs opacity-90">Total</div>
+                    <div className="text-lg flex items-center font-bold">
+                      <FaRupeeSign className="text-sm" />
                       {cartSummary.grandTotal?.toFixed(2) || "0.00"}
                     </div>
                   </div>
                   <Link href="/checkout">
                     <Button
-                      className="bg-white text-red-900 hover:bg-gray-100"
+                      className="bg-white text-red-600 hover:bg-gray-100 px-6 py-2 text-sm font-semibold rounded-lg shadow-lg"
                       disabled={cartSummary.isEmpty}>
                       Checkout
                     </Button>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { FiClock, FiTag, FiPercent, FiShoppingBag, FiChevronRight } from "react-icons/fi";
+import { useRouter } from "next/navigation";
 
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -34,10 +35,17 @@ interface ApiResponse {
 }
 
 const OffersPage = () => {
+  const router = useRouter();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedOffers, setExpandedOffers] = useState<{ [key: string]: boolean }>({});
+
+  // Handle product click - redirect to search page with product name
+  const handleProductClick = (productTitle: string) => {
+    const searchQuery = encodeURIComponent(productTitle);
+    router.push(`/search?q=${searchQuery}`);
+  };
 
   // Fetch coupons data
   const fetchCoupons = async () => {
@@ -248,17 +256,21 @@ const OffersPage = () => {
                       {/* Show first 3 products */}
                       <div className="grid grid-cols-3 gap-2 mb-3">
                         {coupon.applicableProducts.slice(0, 3).map((product) => (
-                          <div key={product._id} className="text-center">
+                          <div 
+                            key={product._id} 
+                            className="text-center cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                            onClick={() => handleProductClick(product.title)}
+                          >
                             <div className="w-full h-16 bg-gray-100 rounded-lg mb-2 overflow-hidden">
                               <Image
                                 src={product.imageUrl || '/placeholder-food.svg'}
                                 alt={product.title}
                                 width={80}
                                 height={64}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover hover:scale-105 transition-transform"
                               />
                             </div>
-                            <p className="text-xs text-gray-600 font-medium line-clamp-2">
+                            <p className="text-xs text-gray-600 font-medium line-clamp-2 hover:text-red-600 transition-colors">
                               {product.title}
                             </p>
                             <p className="text-xs text-red-600 font-bold">
@@ -283,18 +295,22 @@ const OffersPage = () => {
                       {expandedOffers[coupon._id] && coupon.applicableProducts.length > 3 && (
                         <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100">
                           {coupon.applicableProducts.slice(3).map((product) => (
-                            <div key={product._id} className="flex items-center space-x-2">
+                            <div 
+                              key={product._id} 
+                              className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                              onClick={() => handleProductClick(product.title)}
+                            >
                               <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                                 <Image
                                   src={product.imageUrl || '/placeholder-food.svg'}
                                   alt={product.title}
                                   width={48}
                                   height={48}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover hover:scale-105 transition-transform"
                                 />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                                <p className="text-sm font-medium text-gray-900 line-clamp-1 hover:text-red-600 transition-colors">
                                   {product.title}
                                 </p>
                                 <p className="text-sm text-red-600 font-bold">

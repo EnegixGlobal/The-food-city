@@ -63,6 +63,8 @@ const CouponsPage = () => {
     isActive: true
   });
 
+  console.log(coupons, "Coupons Data");
+
   // Image upload handler
   const handleImageUpload = async (file: File) => {
     if (!file) return;

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { FiChevronLeft, FiChevronRight, FiTag, FiClock, FiShoppingCart } from "react-icons/fi";
 import { FaFire, FaGift } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 import Container from "./Container";
 import Button from "./Button";
 import Image from "next/image";
@@ -28,9 +29,24 @@ interface Coupon {
 }
 
 const SpecialOffers = () => {
+  const router = useRouter();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [offers, setOffers] = useState<Coupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Handle product click - redirect to search page with product name
+  const handleProductClick = (productTitle: string) => {
+    const searchQuery = encodeURIComponent(productTitle);
+    router.push(`/search?q=${searchQuery}`);
+  };
+
+  // Handle "View All Items" - create a search query with all product names
+  const handleViewAllItems = (products: Array<{title: string}>) => {
+    // Create a search query with multiple product names separated by " OR "
+    const searchTerms = products.map(p => p.title).join(' OR ');
+    const searchQuery = encodeURIComponent(searchTerms);
+    router.push(`/search?q=${searchQuery}`);
+  };
 
   // Fetch offers from API
   useEffect(() => {
@@ -203,21 +219,25 @@ const SpecialOffers = () => {
                 )}
               </div>
 
-              {/* Product Images Preview */}
+              {/* Product Images Preview - Clickable */}
               {currentOffer.applicableProducts.length > 0 && (
                 <div className="absolute bottom-3 left-3 flex gap-1">
                   {currentOffer.applicableProducts.slice(0, 3).map((product, index) => (
-                    <div key={product._id} className="relative">
+                    <div 
+                      key={product._id} 
+                      className="relative cursor-pointer hover:scale-110 transition-transform"
+                      onClick={() => handleProductClick(product.title)}
+                      title={`Click to search for ${product.title}`}
+                    >
                       <Image
-                        src={product.imageUrl }
+                        src={product.imageUrl}
                         alt={product.title}
                         width={40}
                         height={40}
-                        className="rounded-md border-2 border-white shadow-lg object-cover"
-                        
+                        className="rounded-md border-2 border-white shadow-lg object-cover hover:border-yellow-400 transition-colors"
                       />
                       {index === 2 && currentOffer.applicableProducts.length > 3 && (
-                        <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">
+                        <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center hover:bg-black/50 transition-colors">
                           <span className="text-white text-xs font-bold">+{currentOffer.applicableProducts.length - 3}</span>
                         </div>
                       )}
@@ -260,7 +280,7 @@ const SpecialOffers = () => {
                 </p>
 
                 {/* Expiry Info */}
-                <div className="text-white/70 text-xs mb-4 flex items-center justify-center gap-1">
+                <div className="text-white/70 text-xs mb-3 flex items-center justify-center gap-1">
                   <FiClock className="text-xs" />
                   Expires: {new Date(currentOffer.endDate).toLocaleDateString('en-US', { 
                     month: 'short', 
@@ -268,6 +288,33 @@ const SpecialOffers = () => {
                     year: 'numeric'
                   })}
                 </div>
+
+                {/* Clickable Product Preview */}
+                {currentOffer.applicableProducts.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-white/80 text-xs mb-2 text-center">Click any item to search:</p>
+                    <div className="flex flex-wrap justify-center gap-2 max-w-xs mx-auto">
+                      {currentOffer.applicableProducts.slice(0, 6).map((product) => (
+                        <button
+                          key={product._id}
+                          onClick={() => handleProductClick(product.title)}
+                          className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded-full border border-white/20 hover:border-yellow-400 transition-all duration-200 hover:scale-105"
+                          title={`Search for ${product.title}`}
+                        >
+                          {product.title.length > 15 ? `${product.title.substring(0, 15)}...` : product.title}
+                        </button>
+                      ))}
+                      {currentOffer.applicableProducts.length > 6 && (
+                        <button
+                          onClick={() => handleViewAllItems(currentOffer.applicableProducts)}
+                          className="bg-yellow-400/20 hover:bg-yellow-400/30 text-yellow-300 text-xs px-2 py-1 rounded-full border border-yellow-400/50 hover:border-yellow-400 transition-all duration-200 hover:scale-105"
+                        >
+                          +{currentOffer.applicableProducts.length - 6} more
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-2 justify-center">
@@ -277,12 +324,13 @@ const SpecialOffers = () => {
                       View All Offers
                     </Button>
                   </Link>
-                  <Link href={`/search?q=${encodeURIComponent(currentOffer.applicableProducts[0]?.title || 'food')}`}>
-                    <Button className="bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 font-bold py-2 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-1 text-sm">
-                      <FiShoppingCart className="text-sm" />
-                      Order Now
-                    </Button>
-                  </Link>
+                  <Button 
+                    onClick={() => handleViewAllItems(currentOffer.applicableProducts)}
+                    className="bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 font-bold py-2 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-1 text-sm"
+                  >
+                    <FiShoppingCart className="text-sm" />
+                    Search All Items
+                  </Button>
                 </div>
               </div>
             </div>

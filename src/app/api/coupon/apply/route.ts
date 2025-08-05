@@ -33,8 +33,7 @@ export const POST = asyncHandler(async (req) => {
 
     if (isApplicable) {
       if (coupon.discountType === "percentage") {
-        totalDiscount +=
-          ((item.price * coupon.discountValue) / 100) * item.quantity;
+        totalDiscount += (item.price * coupon.discountValue) / 100;
       } else if (coupon.discountType === "fixed") {
         totalDiscount += coupon.discountValue * item.quantity;
       }
@@ -42,7 +41,7 @@ export const POST = asyncHandler(async (req) => {
   }
 
   // increase usage count
-  coupon.userCount += 1;
+  coupon.usedCount += 1;
   await coupon.save();
 
   return apiResponse(200, "Coupon Applied Successfully !", {

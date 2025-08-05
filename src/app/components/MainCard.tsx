@@ -174,7 +174,7 @@ function MainCard({
 
   return (
     <div
-      className={`w-full md:max-w-[270px] max-w-[180px] 
+      className={`w-full md:max-w-[270px] max-w-[190px] 
                   flex-shrink-0 
                   bg-white rounded-xl shadow-md overflow-hidden 
                   hover:shadow-xl transition-all duration-300 
@@ -266,8 +266,6 @@ function MainCard({
                 0.00
               </span>
             )}
-
-            
           </div>
         </div>
 
@@ -277,21 +275,19 @@ function MainCard({
           </p>
         )}
 
-        {/* Meta Info */}
-        <div className="flex flex-wrap md:gap-4 gap-2 text-sm text-gray-600 mb-4">
-          <div className="flex items-center">
-            <FiStar className="text-yellow-400 mr-1" />
-            <span>
-              {item.rating.toFixed(1)} ({item.ratingCount}){" "}
-            </span>
+        {/* Meta Info - Compact single line */}
+        <div className="flex items-center justify-between text-xs md:text-sm text-gray-600 mb-4">
+          <div className="flex items-center gap-1">
+            <FiStar className="text-yellow-400" size={12} />
+            <span>{item.rating.toFixed(1)} ({item.ratingCount})</span>
           </div>
-          <div className="flex items-center">
-            <FiClock className="text-gray-400 mr-1" />
+          <div className="flex items-center gap-1">
+            <FiClock className="text-gray-400" size={12} />
             <span>{item.prepTime}</span>
           </div>
-          <div className="flex items-center">
-            <FaFire className="text-red-400 mr-1" />
-            <span>{spiceLevels[item.spicyLevel].label}</span>
+          <div className="flex items-center gap-1">
+            <FaFire className="text-red-400" size={12} />
+            <span className="text-xs">{spiceLevels[item.spicyLevel].label}</span>
           </div>
         </div>
 

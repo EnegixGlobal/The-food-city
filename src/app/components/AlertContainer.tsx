@@ -61,7 +61,8 @@ const AlertComponent: React.FC<{ alert: Alert }> = ({ alert }) => {
   return (
     <div
       className={`
-        ${styles.bgColor} border-l-4 rounded-r-lg shadow-xl p-4 mb-3 min-w-96 max-w-md relative overflow-hidden
+        ${styles.bgColor} border-l-4 rounded-r-lg shadow-xl p-2 sm:p-4 mb-3 
+        w-full max-w-sm sm:min-w-96 sm:max-w-md relative overflow-hidden
         transform transition-all duration-300 ease-in-out backdrop-blur-sm
         ${alert.isVisible ? 'translate-x-0 opacity-100 scale-100' : 'translate-x-full opacity-0 scale-95'}
         hover:shadow-2xl hover:scale-105
@@ -97,16 +98,17 @@ const AlertComponent: React.FC<{ alert: Alert }> = ({ alert }) => {
       />
       
       <div className="flex items-start relative z-10">
-        <div className={`${styles.iconColor} mr-3 mt-0.5 animate-bounce`}>
-          <IconComponent size={20} />
+        <div className={`${styles.iconColor} mr-2 sm:mr-3 mt-0.5 animate-bounce`}>
+          <IconComponent size={16} className="sm:w-5 sm:h-5" />
         </div>
         
         <div className="flex-1">
-          <h4 className={`${styles.titleColor} font-bold text-sm leading-tight`}>
+          {/* Show title only on desktop */}
+          <h4 className={`${styles.titleColor} font-bold text-xs sm:text-sm leading-tight hidden sm:block`}>
             {alert.title}
           </h4>
           {alert.message && (
-            <p className={`${styles.messageColor} text-xs mt-1 leading-relaxed font-medium`}>
+            <p className={`${styles.messageColor} text-xs sm:text-xs mt-0 sm:mt-1 leading-relaxed font-medium`}>
               {alert.message}
             </p>
           )}
@@ -114,10 +116,10 @@ const AlertComponent: React.FC<{ alert: Alert }> = ({ alert }) => {
         
         <button
           onClick={handleClose}
-          className={`${styles.iconColor} hover:opacity-70 hover:scale-110 transition-all duration-200 ml-2 p-1 rounded-full hover:bg-white hover:bg-opacity-50`}
+          className={`${styles.iconColor} hover:opacity-70 hover:scale-110 transition-all duration-200 ml-1 sm:ml-2 p-1 rounded-full hover:bg-white hover:bg-opacity-50`}
           aria-label="Close alert"
         >
-          <FaTimes size={14} />
+          <FaTimes size={12} className="sm:w-3.5 sm:h-3.5" />
         </button>
       </div>
     </div>
@@ -130,7 +132,7 @@ const AlertContainer: React.FC = () => {
   if (alerts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-[9999] space-y-2">
+    <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto z-[9999] space-y-2">
       {alerts.map((alert) => (
         <AlertComponent key={alert.id} alert={alert} />
       ))}

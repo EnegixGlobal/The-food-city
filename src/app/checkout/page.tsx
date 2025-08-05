@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { FiPlus, FiMinus } from "react-icons/fi";
-import { FaUser, FaRupeeSign } from "react-icons/fa";
+import { FaUser, FaRupeeSign, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
 import {
   FiUser,
   FiMapPin,
@@ -60,6 +60,9 @@ const CheckoutPage = () => {
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
+  
+  // Payment method state
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"online" | "cod">("online");
 
   // Load Razorpay script
   const loadRazorpayScript = () => {
@@ -270,7 +273,6 @@ const CheckoutPage = () => {
       });
 
       const data = await response.json();
-      console.log("Fetch addresses response:", data);
 
       if (response.ok && data.success) {
         const addressList = data.data || [];
@@ -456,21 +458,19 @@ const CheckoutPage = () => {
 
     setApplyingCoupon(true);
 
+    console.log(cart);
+
     try {
       // Prepare cart items for API
       const cartItems = [
         ...cart.map((item: any) => ({
           _id: item._id,
-          price: item.selectedCustomization
-            ? item.selectedCustomization.price
-            : item.effectivePrice || item.price,
+          price: item.totalPrice,
           quantity: item.quantity,
         })),
         ...addons.map((item: any) => ({
           _id: item._id,
-          price: item.selectedCustomization
-            ? item.selectedCustomization.price
-            : item.effectivePrice || item.price,
+          price: item.totalPrice,
           quantity: item.quantity,
         })),
       ];
@@ -548,17 +548,23 @@ const CheckoutPage = () => {
       // Prepare order items from cart
       const orderItems = cart.map((item: any) => ({
         productId: item._id,
-        title: item.title,
+        // Combine base title with customization if exists
+        title: item.selectedCustomization
+          ? `${item.title} with ${item.selectedCustomization.option}`
+          : item.title,
         slug: item.slug || item.title.toLowerCase().replace(/\s+/g, "-"),
+        // Store combined price (base + customization)
         price: item.selectedCustomization
-          ? item.selectedCustomization.price
+          ? (item.effectivePrice || item.price) + item.selectedCustomization.price
           : item.effectivePrice || item.price,
         quantity: item.quantity,
         imageUrl: item.imageUrl || "",
+        // Keep customization details for reference
         selectedCustomization: item.selectedCustomization
           ? {
               option: item.selectedCustomization.option,
               price: item.selectedCustomization.price,
+              basePrice: item.effectivePrice || item.price,
             }
           : null,
       }));
@@ -566,16 +572,22 @@ const CheckoutPage = () => {
       // Prepare order addons
       const orderAddons = addons.map((addon: any) => ({
         addOnId: addon._id,
-        name: addon.title,
+        // Combine base name with customization if exists
+        name: addon.selectedCustomization
+          ? `${addon.title} with ${addon.selectedCustomization.option}`
+          : addon.title,
+        // Store combined price (base + customization)
         price: addon.selectedCustomization
-          ? addon.selectedCustomization.price
+          ? (addon.effectivePrice || addon.price) + addon.selectedCustomization.price
           : addon.effectivePrice || addon.price,
         quantity: addon.quantity,
         image: addon.imageUrl || "",
+        // Keep customization details for reference
         selectedCustomization: addon.selectedCustomization
           ? {
               option: addon.selectedCustomization.option,
               price: addon.selectedCustomization.price,
+              basePrice: addon.effectivePrice || addon.price,
             }
           : null,
       }));
@@ -609,7 +621,7 @@ const CheckoutPage = () => {
         deliveryCharge: cartSummary.deliveryFee,
         onlineDiscount: cartSummary.discount,
         tax: cartSummary.tax || 0,
-        paymentMethod: "online", // Default to online payment
+        paymentMethod: selectedPaymentMethod, // Use selected payment method
         paymentStatus: "pending",
         status: "pending",
       };
@@ -680,8 +692,26 @@ const CheckoutPage = () => {
 
         if (orderResult) {
           setCreatingOrder(false);
-          // Process payment with Razorpay
-          await processPayment(orderResult);
+          
+          if (selectedPaymentMethod === "online") {
+            // Process online payment with Razorpay
+            await processPayment(orderResult);
+          } else {
+            // COD order - no payment processing needed
+            showAlert.success(
+              "Order Placed Successfully!",
+              `Your COD order ${orderResult.orderId} has been confirmed. Pay cash on delivery.`
+            );
+
+            // Clear cart and redirect
+            const { clearCart } = useCartStore.getState();
+            clearCart();
+            clearAddons();
+
+            setTimeout(() => {
+              router.push("/my-account");
+            }, 2000);
+          }
         }
       } catch (error) {
         setCreatingOrder(false);
@@ -702,29 +732,48 @@ const CheckoutPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-200 ">
-      <header className="bg-white shadow-md">
-        <Container className="py-2! flex justify-between items-center">
-          <div>
+      <header className="bg-white shadow-lg border-b border-gray-200">
+        <Container className="py-3! flex justify-between items-center">
+          <div className="flex items-center">
             <Image
               src="/logo.png"
               alt="Secure Checkout"
-              width={60}
-              height={60}
-              className="inline-block -rotate-12 mr-3"
+              width={50}
+              height={50}
+              className="inline-block -rotate-12 mr-2 md:mr-3 w-10 h-10 md:w-12 md:h-12"
             />
-            <span className="text-2xl font-bold text-gray-900 mb-8">
-              Secure Checkout
-            </span>
+            <div>
+              <span className="text-lg md:text-2xl font-bold text-gray-900 block">
+                Secure Checkout
+              </span>
+              <span className="text-xs md:text-sm text-gray-600 hidden md:block">
+                Fast & secure payment processing
+              </span>
+            </div>
           </div>
-          <div className="hover:text-yellow-500">
-            <FaUser className="text-2xl  inline-block mr-2" />
-            <span className="font-bold">
+          <div className="flex items-center hover:text-red-600 transition-colors cursor-pointer">
+            <div className="bg-gray-100 p-2 md:p-3 rounded-full mr-2 md:mr-3">
+              <FaUser className="text-sm md:text-lg text-gray-600" />
+            </div>
+            <div className="text-left ">
               {user ? (
-                <Link href="/my-account">{user.name}</Link>
+                <Link href="/my-account" className="hover:text-red-600 transition-colors">
+                  <div className="text-sm md:text-base font-bold text-gray-900 hover:text-yellow-400 transition-colors">
+                    {user.name}
+                  </div>
+                  <div className="text-xs md:text-sm text-gray-600 hidden md:block">
+                    My Account
+                  </div>
+                </Link>
               ) : (
-                <p>Login</p>
+                <button 
+                  onClick={openLogin}
+                  className="text-sm md:text-base font-bold text-gray-900 hover:text-red-600 transition-colors"
+                >
+                  Login
+                </button>
               )}
-            </span>
+            </div>
           </div>
         </Container>
       </header>
@@ -927,23 +976,123 @@ const CheckoutPage = () => {
                     Choose Payment Method
                   </h2>
 
+                  {/* Payment Method Selection */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Online Payment */}
+                    <div
+                      onClick={() => setSelectedPaymentMethod("online")}
+                      className={`p-4 border-2 rounded-none cursor-pointer transition-all duration-200 ${
+                        selectedPaymentMethod === "online"
+                          ? "border-blue-500 bg-blue-50 shadow-md"
+                          : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                      }`}>
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-3 rounded-full ${
+                          selectedPaymentMethod === "online" 
+                            ? "bg-blue-100 text-blue-600" 
+                            : "bg-gray-100 text-gray-600"
+                        }`}>
+                          <FaCreditCard className="text-xl" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Online Payment
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Pay securely with UPI, Cards, Net Banking
+                          </p>
+                          <div className="flex items-center mt-2">
+                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                              Secure & Fast
+                            </span>
+                          </div>
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          selectedPaymentMethod === "online"
+                            ? "border-blue-500 bg-blue-500"
+                            : "border-gray-300"
+                        }`}>
+                          {selectedPaymentMethod === "online" && (
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cash on Delivery */}
+                    <div
+                      onClick={() => setSelectedPaymentMethod("cod")}
+                      className={`p-4 border-2 rounded-none cursor-pointer transition-all duration-200 ${
+                        selectedPaymentMethod === "cod"
+                          ? "border-green-500 bg-green-50 shadow-md"
+                          : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                      }`}>
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-3 rounded-full ${
+                          selectedPaymentMethod === "cod" 
+                            ? "bg-green-100 text-green-600" 
+                            : "bg-gray-100 text-gray-600"
+                        }`}>
+                          <FaMoneyBillWave className="text-xl" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Cash on Delivery
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Pay with cash when your order arrives
+                          </p>
+                          <div className="flex items-center mt-2">
+                            <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
+                              Pay Later
+                            </span>
+                          </div>
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          selectedPaymentMethod === "cod"
+                            ? "border-green-500 bg-green-500"
+                            : "border-gray-300"
+                        }`}>
+                          {selectedPaymentMethod === "cod" && (
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Action Button */}
                   <Button
                     onClick={handleSubmit}
                     disabled={creatingOrder || processingPayment}
-                    className="py-3! flex items-center justify-center w-full rounded-none bg-[#1ba672]! text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                    className={`py-4 flex items-center justify-center w-full rounded-none text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ${
+                      selectedPaymentMethod === "online"
+                        ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg"
+                        : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg"
+                    }`}>
                     {creatingOrder ? (
                       <>
-                        <Spinner h={20} className="mr-4" />
+                        <Spinner h={20} className="mr-3" />
                         Creating Order...
                       </>
                     ) : processingPayment ? (
                       <>
-                        <Spinner h={20} className="mr-4" />
+                        <Spinner h={20} className="mr-3" />
                         Processing Payment...
+                      </>
+                    ) : selectedPaymentMethod === "online" ? (
+                      <>
+                        <FaCreditCard className="mr-3" />
+                        Proceed to Pay{" "}
+                        <span className="flex items-center ml-2">
+                          <FaRupeeSign size={14} className="mr-1" />
+                          {cartSummary.grandTotal?.toFixed(2) || "0.00"}
+                        </span>
                       </>
                     ) : (
                       <>
-                        Proceed to Pay{" "}
+                        <FaMoneyBillWave className="mr-3" />
+                        Place Order (COD){" "}
                         <span className="flex items-center ml-2">
                           <FaRupeeSign size={14} className="mr-1" />
                           {cartSummary.grandTotal?.toFixed(2) || "0.00"}
@@ -951,6 +1100,31 @@ const CheckoutPage = () => {
                       </>
                     )}
                   </Button>
+
+                  {/* Payment Method Info */}
+                  <div className="bg-gray-50 p-4 rounded-none">
+                    {selectedPaymentMethod === "online" ? (
+                      <div className="flex items-start space-x-3">
+                        <FaCreditCard className="text-blue-500 mt-1" />
+                        <div>
+                          <h4 className="font-semibold text-gray-900">Secure Online Payment</h4>
+                          <p className="text-sm text-gray-600">
+                            Your payment is processed securely through Razorpay. We accept UPI, Credit Cards, Debit Cards, and Net Banking.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start space-x-3">
+                        <FaMoneyBillWave className="text-green-500 mt-1" />
+                        <div>
+                          <h4 className="font-semibold text-gray-900">Cash on Delivery</h4>
+                          <p className="text-sm text-gray-600">
+                            Pay with cash when your order is delivered to your doorstep. Please keep exact change ready.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -968,7 +1142,8 @@ const CheckoutPage = () => {
                 {/* Continue/Place Order Button */}
                 {/* For logged in users: don't show Continue on login step (it doesn't exist) */}
                 {/* For non-logged users: don't show Continue on login step (they use login button instead) */}
-                {!(needsLogin && activeStep === 1) && (
+                {!(needsLogin && activeStep < 3) && 
+                 !((needsLogin && activeStep === 3) || (!needsLogin && activeStep === 2)) && (
                   <Button
                     onClick={handleSubmit}
                     disabled={

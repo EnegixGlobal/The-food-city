@@ -6,19 +6,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { FaCartShopping } from "react-icons/fa6";
 
-function BottomCart() {
-  const [items, setCartItems] = useState([]);
-  const { getCartItems, getTotalItems } = useCartStore((state) => state);
-  const totalItems = getTotalItems();
-
+// Custom hook to handle SSR issues with Zustand
+const useClientSideCart = () => {
+  const [isHydrated, setIsHydrated] = useState(false);
+  const cartStore = useCartStore();
+  
   useEffect(() => {
-    const cartItems = getCartItems();
-    setCartItems(cartItems);
-  }, [getCartItems]);
+    setIsHydrated(true);
+  }, []);
+  
+  // Return empty state during SSR, actual state after hydration
+  return isHydrated ? cartStore : { cart: [], getTotalItems: () => 0 };
+};
+
+function BottomCart() {
+  const { cart, getTotalItems } = useClientSideCart();
+  const totalItems = getTotalItems();
 
   return (
     <AnimatePresence>
-      {items.length > 0 && (
+      {cart.length > 0 && (
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
