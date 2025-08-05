@@ -15,10 +15,12 @@ export const GET = async (
     const { id } = await context.params;
 
     if (!id) {
-      return apiResponse(400, "Product id is required");
+      return apiResponse(400, "Review id is required");
     }
 
-    const review = await Review.findById(id);
+    const review = await Review.findById(id)
+      .populate("userId", "name") // Populate user details with only name
+      .populate("productId", "title imageUrl"); // Optionally populate product details
 
     if (!review) {
       return apiResponse(404, "Review not found");
@@ -31,7 +33,7 @@ export const GET = async (
   }
 };
 
-// update the review
+// update the review (including helpful status)
 export const PATCH = async (
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -42,10 +44,36 @@ export const PATCH = async (
     const { id } = await context.params;
 
     if (!id) {
-      return apiResponse(400, "Product id is required");
+      return apiResponse(400, "Review id is required");
     }
 
     const body = await req.json();
+
+    // Find the current review to get the current helpful status
+    const currentReview = await Review.findById(id);
+    if (!currentReview) {
+      return apiResponse(404, "Review not found");
+    }
+
+    // Handle helpful status update specifically
+    if ('isHelpful' in body) {
+      const { isHelpful } = body;
+      
+      if (typeof isHelpful !== 'boolean') {
+        return apiResponse(400, "isHelpful must be a boolean value");
+      }
+
+      const wasHelpful = currentReview.isHelpful;
+      
+      // Update helpful count based on the change
+      if (isHelpful && !wasHelpful) {
+        // Mark as helpful - increment count
+        body.helpfullCount = (currentReview.helpfullCount || 0) + 1;
+      } else if (!isHelpful && wasHelpful) {
+        // Remove helpful - decrement count
+        body.helpfullCount = Math.max((currentReview.helpfullCount || 0) - 1, 0);
+      }
+    }
 
     const review = await Review.findByIdAndUpdate(id, body, {
       new: true,
@@ -56,9 +84,12 @@ export const PATCH = async (
       return apiResponse(404, "Review not found");
     }
 
-    return apiResponse(200, "Review fetched successfully", review);
+    return apiResponse(200, "Review updated successfully", {
+      review,
+      helpfulCount: review.helpfullCount
+    });
   } catch (error) {
-    console.error("Error fetching review:", error);
+    console.error("Error updating review:", error);
     return apiResponse(500, "Internal server error");
   }
 };

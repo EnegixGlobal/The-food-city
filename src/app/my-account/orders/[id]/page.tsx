@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { format } from "date-fns";
+import Link from "next/link";
 
 interface OrderItem {
   productId: string;
@@ -115,6 +116,8 @@ export default function OrderDetailsPage() {
   const params = useParams();
   const orderId = params.id as string;
 
+
+  
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
@@ -356,8 +359,9 @@ export default function OrderDetailsPage() {
             </h2>
             <div className="space-y-4">
               {order.items.map((item, index) => (
+                <Link key={index} href={`/product/${item.slug}`} className="block">
                 <div
-                  key={index}
+                  
                   className="flex items-center space-x-4 p-4 border border-gray-100 rounded-none">
                   <div className="w-16 h-16 relative rounded-none overflow-hidden bg-gray-100 flex-shrink-0">
                     {item.imageUrl ? (
@@ -392,7 +396,7 @@ export default function OrderDetailsPage() {
                       ₹{item.price * item.quantity}
                     </p>
                   </div>
-                </div>
+                </div></Link>
               ))}
 
               {/* Add-ons */}

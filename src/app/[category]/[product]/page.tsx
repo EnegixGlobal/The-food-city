@@ -14,6 +14,8 @@ import { FaCartShopping, FaCartPlus } from "react-icons/fa6";
 import { useCartStore } from "@/app/zustand/cartStore";
 import { useAddonStore } from "@/app/zustand/addonStore";
 import CustomizationModal from "@/app/components/CustomizationModal";
+import ReviewsModal from "@/app/components/ReviewsModal";
+import useUserStore from "@/app/zustand/userStore";
 
 interface AddOn {
   rating: number;
@@ -31,6 +33,22 @@ interface AddOn {
     isAvailable: boolean;
     _id: string;
   }>;
+}
+
+interface Review {
+  _id: string;
+  productId: string;
+  userId: {
+    _id: string;
+    name: string;
+  };
+  rating: number;
+  comment: string;
+  imageUrl?: string;
+  isHelpful: boolean;
+  helpfullCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Product {
@@ -76,11 +94,14 @@ interface ProductPageProps {
 function ProductPage({ params }: ProductPageProps) {
   const [productSlug, setProductSlug] = useState<string>("");
   const [product, setProduct] = useState<Product | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedAddons, setSelectedAddons] = useState<AddOn[]>([]);
   const [showCustomizationModal, setShowCustomizationModal] = useState(false);
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
 
   // Cart store
   const {
@@ -93,6 +114,116 @@ function ProductPage({ params }: ProductPageProps) {
   } = useCartStore();
 
   const { addons } = useAddonStore();
+  const { user } = useUserStore();
+
+  // Format date for reviews
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Handle helpful status update
+  const handleHelpfulUpdate = async (reviewId: string, isHelpful: boolean) => {
+    try {
+      const response = await fetch(`/api/review/${reviewId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ isHelpful }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update the local reviews state
+        setReviews(prevReviews => 
+          prevReviews.map(review => 
+            review._id === reviewId 
+              ? { ...review, isHelpful, helpfullCount: data.data.helpfulCount }
+              : review
+          )
+        );
+      } else {
+        console.error('Failed to update helpful status:', data.message);
+      }
+    } catch (error) {
+      console.error('Error updating helpful status:', error);
+    }
+  };
+
+  // Handle review deletion
+  const handleDeleteReview = async (reviewId: string) => {
+    try {
+      const response = await fetch(`/api/review/${reviewId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Remove the review from local state
+        setReviews(prevReviews => 
+          prevReviews.filter(review => review._id !== reviewId)
+        );
+        
+        // Refresh product data to update average rating
+        if (product) {
+          fetchReviews(product._id);
+        }
+      } else {
+        console.error('Failed to delete review:', data.message);
+        alert('Failed to delete review: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      alert('Error deleting review. Please try again.');
+    }
+  };
+
+  // Handle review update
+  const handleUpdateReview = async (reviewId: string, updatedData: { rating: number; comment: string; imageUrl?: string }) => {
+    try {
+      const response = await fetch(`/api/review/${reviewId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(updatedData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update the review in local state
+        setReviews(prevReviews => 
+          prevReviews.map(review => 
+            review._id === reviewId 
+              ? { ...review, ...updatedData, updatedAt: new Date().toISOString() }
+              : review
+          )
+        );
+        
+        // Refresh product data to update average rating
+        if (product) {
+          fetchReviews(product._id);
+        }
+      } else {
+        console.error('Failed to update review:', data.message);
+        alert('Failed to update review: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error updating review:', error);
+      alert('Error updating review. Please try again.');
+    }
+  };
 
   // Fetch product data
   const fetchProduct = async (slug: string) => {
@@ -104,6 +235,8 @@ function ProductPage({ params }: ProductPageProps) {
 
       if (data.success) {
         setProduct(data.data);
+        // Fetch reviews after product is loaded
+        fetchReviews(data.data._id);
       } else {
         setError(data.message || "Product not found");
       }
@@ -112,6 +245,25 @@ function ProductPage({ params }: ProductPageProps) {
       console.error("Error fetching product:", err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fetch reviews for the product
+  const fetchReviews = async (productId: string) => {
+    try {
+      setIsLoadingReviews(true);
+      const response = await fetch(`/api/review?productId=${productId}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setReviews(data.data);
+      } else {
+        console.error("Failed to fetch reviews:", data.message);
+      }
+    } catch (err) {
+      console.error("Error fetching reviews:", err);
+    } finally {
+      setIsLoadingReviews(false);
     }
   };
 
@@ -625,18 +777,160 @@ function ProductPage({ params }: ProductPageProps) {
                 </div>
               </div>
 
-              {/* Reviews Section - Show placeholder since API doesn't have reviews */}
+              {/* Reviews Section */}
               <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mt-4 sm:mt-6">
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">
-                  Customer Reviews
-                </h3>
-                <div className="text-center py-6 sm:py-8">
-                  <div className="text-3xl sm:text-4xl text-gray-300 mb-2">⭐</div>
-                  <p className="text-sm sm:text-base text-gray-500">No reviews yet</p>
-                  <p className="text-xs sm:text-sm text-gray-400 mt-1">
-                    Be the first to review this item!
-                  </p>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+                    Customer Reviews ({reviews.length})
+                  </h3>
+                  {product.rating && (
+                    <div className="flex items-center gap-2">
+                      <div className="flex">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <FiStar
+                            key={star}
+                            className={`w-4 h-4 ${
+                              star <= Math.round(product.rating)
+                                ? "text-yellow-500 fill-current"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm font-medium text-gray-600">
+                        {product.rating.toFixed(1)}
+                      </span>
+                    </div>
+                  )}
                 </div>
+
+                {isLoadingReviews ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="animate-pulse">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                          <div className="flex-1">
+                            <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+                            <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                            <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : reviews.length > 0 ? (
+                  <div className="space-y-4">
+                    {reviews.slice(0, 3).map((review) => (
+                      <div
+                        key={review._id}
+                        className="border-b border-gray-100 pb-4 last:border-b-0"
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* User Avatar */}
+                          <div className="w-10 h-10 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            {review.userId.name.charAt(0).toUpperCase()}
+                          </div>
+
+                          <div className="flex-1">
+                            {/* User Name and Rating */}
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold text-gray-900 text-sm">
+                                  {review.userId.name}
+                                </h4>
+                                <div className="flex">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <FiStar
+                                      key={star}
+                                      className={`w-3 h-3 ${
+                                        star <= review.rating
+                                          ? "text-yellow-500 fill-current"
+                                          : "text-gray-300"
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                              <span className="text-xs text-gray-500">
+                                {formatDate(review.createdAt)}
+                              </span>
+                            </div>
+
+                            {/* Review Comment */}
+                            <p className="text-sm text-gray-700 leading-relaxed mb-2">
+                              {review.comment}
+                            </p>
+
+                            {/* Review Image */}
+                            {review.imageUrl && (
+                              <div className="mt-2">
+                                <Image
+                                  src={review.imageUrl}
+                                  alt="Review image"
+                                  width={100}
+                                  height={100}
+                                  className="rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() => window.open(review.imageUrl, '_blank')}
+                                />
+                              </div>
+                            )}
+
+                            {/* Helpful Button */}
+                            <div className="mt-3 flex items-center gap-2">
+                              <button
+                                onClick={() => handleHelpfulUpdate(review._id, !review.isHelpful)}
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                                  review.isHelpful
+                                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                              >
+                                <svg 
+                                  className={`w-3 h-3 ${review.isHelpful ? 'fill-current' : ''}`} 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V9a2 2 0 00-2-2h-.095c-.5 0-.905.031-1.312.09C10.279 7.224 9.641 7.5 9 7.5c-1.062 0-2.062.5-2.5 1.5-1 2.5-1.5 4-1.5 6.5 0 1.036.208 2.047.61 2.985A2.95 2.95 0 007 19.5c1.216 0 2.357-.596 3.047-1.578l.953-1.354" />
+                                </svg>
+                                {review.isHelpful ? 'Helpful' : 'Mark as helpful'}
+                              </button>
+                              {review.helpfullCount > 0 && (
+                                <span className="text-xs text-gray-500">
+                                  {review.helpfullCount} found this helpful
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Show All Reviews Button */}
+                    {reviews.length > 3 && (
+                      <div className="pt-4 border-t border-gray-100">
+                        <button
+                          onClick={() => setShowReviewsModal(true)}
+                          className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 font-medium flex items-center justify-center gap-2"
+                        >
+                          <span>Show All {reviews.length} Reviews</span>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 sm:py-8">
+                    <div className="text-3xl sm:text-4xl text-gray-300 mb-2">⭐</div>
+                    <p className="text-sm sm:text-base text-gray-500">No reviews yet</p>
+                    <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                      Be the first to review this item!
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -694,6 +988,18 @@ function ProductPage({ params }: ProductPageProps) {
           customizableOptions: product.customizableOptions,
         }}
         onAddToCart={handleCustomizationAdd}
+      />
+
+      {/* Reviews Modal */}
+      <ReviewsModal
+        isOpen={showReviewsModal}
+        onClose={() => setShowReviewsModal(false)}
+        reviews={reviews}
+        productTitle={product.title}
+        onHelpfulUpdate={handleHelpfulUpdate}
+        onDeleteReview={handleDeleteReview}
+        onUpdateReview={handleUpdateReview}
+        currentUserId={user?.id}
       />
 
       <Footer />

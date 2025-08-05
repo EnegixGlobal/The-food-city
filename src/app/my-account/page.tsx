@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { format } from "date-fns";
+import ReviewModal from "../components/ReviewModal";
 
 // Declare Razorpay global
 declare global {
@@ -13,6 +14,8 @@ declare global {
 }
 
 interface OrderItem {
+  productId: any;
+  _id: any;
   title: string;
   price: number;
   quantity: number;
@@ -75,7 +78,54 @@ export default function OrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState<string>("");
-  const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+  const [processingPayment, setProcessingPayment] = useState<string | null>(
+    null
+  );
+
+  // Review Modal States
+  const [reviewModal, setReviewModal] = useState({
+    isOpen: false,
+    productId: "",
+    productTitle: "",
+    productImage: "",
+  });
+
+  // Handle opening review modal
+  const openReviewModal = (
+    productId: string,
+    productTitle: string,
+    productImage: string
+  ) => {
+    setReviewModal({
+      isOpen: true,
+      productId,
+      productTitle,
+      productImage,
+    });
+  };
+
+  // Handle closing review modal
+  const closeReviewModal = () => {
+    setReviewModal({
+      isOpen: false,
+      productId: "",
+      productTitle: "",
+      productImage: "",
+    });
+  };
+
+  console.log(orders);
+
+  // Handle review submitted
+  const handleReviewSubmitted = () => {
+    // You could refresh orders or show a success message here
+    console.log("Review submitted successfully!");
+  };
+
+  const handleStatusChange = (status: string) => {
+    setSelectedStatus(status);
+    setCurrentPage(1);
+  };
 
   const router = useRouter();
 
@@ -119,8 +169,8 @@ export default function OrdersPage() {
   // Load Razorpay script
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
@@ -135,21 +185,21 @@ export default function OrdersPage() {
       // Load Razorpay script
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
-        alert('Failed to load payment gateway. Please try again.');
+        alert("Failed to load payment gateway. Please try again.");
         return;
       }
 
       // Create payment order
-      const response = await fetch('/api/payment/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ orderId: order.orderId })
+      const response = await fetch("/api/payment/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ orderId: order.orderId }),
       });
 
       const paymentData = await response.json();
       if (!response.ok || !paymentData.success) {
-        throw new Error(paymentData.message || 'Failed to create payment');
+        throw new Error(paymentData.message || "Failed to create payment");
       }
 
       // Configure Razorpay options
@@ -157,35 +207,37 @@ export default function OrdersPage() {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: paymentData.data.amount,
         currency: paymentData.data.currency,
-        name: 'The Food City',
+        name: "The Food City",
         description: `Payment for Order #${order.orderId}`,
         order_id: paymentData.data.razorpayOrderId,
         handler: async (response: any) => {
           try {
             // Verify payment
-            const verifyResponse = await fetch('/api/payment/verify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
+            const verifyResponse = await fetch("/api/payment/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
               body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                orderId: order.orderId
-              })
+                orderId: order.orderId,
+              }),
             });
 
             const verifyData = await verifyResponse.json();
             if (verifyResponse.ok && verifyData.success) {
-              alert('Payment successful! Your order has been confirmed.');
+              alert("Payment successful! Your order has been confirmed.");
               // Refresh orders to show updated payment status
               fetchOrders(currentPage, selectedStatus);
             } else {
-              throw new Error(verifyData.message || 'Payment verification failed');
+              throw new Error(
+                verifyData.message || "Payment verification failed"
+              );
             }
           } catch (error) {
-            console.error('Payment verification error:', error);
-            alert('Payment verification failed. Please contact support.');
+            console.error("Payment verification error:", error);
+            alert("Payment verification failed. Please contact support.");
           } finally {
             setProcessingPayment(null);
           }
@@ -193,19 +245,20 @@ export default function OrdersPage() {
         modal: {
           ondismiss: () => {
             setProcessingPayment(null);
-          }
+          },
         },
         theme: {
-          color: '#f97316' // orange-500
-        }
+          color: "#f97316", // orange-500
+        },
       };
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-
     } catch (error) {
-      console.error('Payment processing error:', error);
-      alert(error instanceof Error ? error.message : 'Payment processing failed');
+      console.error("Payment processing error:", error);
+      alert(
+        error instanceof Error ? error.message : "Payment processing failed"
+      );
       setProcessingPayment(null);
     }
   };
@@ -340,11 +393,19 @@ export default function OrdersPage() {
                       <h3 className="text-lg font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
                         #{order.orderId}
                       </h3>
-                      
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                       <span>
                         {format(
@@ -363,19 +424,20 @@ export default function OrdersPage() {
                         )}`}>
                         {order.paymentStatus.toUpperCase()}
                       </span>
-                      
+
                       {/* Payment Method Badge */}
                       <div className="flex flex-wrap gap-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          order.paymentMethod === 'online' 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-orange-100 text-orange-800'
-                        }`}>
-                          {order.paymentMethod === 'online' ? 'ONLINE' : 'COD'}
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            order.paymentMethod === "online"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-orange-100 text-orange-800"
+                          }`}>
+                          {order.paymentMethod === "online" ? "ONLINE" : "COD"}
                         </span>
                       </div>
                     </div>
-                    
+
                     {/* Right side - Payment Status and Amount */}
                     <div className="flex items-center gap-4">
                       <div className="text-right">
@@ -383,14 +445,26 @@ export default function OrdersPage() {
                           ₹{order.totalAmount}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {order.items.length + order.addons.length} item{order.items.length + order.addons.length > 1 ? 's' : ''}
+                          {order.items.length + order.addons.length} item
+                          {order.items.length + order.addons.length > 1
+                            ? "s"
+                            : ""}
                         </div>
                       </div>
 
                       {/* Arrow */}
                       <div className="flex-shrink-0 text-gray-400 group-hover:text-orange-400 transition-colors">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        <svg
+                          className="w-6 h-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
                         </svg>
                       </div>
                     </div>
@@ -425,7 +499,8 @@ export default function OrdersPage() {
                         {order.items.length > 1 && (
                           <p className="text-sm text-gray-600 mt-1">
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
-                              +{order.items.length - 1} more item{order.items.length > 2 ? "s" : ""}
+                              +{order.items.length - 1} more item
+                              {order.items.length > 2 ? "s" : ""}
                             </span>
                           </p>
                         )}
@@ -434,22 +509,49 @@ export default function OrdersPage() {
                       {/* Customer Info */}
                       <div className="space-y-1 text-sm text-gray-600">
                         <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          <svg
+                            className="w-4 h-4 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
                           </svg>
-                          <span className="font-medium">{order.customerInfo.name}</span>
+                          <span className="font-medium">
+                            {order.customerInfo.name}
+                          </span>
                         </div>
                         <div className="flex items-start gap-2">
-                          <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <svg
+                            className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
                           </svg>
-                          <span className="line-clamp-2">{order.customerInfo.address}</span>
+                          <span className="line-clamp-2">
+                            {order.customerInfo.address}
+                          </span>
                         </div>
                       </div>
 
                       {/* Pay Online Button */}
-                      {order.paymentStatus === 'pending'  && (
+                      {order.paymentStatus === "pending" && (
                         <div className="mt-3">
                           <button
                             onClick={(e) => {
@@ -457,8 +559,7 @@ export default function OrdersPage() {
                               processPayment(order);
                             }}
                             disabled={processingPayment === order._id}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-none hover:from-blue-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm hover:shadow-md"
-                          >
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-none hover:from-blue-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm hover:shadow-md">
                             {processingPayment === order._id ? (
                               <>
                                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
@@ -466,8 +567,17 @@ export default function OrdersPage() {
                               </>
                             ) : (
                               <>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24">
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                                  />
                                 </svg>
                                 Pay Online
                               </>
@@ -475,6 +585,49 @@ export default function OrdersPage() {
                           </button>
                         </div>
                       )}
+
+                      {/* Review Buttons for Items */}
+                      {order.status === "delivered" &&
+                        order.items.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            <div className="text-xs text-gray-500 mb-2">
+                              📝 Write reviews for your items:
+                            </div>
+
+                            {order.items.map((item, itemIndex) => (
+                              <button
+                                key={itemIndex}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Use a more reliable product ID
+                                  const productId = item.productId;
+                                  openReviewModal(
+                                    productId,
+                                    item.title,
+                                    item.imageUrl
+                                  );
+                                }}
+                                className="w-full flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-none hover:from-orange-600 hover:to-orange-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md">
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24">
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                                  />
+                                </svg>
+                                Write Review for{" "}
+                                {item.title.length > 12
+                                  ? item.title.substring(0, 12) + "..."
+                                  : item.title}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                     </div>
                   </div>
 
@@ -482,14 +635,27 @@ export default function OrdersPage() {
                   {order.addons.length > 0 && (
                     <div className="mt-4 pt-3 border-t border-gray-100">
                       <div className="flex items-center gap-2 mb-2">
-                        <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        <svg
+                          className="w-4 h-4 text-orange-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
                         </svg>
-                        <span className="text-sm font-medium text-gray-700">Add-ons</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          Add-ons
+                        </span>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {order.addons.map((addon, index) => (
-                          <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-orange-50 text-orange-700 border border-orange-200">
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-orange-50 text-orange-700 border border-orange-200">
                             {addon.name}
                           </span>
                         ))}
@@ -525,7 +691,7 @@ export default function OrdersPage() {
                   } else {
                     pageNum = currentPage - 2 + i;
                   }
-                  
+
                   return (
                     <button
                       key={pageNum}
@@ -550,7 +716,7 @@ export default function OrdersPage() {
                 Next
               </button>
             </div>
-            
+
             {/* Pagination Info */}
             <div className="text-center mt-3 text-sm text-gray-600">
               Showing page {currentPage} of {totalPages}
@@ -558,6 +724,16 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+
+      {/* Review Modal */}
+      <ReviewModal
+        isOpen={reviewModal.isOpen}
+        onClose={closeReviewModal}
+        productId={reviewModal.productId}
+        productTitle={reviewModal.productTitle}
+        productImage={reviewModal.productImage}
+        onReviewSubmitted={handleReviewSubmitted}
+      />
     </div>
   );
 }

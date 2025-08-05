@@ -3,6 +3,7 @@ import { apiResponse } from "@/app/lib/apiResponse";
 import { asyncHandler } from "@/app/lib/asyncHandler";
 import Product from "@/app/models/Product";
 import Review from "@/app/models/Review";
+import mongoose from "mongoose";
 
 export const POST = asyncHandler(async (req) => {
   connectDb();
@@ -11,7 +12,7 @@ export const POST = asyncHandler(async (req) => {
   // Validate required fields
   const requiredFields = { productId, userId, rating };
   const missingFields = Object.entries(requiredFields).filter(
-    ([_, value]) => !value
+    ([, value]) => !value
   );
 
   if (missingFields.length > 0) {
@@ -47,4 +48,60 @@ export const POST = asyncHandler(async (req) => {
   await product.save();
 
   return apiResponse(200, "Review added successfully", { review: savedReview });
+});
+
+// get all the review of a product
+
+export const GET = asyncHandler(async (req) => {
+  await connectDb();
+
+  const { searchParams } = new URL(req.url);
+  const productId = searchParams.get("productId");
+
+  if (!productId) {
+    return apiResponse(400, "Product ID is required");
+  }
+
+  const reviews = await Review.aggregate([
+    {
+      $match: { productId: new mongoose.Types.ObjectId(productId) },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "userDetails",
+      },
+    },
+    {
+      $unwind: "$userDetails"
+    },
+    {
+      $project: {
+        _id: 1,
+        productId: 1,
+        userId: {
+          _id: "$userDetails._id",
+          name: "$userDetails.name"
+        },
+        rating: 1,
+        comment: 1,
+        imageUrl: 1,
+        createdAt: 1,
+        isHelpful: 1,
+        helpfullCount: 1,
+        updatedAt: 1,
+      },
+    },
+    {
+      $sort: { createdAt: -1 }
+    }
+  ]);
+
+  return apiResponse(
+    200,
+    "All reviews of the product fetched successfully!",
+    reviews
+  );
 });

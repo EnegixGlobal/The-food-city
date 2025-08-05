@@ -275,13 +275,13 @@ function MainCard({
         )}
 
         {/* Meta Info - Vertical Stack for Mobile */}
-        <div className="mb-3 space-y-1">
+        <div className="mb-3 md:flex md:justify-between space-y-1">
           <div className="flex items-center justify-between text-xs text-gray-600">
             <div className="flex items-center gap-1">
               <FiStar className="text-yellow-400" size={10} />
               <span>{item.rating.toFixed(1)} ({item.ratingCount})</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex md:ml-4 items-center gap-1">
               <FiClock className="text-gray-400" size={10} />
               <span>{item.prepTime} min</span>
             </div>
