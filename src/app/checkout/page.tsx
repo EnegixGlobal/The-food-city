@@ -1129,7 +1129,7 @@ const CheckoutPage = () => {
               )}
 
               {/* Navigation Buttons */}
-              <div className="mt-8 flex justify-between">
+              <div className="fixed flex md:relative bottom-0 left-0 z-50 mt-8 md:flex md:justify-between bg-white md:bg-none w-full p-4 md:p-0 border-t md:border-none border-gray-200 shadow-lg md:shadow-none">
                 {/* Back Button - only show if not on first step */}
                 {activeStep > 1 && (
                   <Button

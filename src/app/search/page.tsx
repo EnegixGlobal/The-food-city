@@ -302,7 +302,7 @@ const SearchContent = () => {
           {hasSearched && (
             <div className="max-w-6xl mx-auto">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">
+                <h2 className="text-sm font-bold text-gray-800">
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                       <FiLoader className="animate-spin" />
