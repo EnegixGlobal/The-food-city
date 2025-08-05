@@ -44,8 +44,21 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
     }
   };
 
-  const basePrice = selectedOption?.price || item.price;
-  const totalPrice = selectedOption ? selectedOption.price : basePrice;
+  // Calculate base price following new pricing logic
+  const getBasePrice = () => {
+    if (item.discountedPrice) {
+      return item.discountedPrice;
+    } else if (item.price) {
+      return item.price;
+    } else if (item.customizableOptions && item.customizableOptions.length > 0) {
+      return item.customizableOptions[0].price;
+    }
+    return 0;
+  };
+
+  const basePrice = getBasePrice();
+  const customizationPrice = selectedOption ? selectedOption.price : 0;
+  const totalPrice = basePrice + customizationPrice;
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
@@ -84,13 +97,52 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
                   <span>25-30 min</span>
                 </div>
               </div>
-              <div className="mt-2 flex items-center gap-2">
-                <span className="text-xs text-gray-500">Starting from</span>
-                <div className="flex items-center text-base font-bold text-orange-600">
-                  <FaRupeeSign className="text-sm" />
-                  {Math.min(
-                    ...item.customizableOptions.map((opt) => opt.price)
+              <div className="mt-2 flex items-center gap-3">
+                {/* Base Product Price */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">Base Price:</span>
+                  {item.discountedPrice ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center text-base font-bold text-green-600">
+                        <FaRupeeSign className="text-sm" />
+                        {item.discountedPrice}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-400 line-through">
+                        <FaRupeeSign className="text-xs" />
+                        {item.price}
+                      </div>
+                    </div>
+                  ) : item.price ? (
+                    <div className="flex items-center text-base font-bold text-green-600">
+                      <FaRupeeSign className="text-sm" />
+                      {item.price}
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-base font-bold text-orange-600">
+                      <FaRupeeSign className="text-sm" />
+                      {Math.min(...item.customizableOptions.map((opt) => opt.price))}
+                    </div>
                   )}
+                </div>
+                
+                {/* Plus symbol */}
+                <span className="text-gray-400 font-bold">+</span>
+                
+                {/* Customization Price Range */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">Customization:</span>
+                  <div className="flex items-center text-base font-bold text-orange-600">
+                    <FaRupeeSign className="text-sm" />
+                    {Math.min(...item.customizableOptions.map((opt) => opt.price))}
+                    {Math.min(...item.customizableOptions.map((opt) => opt.price)) !== 
+                     Math.max(...item.customizableOptions.map((opt) => opt.price)) && (
+                      <>
+                        {" - "}
+                        <FaRupeeSign className="text-sm" />
+                        {Math.max(...item.customizableOptions.map((opt) => opt.price))}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -150,17 +202,21 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
                           {option.option}
                         </span>
                       </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Additional customization
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center ml-4">
+                  <div className="flex flex-col items-end ml-4">
                     <div className="flex items-center text-lg font-bold text-gray-900">
+                      <span className="text-sm mr-1">+</span>
                       <FaRupeeSign className="text-base" />
                       {option.price}
                     </div>
                     {selectedOption?.option === option.option && (
-                      <span className="ml-2 text-xs text-orange-600 font-medium">
-                        ✓
+                      <span className="text-xs text-orange-600 font-medium">
+                        ✓ Selected
                       </span>
                     )}
                   </div>
@@ -173,17 +229,46 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
         {/* Footer */}
         <div className="bg-gray-50 border-t border-gray-100 p-4 flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="flex items-center text-xl font-bold text-gray-900">
-                <FaRupeeSign className="text-lg" />
-                <span>{totalPrice.toFixed(2)}</span>
-              </div>
+            <div className="flex-1">
+              {selectedOption ? (
+                <div className="space-y-1">
+                  {/* Price Breakdown */}
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>Base Price:</span>
+                    <div className="flex items-center">
+                      <FaRupeeSign className="text-xs" />
+                      <span>{basePrice.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>{selectedOption.option}:</span>
+                    <div className="flex items-center">
+                      <span className="text-xs mr-1">+</span>
+                      <FaRupeeSign className="text-xs" />
+                      <span>{customizationPrice.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div className="border-t border-gray-200 pt-1">
+                    <div className="flex items-center justify-between font-bold text-gray-900">
+                      <span>Total:</span>
+                      <div className="flex items-center text-xl">
+                        <FaRupeeSign className="text-lg" />
+                        <span>{totalPrice.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center text-xl font-bold text-gray-900">
+                  <span className="text-gray-500 mr-2">Select an option</span>
+                </div>
+              )}
             </div>
 
             <Button
               onClick={handleAddToCart}
               disabled={!selectedOption}
-              className={`w-xs py-3 text-base font-bold rounded-xl transition-all duration-200 transform ${
+              className={`ml-4 py-3 px-6 text-base font-bold rounded-xl transition-all duration-200 transform ${
                 selectedOption
                   ? ""
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"

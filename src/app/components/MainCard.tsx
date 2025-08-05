@@ -191,7 +191,6 @@ function MainCard({
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
           />
 
-
           {/* Badges */}
           <div className="absolute top-0 left-0 flex gap-2">
             {normalizedItem.isBestSeller && (
@@ -231,19 +230,44 @@ function MainCard({
             {normalizedItem.title}
           </h3>
           <div className="flex flex-col items-end">
-            {normalizedItem.isCustomizable ? (
-              <>
+            {/* Base Price Display - Following new pricing logic */}
+            {normalizedItem.discountedPrice ? (
+              // Show discounted price with original price crossed out
+              <div className="flex flex-col items-end">
                 <span className="text-red-600 flex items-center font-bold text-sm md:text-md">
                   <FaRupeeSign className="h-3" />
-                  {normalizedItem.customizableOptions[0].price.toFixed(2)}
+                  {normalizedItem.discountedPrice.toFixed(2)}
                 </span>
-              </>
-            ) : (
+                <span className="text-gray-400 flex items-center line-through text-xs">
+                  <FaRupeeSign className="h-2" />
+                  {normalizedItem.price.toFixed(2)}
+                </span>
+              </div>
+            ) : normalizedItem.price ? (
+              // Show regular price
               <span className="text-red-600 flex items-center font-bold text-sm md:text-md">
                 <FaRupeeSign className="h-3" />
                 {normalizedItem.price.toFixed(2)}
               </span>
+            ) : normalizedItem.isCustomizable &&
+              normalizedItem.customizableOptions?.length > 0 ? (
+              // Fallback: Show first customization option price
+              <div className="flex flex-col items-end">
+                <span className="text-red-600 flex items-center font-bold text-sm md:text-md">
+                  <FaRupeeSign className="h-3" />
+                  {normalizedItem.customizableOptions[0].price.toFixed(2)}
+                </span>
+                <span className="text-gray-500 text-xs">Starting price</span>
+              </div>
+            ) : (
+              // Safety fallback
+              <span className="text-red-600 flex items-center font-bold text-sm md:text-md">
+                <FaRupeeSign className="h-3" />
+                0.00
+              </span>
             )}
+
+            
           </div>
         </div>
 
@@ -305,7 +329,7 @@ function MainCard({
                 </>
               ) : (
                 <>
-                  <FaCartPlus />  
+                  <FaCartPlus />
                   ADD TO CART
                 </>
               )}
