@@ -93,19 +93,19 @@ const AddonCustomizationModal: React.FC<AddonCustomizationModalProps> = ({
   const totalPrice = selectedOption ? selectedOption.price : basePrice;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl transform transition-all duration-300 animate-in slide-in-from-bottom-4 flex flex-col">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] overflow-hidden shadow-2xl transform transition-all duration-300 flex flex-col">
         {/* Header with Product Image */}
-        <div className="relative bg-gradient-to-r from-orange-50 to-red-50 p-4 border-b border-gray-100 flex-shrink-0">
+        <div className="relative bg-gradient-to-r from-orange-50 to-red-50 p-3 sm:p-4 border-b border-gray-100 flex-shrink-0">
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 p-2 hover:bg-white/80 rounded-full transition-all duration-200 shadow-sm z-10 group">
-            <FaTimes className="text-gray-600 group-hover:text-gray-800 transition-colors" />
+            className="absolute top-2 right-2 sm:top-3 sm:right-3 p-2 hover:bg-white/80 rounded-full transition-all duration-200 shadow-sm z-10 group">
+            <FaTimes className="text-gray-600 group-hover:text-gray-800 transition-colors text-sm sm:text-base" />
           </button>
 
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-2 sm:gap-3 pr-8">
             {(item.imageUrl || item.image) && (
-              <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-md flex-shrink-0">
+              <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden shadow-md flex-shrink-0">
                 <Image
                   src={item.imageUrl || item.image || ""}
                   alt={item.title || item.name || "Addon"}
@@ -116,23 +116,14 @@ const AddonCustomizationModal: React.FC<AddonCustomizationModalProps> = ({
             )}
 
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold text-gray-900 mb-1 leading-tight">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 leading-tight">
                 {item.title || item.name}
               </h2>
-              <div className="flex items-center gap-3 text-sm text-gray-600">
-                <div className="flex items-center gap-1">
-                  <FiStar className="text-yellow-400" />
-                  <span>{item.rating || 4.5}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <FiClock className="text-gray-400" />
-                  <span>25-30 min</span>
-                </div>
-              </div>
-              <div className="mt-2 flex items-center gap-2">
-                <span className="text-xs text-gray-500">Starting from</span>
-                <div className="flex items-center text-base font-bold text-orange-600">
-                  <FaRupeeSign className="text-sm" />
+              {/* Show only base price - simplified */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">Starting from:</span>
+                <div className="flex items-center text-lg sm:text-xl font-bold text-orange-600">
+                  <FaRupeeSign className="text-base" />
                   {Math.min(
                     ...item.customizableOptions.map((opt) => opt.price)
                   )}
@@ -144,14 +135,11 @@ const AddonCustomizationModal: React.FC<AddonCustomizationModalProps> = ({
 
         {/* Content - Scrollable */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-4">
-            <div className="mb-4">
-              <h3 className="text-lg font-bold text-gray-900 mb-1">
-                Choose Your Preference
+          <div className="p-3 sm:p-4">
+            <div className="mb-3 sm:mb-4">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
+                Choose Your Option
               </h3>
-              <p className="text-gray-600 text-sm">
-                Select one option to customize your addon
-              </p>
             </div>
 
             {/* Options */}
@@ -159,7 +147,7 @@ const AddonCustomizationModal: React.FC<AddonCustomizationModalProps> = ({
               {item.customizableOptions.map((option, index) => (
                 <label
                   key={index}
-                  className={`group relative flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                  className={`group relative flex items-center justify-between p-2.5 sm:p-3 rounded-lg cursor-pointer transition-all duration-200 ${
                     selectedOption?.option === option.option
                       ? "bg-orange-50 ring-2 ring-orange-200"
                       : "bg-gray-50 hover:bg-gray-100"
@@ -176,7 +164,7 @@ const AddonCustomizationModal: React.FC<AddonCustomizationModalProps> = ({
 
                     {/* Custom Radio Button */}
                     <div
-                      className={`relative w-4 h-4 rounded-full border-2 mr-3 transition-all duration-200 ${
+                      className={`relative w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 mr-2 sm:mr-3 transition-all duration-200 ${
                         selectedOption?.option === option.option
                           ? "border-orange-500 bg-orange-500"
                           : "border-gray-300 group-hover:border-gray-400"
@@ -189,23 +177,22 @@ const AddonCustomizationModal: React.FC<AddonCustomizationModalProps> = ({
                     </div>
 
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                        <span className="font-semibold text-gray-900">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <span className="font-semibold text-gray-900 text-base sm:text-lg">
                           {option.option}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center ml-4">
-                    <div className="flex items-center text-lg font-bold text-gray-900">
-                      <FaRupeeSign className="text-base" />
+                  <div className="flex flex-col items-end ml-2 sm:ml-4">
+                    <div className="flex items-center text-lg sm:text-xl font-bold text-gray-900">
+                      <FaRupeeSign className="text-base sm:text-lg" />
                       {option.price}
                     </div>
                     {selectedOption?.option === option.option && (
-                      <span className="ml-2 text-xs text-orange-600 font-medium">
-                        ✓
+                      <span className="text-sm text-orange-600 font-medium">
+                        ✓ Selected
                       </span>
                     )}
                   </div>
@@ -216,29 +203,36 @@ const AddonCustomizationModal: React.FC<AddonCustomizationModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 border-t border-gray-100 p-4 flex-shrink-0">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="flex items-center text-xl font-bold text-gray-900">
-                <FaRupeeSign className="text-lg" />
-                <span>{totalPrice.toFixed(2)}</span>
-              </div>
+        <div className="bg-gray-50 border-t border-gray-100 p-3 sm:p-4 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              {selectedOption ? (
+                <div className="flex items-center justify-between font-bold text-gray-900">
+                  <span className="text-base sm:text-lg">Total Price:</span>
+                  <div className="flex items-center text-xl sm:text-2xl">
+                    <FaRupeeSign className="text-lg sm:text-xl" />
+                    <span>{totalPrice.toFixed(0)}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center text-lg sm:text-xl font-bold text-gray-900">
+                  <span className="text-gray-500 mr-2 text-base sm:text-lg">Select an option</span>
+                </div>
+              )}
             </div>
 
             <Button
               onClick={handleAddToCart}
               disabled={!selectedOption}
-              className={`w-xs py-3 text-base font-bold rounded-xl transition-all duration-200 transform ${
+              className={`ml-3 sm:ml-4 py-2.5 sm:py-3 px-4 sm:px-6 text-base sm:text-lg font-bold rounded-xl transition-all duration-200 transform ${
                 selectedOption
                   ? ""
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}>
               {selectedOption ? (
-                <div className="flex items-center justify-center gap-2">
-                  <span>Add to Cart</span>
-                </div>
+                <span>Add to Cart</span>
               ) : (
-                "Please select an option"
+                <span className="text-sm sm:text-base">Select option</span>
               )}
             </Button>
           </div>

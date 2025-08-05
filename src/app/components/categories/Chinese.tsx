@@ -59,12 +59,12 @@ function Chinese({ products }: { products: any[] }) {
           </span>
         </Link>
       </div>
-      {products.length >= 5 && (
+       {products.length >= 5 && (
         <button
           onClick={scrollLeft}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 transition transform hover:scale-110">
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/30 w-8 h-8 rounded-full shadow-lg flex items-center justify-center hover:bg-white/20 transition transform hover:scale-110">
           <svg
-            className="w-6 h-6 text-red-600"
+            className="w-6 h-6 text-white"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">
@@ -103,9 +103,9 @@ function Chinese({ products }: { products: any[] }) {
       {products.length >= 5 && (
         <button
           onClick={scrollRight}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 transition transform hover:scale-110">
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/30 w-8 h-8 rounded-full shadow-lg flex items-center justify-center hover:bg-white/20 transition transform hover:scale-110">
           <svg
-            className="w-6 h-6 text-red-600"
+            className="w-6 h-6 text-white"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">

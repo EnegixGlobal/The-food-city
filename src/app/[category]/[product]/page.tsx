@@ -460,7 +460,7 @@ function ProductPage({ params }: ProductPageProps) {
         {/* Product Section */}
 
         <Container>
-          <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-8">
             {/* Left Column - Product Image */}
             <div className="lg:w-1/2">
               <div className="sticky top-14">
@@ -468,7 +468,7 @@ function ProductPage({ params }: ProductPageProps) {
                   <Image
                     src={product.imageUrl}
                     alt={product.title}
-                    className="w-full h-96 object-cover lg:h-[500px]"
+                    className="w-full h-64 sm:h-96 object-cover lg:h-[500px]"
                     width={600}
                     height={400}
                   />
@@ -478,34 +478,36 @@ function ProductPage({ params }: ProductPageProps) {
 
             {/* Right Column - Product Details */}
             <div className="lg:w-1/2">
-              <div className="bg-white rounded-xl shadow-md p-6">
+              <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
                 {/* Category Badge */}
-                <div className="flex items-center gap-2 mb-4">
-                  {getCategoryIcon()}
-                  <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+                <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                  <div className="text-xl sm:text-3xl text-red-900">
+                    {getCategoryIcon()}
+                  </div>
+                  <span className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
                     {product.category.replace("-", " ")}
                   </span>
                 </div>
 
                 {/* Product Name and Rating */}
-                <div className="flex justify-between items-start mb-4">
-                  <h1 className="text-3xl font-bold text-gray-900">
+                <div className="flex justify-between items-start mb-3 sm:mb-4 gap-2">
+                  <h1 className="text-xl sm:text-3xl font-bold text-gray-900 leading-tight">
                     {product.title}
                   </h1>
-                  <div className="flex items-center bg-yellow-100 px-2 py-1 rounded-full">
-                    <FiStar className="text-yellow-500 mr-1" />
-                    <span className="font-bold">{product.rating || "New"}</span>
+                  <div className="flex items-center bg-yellow-100 px-2 py-1 rounded-full flex-shrink-0">
+                    <FiStar className="text-yellow-500 mr-1 text-sm" />
+                    <span className="font-bold text-sm">{product.rating || "New"}</span>
                   </div>
                 </div>
 
                 {/* Price */}
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
                   {product.discountedPrice ? (
-                    <div className="flex items-center gap-2">
-                      <p className="text-2xl font-bold text-red-900">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-xl sm:text-2xl font-bold text-red-900">
                         ₹{product.discountedPrice.toFixed(2)}
                       </p>
-                      <p className="text-lg text-gray-500 line-through">
+                      <p className="text-base sm:text-lg text-gray-500 line-through">
                         ₹{product.price.toFixed(2)}
                       </p>
                       <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
@@ -518,20 +520,20 @@ function ProductPage({ params }: ProductPageProps) {
                       </span>
                     </div>
                   ) : (
-                    <p className="text-2xl font-bold text-red-900">
+                    <p className="text-xl sm:text-2xl font-bold text-red-900">
                       ₹{product.price.toFixed(2)}
                     </p>
                   )}
                 </div>
 
                 {/* Meta Info */}
-                <div className="flex gap-4 mb-6">
-                  <div className="flex items-center text-gray-600">
-                    <FiClock className="mr-1" />
+                <div className="flex gap-2 sm:gap-4 mb-4 sm:mb-6 flex-wrap">
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <FiClock className="mr-1 text-xs sm:text-sm" />
                     <span>{product.prepTime}</span>
                   </div>
-                  <div className="flex items-center text-gray-600">
-                    <FaFire className="mr-1" />
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <FaFire className="mr-1 text-xs sm:text-sm" />
                     <span>
                       {["Mild", "Medium", "Hot", "Extra Hot"][
                         product.spicyLevel
@@ -554,66 +556,67 @@ function ProductPage({ params }: ProductPageProps) {
                 </div>
 
                 {/* Description */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                     Description
                   </h3>
-                  <p className="text-gray-600">{product.description}</p>
+                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{product.description}</p>
                 </div>
 
                 {/* Quantity and Add to Cart */}
-                <div className="border-t border-gray-200 pt-6">
+                <div className="border-t border-gray-200 pt-4 sm:pt-6">
                   {isItemInCart ? (
                     // Quantity Controls for items already in cart
-                    <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md p-4">
+                    <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md p-3 sm:p-4">
                       <button
                         onClick={handleDecrementCart}
-                        className="flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
-                        <FaMinus className="text-sm" />
+                        className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
+                        <FaMinus className="text-xs sm:text-sm" />
                       </button>
 
                       <div className="flex flex-col items-center mx-4">
                         <span className="text-xs text-green-600 font-medium">
                           In Cart
                         </span>
-                        <span className="text-2xl font-bold text-green-700">
+                        <span className="text-xl sm:text-2xl font-bold text-green-700">
                           {itemQuantityInCart}
                         </span>
                       </div>
 
                       <button
                         onClick={handleIncrementCart}
-                        className="flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
-                        <FaPlus className="text-sm" />
+                        className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
+                        <FaPlus className="text-xs sm:text-sm" />
                       </button>
                     </div>
                   ) : (
                     // Regular quantity selector and add to cart
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
+                    <div className="space-y-3 sm:space-y-4">
+                      <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center border border-gray-300 rounded-full">
                           <button
                             onClick={() =>
                               setQuantity((prev) => Math.max(1, prev - 1))
                             }
                             className="p-2 text-gray-600 hover:text-red-900">
-                            <FiMinus />
+                            <FiMinus className="text-sm" />
                           </button>
-                          <span className="px-4 font-medium">{quantity}</span>
+                          <span className="px-3 sm:px-4 font-medium text-sm sm:text-base">{quantity}</span>
                           <button
                             onClick={() => setQuantity((prev) => prev + 1)}
                             className="p-2 text-gray-600 hover:text-red-900">
-                            <FiPlus />
+                            <FiPlus className="text-sm" />
                           </button>
                         </div>
 
                         <Button
                           onClick={handleAddtocart}
-                          className="flex-1 ml-4 py-2 bg-red-900 hover:bg-red-800">
-                          <span className="flex items-center justify-center gap-2">
-                            <FaCartPlus />
-                            ADD TO CART - ₹
-                            {(getTotalprice() * quantity).toFixed(2)}
+                          className="flex-1 ml-2 sm:ml-4 py-2 sm:py-3 bg-red-900 hover:bg-red-800 text-sm sm:text-base">
+                          <span className="flex items-center justify-center gap-1 sm:gap-2">
+                            <FaCartPlus className="text-sm" />
+                            <span className="hidden sm:inline">ADD TO CART - </span>
+                            <span className="sm:hidden">ADD - </span>
+                            ₹{(getTotalprice() * quantity).toFixed(2)}
                           </span>
                         </Button>
                       </div>
@@ -623,14 +626,14 @@ function ProductPage({ params }: ProductPageProps) {
               </div>
 
               {/* Reviews Section - Show placeholder since API doesn't have reviews */}
-              <div className="bg-white rounded-xl shadow-md p-6 mt-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">
+              <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mt-4 sm:mt-6">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">
                   Customer Reviews
                 </h3>
-                <div className="text-center py-8">
-                  <div className="text-4xl text-gray-300 mb-2">⭐</div>
-                  <p className="text-gray-500">No reviews yet</p>
-                  <p className="text-sm text-gray-400 mt-1">
+                <div className="text-center py-6 sm:py-8">
+                  <div className="text-3xl sm:text-4xl text-gray-300 mb-2">⭐</div>
+                  <p className="text-sm sm:text-base text-gray-500">No reviews yet</p>
+                  <p className="text-xs sm:text-sm text-gray-400 mt-1">
                     Be the first to review this item!
                   </p>
                 </div>
@@ -639,8 +642,8 @@ function ProductPage({ params }: ProductPageProps) {
           </div>
 
           {/* You May Also Like - Show Add-ons */}
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          <div className="mt-8 sm:mt-12">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 px-4 sm:px-0">
               You May Also Like
             </h2>
             <div className="">

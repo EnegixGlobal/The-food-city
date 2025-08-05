@@ -174,15 +174,15 @@ function MainCard({
 
   return (
     <div
-      className={`w-full md:max-w-[270px] max-w-[190px] 
+      className={`w-full md:max-w-[270px] max-w-[185px] 
                   flex-shrink-0 
-                  bg-white rounded-xl shadow-md overflow-hidden 
+                  bg-white rounded-xl shadow-sm overflow-hidden 
                   hover:shadow-xl transition-all duration-300 
                   ${className}`}
       {...props}>
       {/* Item Image */}
       <Link href={`/${category}/${item.slug}`}>
-        <div className="relative  h-54 overflow-hidden">
+        <div className="relative  md:h-54 h-48 overflow-hidden">
           <Image
             src={normalizedItem.imageUrl}
             alt={normalizedItem.title}
@@ -257,7 +257,6 @@ function MainCard({
                   <FaRupeeSign className="h-3" />
                   {normalizedItem.customizableOptions[0].price.toFixed(2)}
                 </span>
-                <span className="text-gray-500 text-xs">Starting price</span>
               </div>
             ) : (
               // Safety fallback
@@ -275,42 +274,46 @@ function MainCard({
           </p>
         )}
 
-        {/* Meta Info - Compact single line */}
-        <div className="flex items-center justify-between text-xs md:text-sm text-gray-600 mb-4">
-          <div className="flex items-center gap-1">
-            <FiStar className="text-yellow-400" size={12} />
-            <span>{item.rating.toFixed(1)} ({item.ratingCount})</span>
+        {/* Meta Info - Vertical Stack for Mobile */}
+        <div className="mb-3 space-y-1">
+          <div className="flex items-center justify-between text-xs text-gray-600">
+            <div className="flex items-center gap-1">
+              <FiStar className="text-yellow-400" size={10} />
+              <span>{item.rating.toFixed(1)} ({item.ratingCount})</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <FiClock className="text-gray-400" size={10} />
+              <span>{item.prepTime} min</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <FiClock className="text-gray-400" size={12} />
-            <span>{item.prepTime}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <FaFire className="text-red-400" size={12} />
-            <span className="text-xs">{spiceLevels[item.spicyLevel].label}</span>
+          <div className="flex items-left text-left justify-start">
+            <div className="flex items-center gap-1">
+              <FaFire className="text-red-400" size={10} />
+              <span className="text-xs">{spiceLevels[item.spicyLevel].label}</span>
+            </div>
           </div>
         </div>
 
         {isItemInCart ? (
-          // Quantity Controls for items already in cart
-          <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md p-2">
-            <button
-              onClick={handleDecrement}
-              className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
-              <FaMinus className="text-xs" />
-            </button>
-
-            <div className="flex flex-col items-center mx-3">
-              <span className="text-lg font-bold text-green-700">
-                {itemQuantity}
-              </span>
+          // Modern Compact Cart Design
+          <div className="bg-green-500 text-white rounded-lg p-2">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={handleDecrement}
+                className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
+                <FaMinus className="text-xs" />
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">{itemQuantity} in cart</span>
+              </div>
+              
+              <button
+                onClick={handleIncrement}
+                className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
+                <FaPlus className="text-xs" />
+              </button>
             </div>
-
-            <button
-              onClick={handleIncrement}
-              className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
-              <FaPlus className="text-xs" />
-            </button>
           </div>
         ) : (
           // Regular Add to Cart Button
