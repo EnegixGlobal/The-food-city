@@ -13,6 +13,7 @@ import useUserStore from "../zustand/userStore";
 import { useAlertStore } from "../zustand/alertStore";
 import SideLogin from "./SideLogin";
 import { useRouter } from "next/navigation";
+import { MdOutlineWorkHistory } from "react-icons/md";
 
 function Navbar() {
   const [userHoverOpen, setUserHoverOpen] = useState(false);
@@ -138,6 +139,11 @@ function Navbar() {
       name: "Offers",
       href: "/offers",
       icon: <BlinkingOfferIcon />,
+    },
+    {
+      name: "Career",
+      href: "/career",
+      icon: <MdOutlineWorkHistory />,
     },
   ];
 

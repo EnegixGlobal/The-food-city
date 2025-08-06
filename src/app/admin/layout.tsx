@@ -83,6 +83,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       icon: Settings,
       current: pathname === "/admin/settings",
     },
+    {
+      name: "Job Applications",
+      href: "/admin/job-application",
+      icon: Settings,
+      current: pathname === "/admin/job-application",
+    },
   ];
 
   // Fetch company details

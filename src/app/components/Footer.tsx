@@ -91,6 +91,13 @@ const Footer = () => {
                   Contact
                 </a>
               </li>
+              <li>
+                <Link
+                  href="/career"
+                  className="font-medium hover:text-yellow-400 transition">
+                  Career
+                </Link>
+              </li>
               <li className="font-thin">
                 <Link
                   href="/admin"
