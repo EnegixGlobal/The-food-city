@@ -649,7 +649,7 @@ const JobApplicationsAdmin = () => {
 
                 <div className="mt-6 flex justify-end space-x-3">
                   {selectedApplication.resumeUrl?.startsWith('/resumes/') ? (
-                    <div className="text-green-600 text-sm mb-2 hidden flex items-center">
+                    <div className="text-green-600 text-sm mb-2 hidden  items-center">
                       <span className="mr-2">📄</span>
                       click to download resume
                     </div>
