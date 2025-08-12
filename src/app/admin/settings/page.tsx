@@ -41,7 +41,7 @@ interface Employee {
   updatedAt: string;
 }
 
-const COMPANY_ID = "6888be3b6db74d474efde7f1"; // Fixed company ID as per requirement
+const COMPANY_ID = "6899da8f97ccc3ed5dc9eaa8"; // Fixed company ID as per requirement
 
 const SettingsPage = () => {
   // State management
