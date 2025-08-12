@@ -141,7 +141,7 @@ export const PATCH = async (
       return apiResponse(400, "Product slug is required");
     }
 
-    const body = await req.json();
+  const body = await req.json();
 
     if (!body) {
       return apiResponse(400, "Product data is required");
@@ -170,7 +170,16 @@ export const PATCH = async (
       });
     }
 
-    const product = await Product.findOneAndUpdate({ slug }, body, {
+    // If client wants to remove discountedPrice, use $unset
+    let updateDoc: any = body;
+    if (body.removeDiscountedPrice) {
+      updateDoc = { ...body };
+      delete updateDoc.removeDiscountedPrice;
+      delete updateDoc.discountedPrice;
+      updateDoc.$unset = { discountedPrice: 1 };
+    }
+
+    const product = await Product.findOneAndUpdate({ slug }, updateDoc, {
       new: true,
       runValidators: true,
     });

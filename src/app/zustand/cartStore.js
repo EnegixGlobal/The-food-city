@@ -4,8 +4,8 @@ import { persist } from "zustand/middleware";
 
 // Cart item types
 const ITEM_TYPES = {
-  PRODUCT: 'product',
-  ADDON: 'addon'
+  PRODUCT: "product",
+  ADDON: "addon",
 };
 
 export const useCartStore = create(
@@ -14,49 +14,63 @@ export const useCartStore = create(
       cart: [],
 
       // CREATE - Add product to cart
-      addProductToCart: (product, quantity = 1, selectedAddons = [], customization = null) => {
+      addProductToCart: (
+        product,
+        quantity = 1,
+        selectedAddons = [],
+        customization = null
+      ) => {
         try {
           // Create unique cart item ID by combining product ID, selected addons, and customization
-          const addonIds = selectedAddons.map(addon => addon._id).sort().join('-');
-          const customizationId = customization ? `-custom-${customization.option}` : '';
-          const cartItemId = `${product._id}${addonIds ? `-addons-${addonIds}` : ''}${customizationId}`;
-          
-          const existingItem = get().cart.find((item) => item.cartItemId === cartItemId);
-          
+          const addonIds = selectedAddons
+            .map((addon) => addon._id)
+            .sort()
+            .join("-");
+          const customizationId = customization
+            ? `-custom-${customization.option}`
+            : "";
+          const cartItemId = `${product._id}${
+            addonIds ? `-addons-${addonIds}` : ""
+          }${customizationId}`;
+
+          const existingItem = get().cart.find(
+            (item) => item.cartItemId === cartItemId
+          );
+
           if (existingItem) {
             // If same product with same addons and customization exists, increase quantity
             set({
               cart: get().cart.map((item) =>
-                item.cartItemId === cartItemId 
-                  ? { ...item, quantity: item.quantity + quantity } 
+                item.cartItemId === cartItemId
+                  ? { ...item, quantity: item.quantity + quantity }
                   : item
               ),
             });
           } else {
             // Create new cart item with proper pricing logic
-            
+
             // Step 1: Determine base price (product price or fallback to first customization option)
             let basePrice;
             if (product.discountedPrice) {
               basePrice = product.discountedPrice;
             } else if (product.price) {
               basePrice = product.price;
-            } else if (product.customizableOptions && product.customizableOptions.length > 0) {
-              // Fallback: use first customization option price if no product price
-              basePrice = product.customizableOptions[0].price;
             } else {
               basePrice = 0; // Safety fallback
             }
-            
+
             // Step 2: Add customization price if selected (ON TOP of base price)
             const customizationPrice = customization ? customization.price : 0;
-            
+
             // Step 3: Add addons price
-            const addonsPrice = selectedAddons.reduce((sum, addon) => sum + addon.price, 0);
-            
+            const addonsPrice = selectedAddons.reduce(
+              (sum, addon) => sum + addon.price,
+              0
+            );
+
             // Step 4: Calculate total unit price
             const unitPrice = basePrice + customizationPrice + addonsPrice;
-            
+
             const newCartItem = {
               cartItemId,
               type: ITEM_TYPES.PRODUCT,
@@ -79,25 +93,27 @@ export const useCartStore = create(
               quantity,
               totalPrice: unitPrice * quantity, // Total price for this quantity
               // Associated addons
-              selectedAddons: selectedAddons.map(addon => ({
+              selectedAddons: selectedAddons.map((addon) => ({
                 _id: addon._id,
                 title: addon.title,
                 description: addon.description,
                 price: addon.price,
                 imageUrl: addon.imageUrl,
                 isVeg: addon.isVeg,
-                rating: addon.rating
+                rating: addon.rating,
               })),
               // Customization
-              selectedCustomization: customization ? {
-                option: customization.option,
-                price: customization.price
-              } : null,
-              addedAt: new Date().toISOString()
+              selectedCustomization: customization
+                ? {
+                    option: customization.option,
+                    price: customization.price,
+                  }
+                : null,
+              addedAt: new Date().toISOString(),
             };
-            
-            set({ 
-              cart: [...get().cart, newCartItem] 
+
+            set({
+              cart: [...get().cart, newCartItem],
             });
           }
         } catch (error) {
@@ -109,14 +125,16 @@ export const useCartStore = create(
       addAddonToCart: (addon, quantity = 1) => {
         try {
           const cartItemId = `addon-${addon._id}`;
-          const existingItem = get().cart.find((item) => item.cartItemId === cartItemId);
-          
+          const existingItem = get().cart.find(
+            (item) => item.cartItemId === cartItemId
+          );
+
           if (existingItem) {
             // If addon exists, increase quantity
             set({
               cart: get().cart.map((item) =>
-                item.cartItemId === cartItemId 
-                  ? { ...item, quantity: item.quantity + quantity } 
+                item.cartItemId === cartItemId
+                  ? { ...item, quantity: item.quantity + quantity }
                   : item
               ),
             });
@@ -138,11 +156,11 @@ export const useCartStore = create(
               // Cart specific
               quantity,
               selectedAddons: [],
-              addedAt: new Date().toISOString()
+              addedAt: new Date().toISOString(),
             };
-            
-            set({ 
-              cart: [...get().cart, newCartItem] 
+
+            set({
+              cart: [...get().cart, newCartItem],
             });
           }
         } catch (error) {
@@ -163,24 +181,29 @@ export const useCartStore = create(
           } else {
             // Fallback to old behavior for compatibility
             const cartItemId = item.cartItemId || item._id || item.id;
-            const existingItem = get().cart.find((i) => (i.cartItemId || i._id || i.id) === cartItemId);
-            
+            const existingItem = get().cart.find(
+              (i) => (i.cartItemId || i._id || i.id) === cartItemId
+            );
+
             if (existingItem) {
               set({
                 cart: get().cart.map((i) =>
-                  (i.cartItemId || i._id || i.id) === cartItemId 
-                    ? { ...i, quantity: i.quantity + 1 } 
+                  (i.cartItemId || i._id || i.id) === cartItemId
+                    ? { ...i, quantity: i.quantity + 1 }
                     : i
                 ),
               });
             } else {
-              set({ 
-                cart: [...get().cart, { 
-                  ...item, 
-                  cartItemId: cartItemId,
-                  quantity: 1,
-                  addedAt: new Date().toISOString()
-                }] 
+              set({
+                cart: [
+                  ...get().cart,
+                  {
+                    ...item,
+                    cartItemId: cartItemId,
+                    quantity: 1,
+                    addedAt: new Date().toISOString(),
+                  },
+                ],
               });
             }
           }
@@ -193,20 +216,25 @@ export const useCartStore = create(
       getCartItems: () => get().cart,
 
       // READ - Get specific item from cart
-      getCartItem: (cartItemId) => get().cart.find((item) => item.cartItemId === cartItemId),
+      getCartItem: (cartItemId) =>
+        get().cart.find((item) => item.cartItemId === cartItemId),
 
       // READ - Check if product with specific addons is in cart
       isProductInCart: (productId, selectedAddonIds = []) => {
-        const addonIds = selectedAddonIds.sort().join('-');
-        const cartItemId = `${productId}${addonIds ? `-addons-${addonIds}` : ''}`;
+        const addonIds = selectedAddonIds.sort().join("-");
+        const cartItemId = `${productId}${
+          addonIds ? `-addons-${addonIds}` : ""
+        }`;
         return get().cart.some((item) => item.cartItemId === cartItemId);
       },
 
       // READ - Get products only from cart
-      getProducts: () => get().cart.filter(item => item.type === ITEM_TYPES.PRODUCT),
+      getProducts: () =>
+        get().cart.filter((item) => item.type === ITEM_TYPES.PRODUCT),
 
       // READ - Get addons only from cart
-      getAddons: () => get().cart.filter(item => item.type === ITEM_TYPES.ADDON),
+      getAddons: () =>
+        get().cart.filter((item) => item.type === ITEM_TYPES.ADDON),
 
       // UPDATE - Update item quantity
       updateQuantity: (cartItemId, quantity) => {
@@ -221,23 +249,34 @@ export const useCartStore = create(
               cart: get().cart.map((item) => {
                 if (item.cartItemId === cartItemId) {
                   // Calculate proper pricing based on the new logic
-                  
+
                   // Step 1: Get base price from the item
-                  let basePrice = item.effectivePrice || item.discountedPrice || item.price || 0;
-                  
+                  let basePrice =
+                    item.effectivePrice ||
+                    item.discountedPrice ||
+                    item.price ||
+                    0;
+
                   // Step 2: Add customization price if selected
-                  const customizationPrice = item.selectedCustomization ? item.selectedCustomization.price : 0;
-                  
+                  const customizationPrice = item.selectedCustomization
+                    ? item.selectedCustomization.price
+                    : 0;
+
                   // Step 3: Add addons price
-                  const addonsPrice = item.selectedAddons?.reduce((sum, addon) => sum + addon.price, 0) || 0;
-                  
+                  const addonsPrice =
+                    item.selectedAddons?.reduce(
+                      (sum, addon) => sum + addon.price,
+                      0
+                    ) || 0;
+
                   // Step 4: Calculate unit price
-                  const unitPrice = basePrice + customizationPrice + addonsPrice;
-                  
-                  return { 
-                    ...item, 
+                  const unitPrice =
+                    basePrice + customizationPrice + addonsPrice;
+
+                  return {
+                    ...item,
                     quantity: Math.max(1, quantity),
-                    totalPrice: unitPrice * Math.max(1, quantity)
+                    totalPrice: unitPrice * Math.max(1, quantity),
                   };
                 }
                 return item;
@@ -256,25 +295,35 @@ export const useCartStore = create(
             cart: get().cart.map((item) => {
               if (item.cartItemId === cartItemId) {
                 const newQuantity = item.quantity + 1;
-                
+
                 // Calculate proper pricing based on the new logic
-                
+
                 // Step 1: Get base price from the item
-                let basePrice = item.effectivePrice || item.discountedPrice || item.price || 0;
-                
+                let basePrice =
+                  item.effectivePrice ||
+                  item.discountedPrice ||
+                  item.price ||
+                  0;
+
                 // Step 2: Add customization price if selected
-                const customizationPrice = item.selectedCustomization ? item.selectedCustomization.price : 0;
-                
+                const customizationPrice = item.selectedCustomization
+                  ? item.selectedCustomization.price
+                  : 0;
+
                 // Step 3: Add addons price
-                const addonsPrice = item.selectedAddons?.reduce((sum, addon) => sum + addon.price, 0) || 0;
-                
+                const addonsPrice =
+                  item.selectedAddons?.reduce(
+                    (sum, addon) => sum + addon.price,
+                    0
+                  ) || 0;
+
                 // Step 4: Calculate unit price
                 const unitPrice = basePrice + customizationPrice + addonsPrice;
-                
-                return { 
-                  ...item, 
+
+                return {
+                  ...item,
                   quantity: newQuantity,
-                  totalPrice: unitPrice * newQuantity
+                  totalPrice: unitPrice * newQuantity,
                 };
               }
               return item;
@@ -289,36 +338,49 @@ export const useCartStore = create(
       decrementQuantity: (cartItemId) => {
         try {
           set({
-            cart: get().cart.map((item) => {
-              if (item.cartItemId === cartItemId) {
-                const newQuantity = item.quantity - 1;
-                
-                if (newQuantity <= 0) {
-                  return null; // Mark for removal
+            cart: get()
+              .cart.map((item) => {
+                if (item.cartItemId === cartItemId) {
+                  const newQuantity = item.quantity - 1;
+
+                  if (newQuantity <= 0) {
+                    return null; // Mark for removal
+                  }
+
+                  // Calculate proper pricing based on the new logic
+
+                  // Step 1: Get base price from the item
+                  let basePrice =
+                    item.effectivePrice ||
+                    item.discountedPrice ||
+                    item.price ||
+                    0;
+
+                  // Step 2: Add customization price if selected
+                  const customizationPrice = item.selectedCustomization
+                    ? item.selectedCustomization.price
+                    : 0;
+
+                  // Step 3: Add addons price
+                  const addonsPrice =
+                    item.selectedAddons?.reduce(
+                      (sum, addon) => sum + addon.price,
+                      0
+                    ) || 0;
+
+                  // Step 4: Calculate unit price
+                  const unitPrice =
+                    basePrice + customizationPrice + addonsPrice;
+
+                  return {
+                    ...item,
+                    quantity: newQuantity,
+                    totalPrice: unitPrice * newQuantity,
+                  };
                 }
-                
-                // Calculate proper pricing based on the new logic
-                
-                // Step 1: Get base price from the item
-                let basePrice = item.effectivePrice || item.discountedPrice || item.price || 0;
-                
-                // Step 2: Add customization price if selected
-                const customizationPrice = item.selectedCustomization ? item.selectedCustomization.price : 0;
-                
-                // Step 3: Add addons price
-                const addonsPrice = item.selectedAddons?.reduce((sum, addon) => sum + addon.price, 0) || 0;
-                
-                // Step 4: Calculate unit price
-                const unitPrice = basePrice + customizationPrice + addonsPrice;
-                
-                return {
-                  ...item,
-                  quantity: newQuantity,
-                  totalPrice: unitPrice * newQuantity
-                };
-              }
-              return item;
-            }).filter(item => item !== null), // Remove items marked for removal
+                return item;
+              })
+              .filter((item) => item !== null), // Remove items marked for removal
           });
         } catch (error) {
           console.error("Error decrementing quantity:", error);
@@ -328,8 +390,8 @@ export const useCartStore = create(
       // DELETE - Remove specific item from cart
       removeFromCart: (cartItemId) => {
         try {
-          set({ 
-            cart: get().cart.filter((item) => item.cartItemId !== cartItemId) 
+          set({
+            cart: get().cart.filter((item) => item.cartItemId !== cartItemId),
           });
         } catch (error) {
           console.error("Error removing item from cart:", error);
@@ -347,8 +409,8 @@ export const useCartStore = create(
 
       // UTILITY - Check if item exists in cart (legacy support)
       isInCart: (id) => {
-        return get().cart.some((item) => 
-          item.cartItemId === id || item._id === id || item.id === id
+        return get().cart.some(
+          (item) => item.cartItemId === id || item._id === id || item.id === id
         );
       },
 
@@ -360,22 +422,29 @@ export const useCartStore = create(
             if (item.totalPrice && item.totalPrice > 0) {
               return acc + item.totalPrice;
             }
-            
+
             // Fallback calculation with new pricing logic
-            
+
             // Step 1: Get base price from the item
-            let basePrice = item.effectivePrice || item.discountedPrice || item.price || 0;
-            
+            let basePrice =
+              item.effectivePrice || item.discountedPrice || item.price || 0;
+
             // Step 2: Add customization price if selected
-            const customizationPrice = item.selectedCustomization ? item.selectedCustomization.price : 0;
-            
+            const customizationPrice = item.selectedCustomization
+              ? item.selectedCustomization.price
+              : 0;
+
             // Step 3: Add addons price
-            const addonsPrice = item.selectedAddons?.reduce((sum, addon) => sum + addon.price, 0) || 0;
-            
+            const addonsPrice =
+              item.selectedAddons?.reduce(
+                (sum, addon) => sum + addon.price,
+                0
+              ) || 0;
+
             // Step 4: Calculate unit price and total for this item
             const unitPrice = basePrice + customizationPrice + addonsPrice;
             const itemTotal = unitPrice * item.quantity;
-            
+
             return acc + itemTotal;
           }, 0);
         } catch (error) {
@@ -408,14 +477,19 @@ export const useCartStore = create(
       getItemEffectivePrice: (item) => {
         try {
           // Step 1: Get base price from the item
-          let basePrice = item.effectivePrice || item.discountedPrice || item.price || 0;
-          
+          let basePrice =
+            item.effectivePrice || item.discountedPrice || item.price || 0;
+
           // Step 2: Add customization price if selected
-          const customizationPrice = item.selectedCustomization ? item.selectedCustomization.price : 0;
-          
+          const customizationPrice = item.selectedCustomization
+            ? item.selectedCustomization.price
+            : 0;
+
           // Step 3: Add addons price
-          const addonsPrice = item.selectedAddons?.reduce((sum, addon) => sum + addon.price, 0) || 0;
-          
+          const addonsPrice =
+            item.selectedAddons?.reduce((sum, addon) => sum + addon.price, 0) ||
+            0;
+
           // Step 4: Return unit price
           return basePrice + customizationPrice + addonsPrice;
         } catch (error) {
@@ -439,11 +513,14 @@ export const useCartStore = create(
         try {
           return get().cart.reduce((acc, item) => {
             // Only calculate discount for products (not addons) and only if not customized
-            if (item.type === ITEM_TYPES.PRODUCT && 
-                !item.selectedCustomization && // No customization applied
-                item.discountedPrice && 
-                item.price > item.discountedPrice) {
-              const discount = (item.price - item.discountedPrice) * item.quantity;
+            if (
+              item.type === ITEM_TYPES.PRODUCT &&
+              !item.selectedCustomization && // No customization applied
+              item.discountedPrice &&
+              item.price > item.discountedPrice
+            ) {
+              const discount =
+                (item.price - item.discountedPrice) * item.quantity;
               return acc + discount;
             }
             return acc;
@@ -472,7 +549,10 @@ export const useCartStore = create(
           const tax = subtotal * taxRate;
           return subtotal + tax + deliveryFee;
         } catch (error) {
-          console.error("Error calculating total with tax and delivery:", error);
+          console.error(
+            "Error calculating total with tax and delivery:",
+            error
+          );
           return 0;
         }
       },
@@ -497,7 +577,7 @@ export const useCartStore = create(
             total,
             products: get().getProducts(),
             addons: get().getAddons(),
-            isEmpty: cart.length === 0
+            isEmpty: cart.length === 0,
           };
         } catch (error) {
           console.error("Error getting cart summary:", error);
@@ -511,7 +591,7 @@ export const useCartStore = create(
             total: 0,
             products: [],
             addons: [],
-            isEmpty: true
+            isEmpty: true,
           };
         }
       },
@@ -523,19 +603,25 @@ export const useCartStore = create(
           const items = [];
           const addons = [];
 
-          cart.forEach(cartItem => {
+          cart.forEach((cartItem) => {
             if (cartItem.type === ITEM_TYPES.PRODUCT) {
               // Calculate the correct price for the product using new logic
-              
+
               // Step 1: Get base price
-              let basePrice = cartItem.effectivePrice || cartItem.discountedPrice || cartItem.price || 0;
-              
+              let basePrice =
+                cartItem.effectivePrice ||
+                cartItem.discountedPrice ||
+                cartItem.price ||
+                0;
+
               // Step 2: Add customization price if selected
-              const customizationPrice = cartItem.selectedCustomization ? cartItem.selectedCustomization.price : 0;
-              
+              const customizationPrice = cartItem.selectedCustomization
+                ? cartItem.selectedCustomization.price
+                : 0;
+
               // Step 3: Calculate final product price (base + customization, addons handled separately)
               const productPrice = basePrice + customizationPrice;
-              
+
               // Add main product
               items.push({
                 productId: cartItem._id,
@@ -544,18 +630,21 @@ export const useCartStore = create(
                 price: productPrice,
                 quantity: cartItem.quantity,
                 imageUrl: cartItem.imageUrl,
-                customization: cartItem.selectedCustomization || null
+                customization: cartItem.selectedCustomization || null,
               });
 
               // Add associated addons to the addons array
-              if (cartItem.selectedAddons && cartItem.selectedAddons.length > 0) {
-                cartItem.selectedAddons.forEach(addon => {
+              if (
+                cartItem.selectedAddons &&
+                cartItem.selectedAddons.length > 0
+              ) {
+                cartItem.selectedAddons.forEach((addon) => {
                   addons.push({
                     addOnId: addon._id,
                     name: addon.title,
                     price: addon.price,
                     quantity: cartItem.quantity, // Same quantity as parent product
-                    image: addon.imageUrl
+                    image: addon.imageUrl,
                   });
                 });
               }
@@ -566,7 +655,7 @@ export const useCartStore = create(
                 name: cartItem.title,
                 price: cartItem.price,
                 quantity: cartItem.quantity,
-                image: cartItem.imageUrl
+                image: cartItem.imageUrl,
               });
             }
           });
@@ -576,7 +665,7 @@ export const useCartStore = create(
           console.error("Error formatting cart for order:", error);
           return { items: [], addons: [] };
         }
-      }
+      },
     }),
     {
       name: "cart-storage", // localStorage key

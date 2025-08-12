@@ -19,15 +19,13 @@ const CartPage = () => {
   const [loading, setLoading] = useState(true);
 
   // Get cart data from stores
-  const { cart, incrementQuantity, decrementQuantity } =
-    useCartStore();
+  const { cart, incrementQuantity, decrementQuantity } = useCartStore();
 
   // Get addon cart data
   const {
     addons,
     incrementAddonQuantity,
     decrementAddonQuantity,
-    getTotalAddonPrice
   } = useAddonStore();
 
   // Get combined cart summary
@@ -59,16 +57,7 @@ const CartPage = () => {
         isEmpty: true,
       };
 
-  // Debug logging
-  useEffect(() => {
-    if (isHydrated) {
-      console.log("🛒 Cart Summary Debug:", cartSummary);
-      console.log("📊 Addon Total:", cartSummary.addonTotal);
-      console.log("🍟 Addons:", addons);
-    }
-  }, [isHydrated, cartSummary.addonTotal, addons]);
-
-  console.log(getTotalAddonPrice())
+      console.log(cart)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -90,11 +79,7 @@ const CartPage = () => {
             {!cartSummary.isEmpty && (
               <button
                 onClick={() => {
-                  if (
-                    window.confirm(
-                      "Clear entire cart?"
-                    )
-                  ) {
+                  if (window.confirm("Clear entire cart?")) {
                     try {
                       clearAllCarts();
                     } catch (error) {
@@ -125,94 +110,95 @@ const CartPage = () => {
                 </div>
 
                 {cart.map((item: any) => {
-
                   return (
-                  <div
-                    key={item.cartItemId}
-                    className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
-                    <div className="flex p-3 md:p-6">
-                      {/* Item Image */}
-                      <div className="mr-3 md:mr-4 flex-shrink-0">
-                        <Image
-                          width={120}
-                          height={120}
-                          src={item.imageUrl || "/placeholder-food.svg"}
-                          alt={item.title || "Product"}
-                          className="w-20 h-20 md:w-28 md:h-28 object-cover rounded-xl shadow-sm"
-                        />
-                      </div>
+                    <div
+                      key={item.cartItemId}
+                      className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+                      <div className="flex p-3 md:p-6">
+                        {/* Item Image */}
+                        <div className="mr-3 md:mr-4 flex-shrink-0">
+                          <Image
+                            width={120}
+                            height={120}
+                            src={item.imageUrl || "/placeholder-food.svg"}
+                            alt={item.title || "Product"}
+                            className="w-20 h-20 md:w-28 md:h-28 object-cover rounded-xl shadow-sm"
+                          />
+                        </div>
 
-                      {/* Item Details */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between h-full">
-                          <div className="flex-1 pr-2">
-                            <h3 className="text-sm md:text-lg font-bold text-gray-900 mb-1 md:mb-2 line-clamp-2">
-                              {item.title || "Unknown Product"}
-                            </h3>
+                        {/* Item Details */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between h-full">
+                            <div className="flex-1 pr-2">
+                              <h3 className="text-sm md:text-lg font-bold text-gray-900 mb-1 md:mb-2 line-clamp-2">
+                                {item.title || "Unknown Product"}
+                              </h3>
 
-                            {/* Selected Customization */}
-                            {item.selectedCustomization && (
-                              <div className="mb-2">
-                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                                  {item.selectedCustomization.option}
+                              {/* Selected Customization */}
+                              {item.selectedCustomization && (
+                                <div className="mb-2">
+                                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                                    {item.selectedCustomization.option}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Price Display */}
+                              <div className="mt-auto">
+                                <span className="text-red-600 flex items-center font-bold text-sm md:text-base">
+                                  <FaRupeeSign className="text-xs md:text-sm" />
+                                  {(item.totalPrice && item.totalPrice > 0
+                                    ? item.totalPrice
+                                    : item.selectedCustomization
+                                    ? item.selectedCustomization.price *
+                                      item.quantity
+                                    : (item.effectivePrice || item.price) *
+                                      item.quantity
+                                  )?.toFixed(2) || "0.00"}
                                 </span>
                               </div>
-                            )}
-
-                            {/* Price Display */}
-                            <div className="mt-auto">
-                              <span className="text-red-600 flex items-center font-bold text-sm md:text-base">
-                                <FaRupeeSign className="text-xs md:text-sm" />
-                                {(item.totalPrice && item.totalPrice > 0 
-                                  ? item.totalPrice 
-                                  : (item.selectedCustomization 
-                                    ? item.selectedCustomization.price * item.quantity
-                                    : (item.effectivePrice || item.price) * item.quantity)
-                                )?.toFixed(2) || '0.00'}
-                              </span>
                             </div>
-                          </div>
 
-                          <div className="flex flex-col items-end justify-between h-full">
-                            {/* Quantity Controls */}
-                            <div className="flex items-center bg-gray-100 rounded-full border">
-                              <button
-                                onClick={() => {
-                                  try {
-                                    decrementQuantity(item.cartItemId);
-                                  } catch (error) {
-                                    console.error(
-                                      "Error decrementing product quantity:",
-                                      error
-                                    );
-                                  }
-                                }}
-                                className="p-2 text-gray-600 hover:text-red-600 transition-colors rounded-full hover:bg-red-50">
-                                <FiMinus size={12} />
-                              </button>
-                              <span className="px-3 py-1 font-bold text-sm min-w-[2rem] text-center">
-                                {item.quantity || 0}
-                              </span>
-                              <button
-                                onClick={() => {
-                                  try {
-                                    incrementQuantity(item.cartItemId);
-                                  } catch (error) {
-                                    console.error(
-                                      "Error incrementing product quantity:",
-                                      error
-                                    );
-                                  }
-                                }}
-                                className="p-2 text-gray-600 hover:text-green-600 transition-colors rounded-full hover:bg-green-50">
-                                <FiPlus size={12} />
-                              </button>
+                            <div className="flex flex-col items-end justify-between h-full">
+                              {/* Quantity Controls */}
+                              <div className="flex items-center bg-gray-100 rounded-full border">
+                                <button
+                                  onClick={() => {
+                                    try {
+                                      decrementQuantity(item.cartItemId);
+                                    } catch (error) {
+                                      console.error(
+                                        "Error decrementing product quantity:",
+                                        error
+                                      );
+                                    }
+                                  }}
+                                  className="p-2 text-gray-600 hover:text-red-600 transition-colors rounded-full hover:bg-red-50">
+                                  <FiMinus size={12} />
+                                </button>
+                                <span className="px-3 py-1 font-bold text-sm min-w-[2rem] text-center">
+                                  {item.quantity || 0}
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    try {
+                                      incrementQuantity(item.cartItemId);
+                                    } catch (error) {
+                                      console.error(
+                                        "Error incrementing product quantity:",
+                                        error
+                                      );
+                                    }
+                                  }}
+                                  className="p-2 text-gray-600 hover:text-green-600 transition-colors rounded-full hover:bg-green-50">
+                                  <FiPlus size={12} />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
                   );
                 })}
               </div>
@@ -267,12 +253,14 @@ const CartPage = () => {
                             <div className="mt-auto">
                               <span className="text-red-600 flex items-center font-bold text-sm md:text-base">
                                 <FaRupeeSign className="text-xs md:text-sm" />
-                                {(item.totalPrice && item.totalPrice > 0 
-                                  ? item.totalPrice 
-                                  : (item.selectedCustomization 
-                                    ? item.selectedCustomization.price * item.quantity
-                                    : (item.effectivePrice || item.price) * item.quantity)
-                                )?.toFixed(2) || '0.00'}
+                                {(item.totalPrice && item.totalPrice > 0
+                                  ? item.totalPrice
+                                  : item.selectedCustomization
+                                  ? item.selectedCustomization.price *
+                                    item.quantity
+                                  : (item.effectivePrice || item.price) *
+                                    item.quantity
+                                )?.toFixed(2) || "0.00"}
                               </span>
                             </div>
                           </div>
@@ -399,7 +387,9 @@ const CartPage = () => {
                 )}
 
                 <div className="flex justify-between items-center">
-                  <span className="text-xs md:text-sm text-gray-600">Delivery</span>
+                  <span className="text-xs md:text-sm text-gray-600">
+                    Delivery
+                  </span>
                   <span className="font-medium text-xs md:text-sm text-green-600">
                     {cartSummary.deliveryFee === 0
                       ? "Free"
@@ -408,7 +398,9 @@ const CartPage = () => {
                 </div>
                 {cartSummary.discount > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-xs md:text-sm text-gray-600">Discount</span>
+                    <span className="text-xs md:text-sm text-gray-600">
+                      Discount
+                    </span>
                     <span className="font-medium text-xs md:text-sm text-green-600">
                       -₹{cartSummary.discount?.toFixed(2) || "0.00"}
                     </span>

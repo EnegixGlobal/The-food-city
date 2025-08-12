@@ -174,7 +174,7 @@ function MainCard({
 
   return (
     <div
-      className={`w-full md:max-w-[270px] max-w-[185px] 
+      className={`w-full md:max-w-[280px] max-w-[190px] 
                   flex-shrink-0 
                   bg-white rounded-xl shadow-sm overflow-hidden 
                   hover:shadow-xl transition-all duration-300 
@@ -239,8 +239,12 @@ function MainCard({
                   {normalizedItem.discountedPrice.toFixed(2)}
                 </span>
                 <span className="text-gray-400 flex items-center line-through text-xs">
-                  <FaRupeeSign className="h-2" />
-                  {normalizedItem.price.toFixed(2)}
+                  {normalizedItem.price > 0 && (
+                    <>
+                      <FaRupeeSign className="h-3" />
+                      {normalizedItem.price.toFixed(2)}
+                    </>
+                  )}
                 </span>
               </div>
             ) : normalizedItem.price ? (
@@ -279,7 +283,9 @@ function MainCard({
           <div className="flex items-center justify-between text-xs text-gray-600">
             <div className="flex items-center gap-1">
               <FiStar className="text-yellow-400" size={10} />
-              <span>{item.rating.toFixed(1)} ({item.ratingCount})</span>
+              <span>
+                {item.rating.toFixed(1)} ({item.ratingCount})
+              </span>
             </div>
             <div className="flex md:ml-4 items-center gap-1">
               <FiClock className="text-gray-400" size={10} />
@@ -289,7 +295,9 @@ function MainCard({
           <div className="flex items-left text-left justify-start">
             <div className="flex items-center gap-1">
               <FaFire className="text-red-400" size={10} />
-              <span className="text-xs">{spiceLevels[item.spicyLevel].label}</span>
+              <span className="text-xs">
+                {spiceLevels[item.spicyLevel].label}
+              </span>
             </div>
           </div>
         </div>
@@ -303,11 +311,13 @@ function MainCard({
                 className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
                 <FaMinus className="text-xs" />
               </button>
-              
+
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{itemQuantity} in cart</span>
+                <span className="text-sm font-medium">
+                  {itemQuantity} in cart
+                </span>
               </div>
-              
+
               <button
                 onClick={handleIncrement}
                 className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">

@@ -106,23 +106,21 @@ function ProductPage({ params }: ProductPageProps) {
   // Cart store
   const {
     addProductToCart,
-    isProductInCart,
     cart,
     incrementQuantity,
     decrementQuantity,
     removeFromCart,
   } = useCartStore();
 
-  const { addons } = useAddonStore();
   const { user } = useUserStore();
 
   // Format date for reviews
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -130,11 +128,11 @@ function ProductPage({ params }: ProductPageProps) {
   const handleHelpfulUpdate = async (reviewId: string, isHelpful: boolean) => {
     try {
       const response = await fetch(`/api/review/${reviewId}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify({ isHelpful }),
       });
 
@@ -142,18 +140,18 @@ function ProductPage({ params }: ProductPageProps) {
 
       if (data.success) {
         // Update the local reviews state
-        setReviews(prevReviews => 
-          prevReviews.map(review => 
-            review._id === reviewId 
+        setReviews((prevReviews) =>
+          prevReviews.map((review) =>
+            review._id === reviewId
               ? { ...review, isHelpful, helpfullCount: data.data.helpfulCount }
               : review
           )
         );
       } else {
-        console.error('Failed to update helpful status:', data.message);
+        console.error("Failed to update helpful status:", data.message);
       }
     } catch (error) {
-      console.error('Error updating helpful status:', error);
+      console.error("Error updating helpful status:", error);
     }
   };
 
@@ -161,41 +159,44 @@ function ProductPage({ params }: ProductPageProps) {
   const handleDeleteReview = async (reviewId: string) => {
     try {
       const response = await fetch(`/api/review/${reviewId}`, {
-        method: 'DELETE',
-        credentials: 'include',
+        method: "DELETE",
+        credentials: "include",
       });
 
       const data = await response.json();
 
       if (data.success) {
         // Remove the review from local state
-        setReviews(prevReviews => 
-          prevReviews.filter(review => review._id !== reviewId)
+        setReviews((prevReviews) =>
+          prevReviews.filter((review) => review._id !== reviewId)
         );
-        
+
         // Refresh product data to update average rating
         if (product) {
           fetchReviews(product._id);
         }
       } else {
-        console.error('Failed to delete review:', data.message);
-        alert('Failed to delete review: ' + data.message);
+        console.error("Failed to delete review:", data.message);
+        alert("Failed to delete review: " + data.message);
       }
     } catch (error) {
-      console.error('Error deleting review:', error);
-      alert('Error deleting review. Please try again.');
+      console.error("Error deleting review:", error);
+      alert("Error deleting review. Please try again.");
     }
   };
 
   // Handle review update
-  const handleUpdateReview = async (reviewId: string, updatedData: { rating: number; comment: string; imageUrl?: string }) => {
+  const handleUpdateReview = async (
+    reviewId: string,
+    updatedData: { rating: number; comment: string; imageUrl?: string }
+  ) => {
     try {
       const response = await fetch(`/api/review/${reviewId}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify(updatedData),
       });
 
@@ -203,25 +204,29 @@ function ProductPage({ params }: ProductPageProps) {
 
       if (data.success) {
         // Update the review in local state
-        setReviews(prevReviews => 
-          prevReviews.map(review => 
-            review._id === reviewId 
-              ? { ...review, ...updatedData, updatedAt: new Date().toISOString() }
+        setReviews((prevReviews) =>
+          prevReviews.map((review) =>
+            review._id === reviewId
+              ? {
+                  ...review,
+                  ...updatedData,
+                  updatedAt: new Date().toISOString(),
+                }
               : review
           )
         );
-        
+
         // Refresh product data to update average rating
         if (product) {
           fetchReviews(product._id);
         }
       } else {
-        console.error('Failed to update review:', data.message);
-        alert('Failed to update review: ' + data.message);
+        console.error("Failed to update review:", data.message);
+        alert("Failed to update review: " + data.message);
       }
     } catch (error) {
-      console.error('Error updating review:', error);
-      alert('Error updating review. Please try again.');
+      console.error("Error updating review:", error);
+      alert("Error updating review. Please try again.");
     }
   };
 
@@ -328,11 +333,6 @@ function ProductPage({ params }: ProductPageProps) {
       };
 
       addProductToCart(normalizedProduct, quantity, selectedAddons);
-
-      // Show success message or update UI
-      console.log(
-        `Added ${quantity} ${product.title} to cart with ${selectedAddons.length} addons`
-      );
     } catch (error) {
       console.error("Error adding product to cart:", error);
     }
@@ -375,11 +375,6 @@ function ProductPage({ params }: ProductPageProps) {
 
       // Reset quantity to 1 after adding to cart
       setQuantity(1);
-
-      // Show success message or update UI
-      console.log(
-        `Added ${quantity} ${product.title} to cart with ${selectedAddons.length} addons`
-      );
     } catch (error) {
       console.error("Error adding product to cart:", error);
     }
@@ -416,11 +411,6 @@ function ProductPage({ params }: ProductPageProps) {
 
       // Reset quantity to 1 after adding to cart
       setQuantity(1);
-
-      // Show success message or update UI
-      console.log(
-        `Added ${quantity} ${product.title} to cart with customization: ${selectedOption.option}`
-      );
     } catch (error) {
       console.error("Error adding customized product to cart:", error);
     }
@@ -632,13 +622,18 @@ function ProductPage({ params }: ProductPageProps) {
             <div className="lg:w-1/2">
               <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
                 {/* Category Badge */}
-                <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                  <div className="text-xl sm:text-3xl text-red-900">
-                    {getCategoryIcon()}
+                <div className="flex items-center gap-2 mb-3 sm:mb-4 justify-between">
+                  <div className="flex items-center gap-1">
+                    <div className="text-xl sm:text-3xl text-red-900">
+                      {getCategoryIcon()}
+                    </div>
+                    <span className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
+                      {product.category.replace("-", " ")}
+                    </span>
                   </div>
-                  <span className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
-                    {product.category.replace("-", " ")}
-                  </span>
+                  <p className="text-gray-500 font-thin text-right">
+                    {product.isCustomizable && "Customisable"}
+                  </p>
                 </div>
 
                 {/* Product Name and Rating */}
@@ -648,13 +643,15 @@ function ProductPage({ params }: ProductPageProps) {
                   </h1>
                   <div className="flex items-center bg-yellow-100 px-2 py-1 rounded-full flex-shrink-0">
                     <FiStar className="text-yellow-500 mr-1 text-sm" />
-                    <span className="font-bold text-sm">{product.rating || "New"}</span>
+                    <span className="font-bold text-sm">
+                      {product.rating || "New"}
+                    </span>
                   </div>
                 </div>
 
                 {/* Price */}
                 <div className="mb-4 sm:mb-6">
-                  {product.discountedPrice ? (
+                  {product.discountedPrice && !product.isCustomizable ? (
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-xl sm:text-2xl font-bold text-red-900">
                         ₹{product.discountedPrice.toFixed(2)}
@@ -662,6 +659,7 @@ function ProductPage({ params }: ProductPageProps) {
                       <p className="text-base sm:text-lg text-gray-500 line-through">
                         ₹{product.price.toFixed(2)}
                       </p>
+
                       <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
                         {Math.round(
                           ((product.price - product.discountedPrice) /
@@ -673,7 +671,9 @@ function ProductPage({ params }: ProductPageProps) {
                     </div>
                   ) : (
                     <p className="text-xl sm:text-2xl font-bold text-red-900">
-                      ₹{product.price.toFixed(2)}
+                      ₹
+                      {product.customizableOptions?.[0]?.price?.toFixed(2) ||
+                        product.price.toFixed(2)}
                     </p>
                   )}
                 </div>
@@ -712,7 +712,9 @@ function ProductPage({ params }: ProductPageProps) {
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                     Description
                   </h3>
-                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{product.description}</p>
+                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                    {product.description}
+                  </p>
                 </div>
 
                 {/* Quantity and Add to Cart */}
@@ -753,7 +755,9 @@ function ProductPage({ params }: ProductPageProps) {
                             className="p-2 text-gray-600 hover:text-red-900">
                             <FiMinus className="text-sm" />
                           </button>
-                          <span className="px-3 sm:px-4 font-medium text-sm sm:text-base">{quantity}</span>
+                          <span className="px-3 sm:px-4 font-medium text-sm sm:text-base">
+                            {quantity}
+                          </span>
                           <button
                             onClick={() => setQuantity((prev) => prev + 1)}
                             className="p-2 text-gray-600 hover:text-red-900">
@@ -766,9 +770,10 @@ function ProductPage({ params }: ProductPageProps) {
                           className="flex-1 ml-2 sm:ml-4 py-2 sm:py-3 bg-red-900 hover:bg-red-800 text-sm sm:text-base">
                           <span className="flex items-center justify-center gap-1 sm:gap-2">
                             <FaCartPlus className="text-sm" />
-                            <span className="hidden sm:inline">ADD TO CART - </span>
-                            <span className="sm:hidden">ADD - </span>
-                            ₹{(getTotalprice() * quantity).toFixed(2)}
+                            <span className="hidden sm:inline">
+                              ADD TO CART {" "}
+                            </span>
+                            <span className="sm:hidden">ADD</span>
                           </span>
                         </Button>
                       </div>
@@ -824,8 +829,7 @@ function ProductPage({ params }: ProductPageProps) {
                     {reviews.slice(0, 3).map((review) => (
                       <div
                         key={review._id}
-                        className="border-b border-gray-100 pb-4 last:border-b-0"
-                      >
+                        className="border-b border-gray-100 pb-4 last:border-b-0">
                         <div className="flex items-start gap-3">
                           {/* User Avatar */}
                           <div className="w-10 h-10 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
@@ -871,7 +875,9 @@ function ProductPage({ params }: ProductPageProps) {
                                   width={100}
                                   height={100}
                                   className="rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                                  onClick={() => window.open(review.imageUrl, '_blank')}
+                                  onClick={() =>
+                                    window.open(review.imageUrl, "_blank")
+                                  }
                                 />
                               </div>
                             )}
@@ -879,22 +885,34 @@ function ProductPage({ params }: ProductPageProps) {
                             {/* Helpful Button */}
                             <div className="mt-3 flex items-center gap-2">
                               <button
-                                onClick={() => handleHelpfulUpdate(review._id, !review.isHelpful)}
+                                onClick={() =>
+                                  handleHelpfulUpdate(
+                                    review._id,
+                                    !review.isHelpful
+                                  )
+                                }
                                 className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                                   review.isHelpful
-                                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
-                              >
-                                <svg 
-                                  className={`w-3 h-3 ${review.isHelpful ? 'fill-current' : ''}`} 
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V9a2 2 0 00-2-2h-.095c-.5 0-.905.031-1.312.09C10.279 7.224 9.641 7.5 9 7.5c-1.062 0-2.062.5-2.5 1.5-1 2.5-1.5 4-1.5 6.5 0 1.036.208 2.047.61 2.985A2.95 2.95 0 007 19.5c1.216 0 2.357-.596 3.047-1.578l.953-1.354" />
+                                    ? "bg-green-100 text-green-700 hover:bg-green-200"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                }`}>
+                                <svg
+                                  className={`w-3 h-3 ${
+                                    review.isHelpful ? "fill-current" : ""
+                                  }`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24">
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V9a2 2 0 00-2-2h-.095c-.5 0-.905.031-1.312.09C10.279 7.224 9.641 7.5 9 7.5c-1.062 0-2.062.5-2.5 1.5-1 2.5-1.5 4-1.5 6.5 0 1.036.208 2.047.61 2.985A2.95 2.95 0 007 19.5c1.216 0 2.357-.596 3.047-1.578l.953-1.354"
+                                  />
                                 </svg>
-                                {review.isHelpful ? 'Helpful' : 'Mark as helpful'}
+                                {review.isHelpful
+                                  ? "Helpful"
+                                  : "Mark as helpful"}
                               </button>
                               {review.helpfullCount > 0 && (
                                 <span className="text-xs text-gray-500">
@@ -906,17 +924,25 @@ function ProductPage({ params }: ProductPageProps) {
                         </div>
                       </div>
                     ))}
-                    
+
                     {/* Show All Reviews Button */}
                     {reviews.length > 3 && (
                       <div className="pt-4 border-t border-gray-100">
                         <button
                           onClick={() => setShowReviewsModal(true)}
-                          className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 font-medium flex items-center justify-center gap-2"
-                        >
+                          className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 font-medium flex items-center justify-center gap-2">
                           <span>Show All {reviews.length} Reviews</span>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
                           </svg>
                         </button>
                       </div>
@@ -924,8 +950,12 @@ function ProductPage({ params }: ProductPageProps) {
                   </div>
                 ) : (
                   <div className="text-center py-6 sm:py-8">
-                    <div className="text-3xl sm:text-4xl text-gray-300 mb-2">⭐</div>
-                    <p className="text-sm sm:text-base text-gray-500">No reviews yet</p>
+                    <div className="text-3xl sm:text-4xl text-gray-300 mb-2">
+                      ⭐
+                    </div>
+                    <p className="text-sm sm:text-base text-gray-500">
+                      No reviews yet
+                    </p>
                     <p className="text-xs sm:text-sm text-gray-400 mt-1">
                       Be the first to review this item!
                     </p>

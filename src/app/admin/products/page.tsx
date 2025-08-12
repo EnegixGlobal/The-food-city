@@ -80,13 +80,13 @@ const ProductsPage = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  
+  const [pageSize, setPageSize] = useState(40);
+
   const [formData, setFormData] = useState<ProductFormData>({
     title: "",
     description: "",
@@ -137,23 +137,41 @@ const ProductsPage = () => {
         body: uploadFormData,
       });
 
-      const data = await response.json();
+      let data: any = {};
+      try {
+        data = await response.json();
+      } catch (e) {
+        showAlert.error("Upload Failed", "Invalid server response");
+        return;
+      }
 
-      console.log(data);
-
-      if (data.message === "Upload successful") {
-        setFormData({
-          ...formData,
-          imageUrl: data.url,
-          cloudinaryPublicId: data.publicId,
-        });
-        showAlert.success("Image Uploaded", "Image uploaded successfully!");
-      } else {
+      if (!response.ok || data.error) {
         showAlert.error(
           "Upload Failed",
-          data.message || "Failed to upload image"
+          data.error || data.message || "Failed to upload image"
         );
+        return;
       }
+
+      // Support both nested (data.data.secure_url) and legacy (data.secure_url) structures
+      const secureUrl = data?.data?.secure_url || data?.secure_url;
+      const publicId = data?.data?.public_id || data?.public_id;
+
+      if (!secureUrl) {
+        console.warn("Upload response missing secure_url shape:", data);
+        showAlert.error(
+          "Upload Failed",
+          "Upload succeeded but no image URL returned"
+        );
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        imageUrl: secureUrl,
+        cloudinaryPublicId: publicId || prev.cloudinaryPublicId || "",
+      }));
+      showAlert.success("Image Uploaded", "Image uploaded successfully!");
     } catch (error) {
       console.error("Error uploading image:", error);
       showAlert.error("Upload Error", "Failed to upload image");
@@ -163,36 +181,41 @@ const ProductsPage = () => {
   };
 
   // Fetch products by category
-  const fetchProducts = useCallback(async (category: string, page: number = 1) => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/product?category=${category}&page=${page}&limit=${pageSize}`);
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setProducts(data.data.products || []);
-        setTotalCount(data.data.totalCount || 0);
-        setCurrentPage(data.data.currentPage || 1);
-        setTotalPages(data.data.totalPages || 1);
-      } else {
-        showAlert.error(
-          "Fetch Failed",
-          data.message || "Failed to fetch products"
+  const fetchProducts = useCallback(
+    async (category: string, page: number = 1) => {
+      try {
+        setLoading(true);
+        const response = await fetch(
+          `/api/product?category=${category}&page=${page}&limit=${pageSize}`
         );
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          setProducts(data.data.products || []);
+          setTotalCount(data.data.totalCount || 0);
+          setCurrentPage(data.data.currentPage || 1);
+          setTotalPages(data.data.totalPages || 1);
+        } else {
+          showAlert.error(
+            "Fetch Failed",
+            data.message || "Failed to fetch products"
+          );
+          setProducts([]);
+          setTotalCount(0);
+          setTotalPages(1);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        showAlert.error("Network Error", "Failed to fetch products");
         setProducts([]);
         setTotalCount(0);
         setTotalPages(1);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      showAlert.error("Network Error", "Failed to fetch products");
-      setProducts([]);
-      setTotalCount(0);
-      setTotalPages(1);
-    } finally {
-      setLoading(false);
-    }
-  }, [pageSize]);
+    },
+    [pageSize]
+  );
 
   // Fetch addons
   const fetchAddOns = useCallback(async () => {
@@ -213,20 +236,43 @@ const ProductsPage = () => {
     e.preventDefault();
 
     if (!formData.title || !formData.description) {
-      showAlert.error("Missing Fields", "Please fill in the title and description fields");
+      showAlert.error(
+        "Missing Fields",
+        "Please fill in the title and description fields"
+      );
+      return;
+    }
+
+    // Validate discounted price when present
+    const hasDiscountInput =
+      (formData.discountedPrice ?? "").toString().trim() !== "";
+    const priceNum = formData.price ? parseFloat(formData.price) : 0;
+    const discountedNum = hasDiscountInput
+      ? parseFloat(formData.discountedPrice)
+      : undefined;
+    if (
+      hasDiscountInput &&
+      discountedNum !== undefined &&
+      !Number.isNaN(discountedNum) &&
+      discountedNum >= priceNum
+    ) {
+      showAlert.warning(
+        "Invalid discount",
+        "Discounted price must be less than the original price."
+      );
       return;
     }
 
     const productData = {
       title: formData.title,
       description: formData.description,
-      price: formData.price ? parseFloat(formData.price) : 0,
-      discountedPrice: formData.discountedPrice
-        ? parseFloat(formData.discountedPrice)
-        : undefined,
+      price: priceNum,
+      // discountedPrice is set only if provided; otherwise send a flag to unset
+      ...(hasDiscountInput
+        ? { discountedPrice: parseFloat(formData.discountedPrice) }
+        : { removeDiscountedPrice: true }),
       category: formData.category,
-      imageUrl:
-        formData.imageUrl || "/placeholder-food.svg",
+      imageUrl: formData.imageUrl || "/placeholder-food.svg",
       cloudinaryPublicId:
         formData.cloudinaryPublicId || `product_${Date.now()}`,
       isVeg: formData.isVeg,
@@ -235,7 +281,9 @@ const ProductsPage = () => {
       prepTime: formData.prepTime,
       addOns: formData.addOns.filter((id) => id.trim() !== ""),
       isCustomizable: formData.isCustomizable,
-      customizableOptions: formData.isCustomizable ? formData.customizableOptions : [],
+      customizableOptions: formData.isCustomizable
+        ? formData.customizableOptions
+        : [],
     };
 
     try {
@@ -329,10 +377,12 @@ const ProductsPage = () => {
       prepTime: product.prepTime,
       addOns: product.addOns || [],
       isCustomizable: product.isCustomizable || false,
-      customizableOptions: (product.customizableOptions || []).map(option => ({
-        option: option.option,
-        price: option.price,
-      })),
+      customizableOptions: (product.customizableOptions || []).map(
+        (option) => ({
+          option: option.option,
+          price: option.price,
+        })
+      ),
     });
     setShowForm(true);
   };
@@ -427,8 +477,8 @@ const ProductsPage = () => {
   );
 
   const SpicyBadge = ({ level }: { level: number }) => {
-    const spiceIcons = ['🌶️', '🌶️', '🌶️'];
-    
+    const spiceIcons = ["🌶️", "🌶️", "🌶️"];
+
     if (level === 0) {
       return (
         <div className="flex items-center">
@@ -438,7 +488,7 @@ const ProductsPage = () => {
         </div>
       );
     }
-    
+
     return (
       <div className="flex items-center">
         {spiceIcons.slice(0, level).map((_, i) => (
@@ -446,9 +496,7 @@ const ProductsPage = () => {
             🌶️
           </span>
         ))}
-        <span className="text-xs text-gray-500 ml-1">
-          Level {level}
-        </span>
+        <span className="text-xs text-gray-500 ml-1">Level {level}</span>
       </div>
     );
   };
@@ -498,11 +546,7 @@ const ProductsPage = () => {
               }`}
               disabled={loading}>
               {category.label}{" "}
-              {`${
-                activeTab === category.key
-                  ? `(${totalCount})`
-                  : " "
-              }`}
+              {`${activeTab === category.key ? `(${totalCount})` : " "}`}
             </button>
           ))}
         </nav>
@@ -818,7 +862,9 @@ const ProductsPage = () => {
                         }
                         className="mr-2"
                       />
-                      <label htmlFor="isCustomizable" className="text-sm font-medium text-gray-700 cursor-pointer">
+                      <label
+                        htmlFor="isCustomizable"
+                        className="text-sm font-medium text-gray-700 cursor-pointer">
                         Enable customizable options for this product
                       </label>
                     </div>
@@ -831,7 +877,8 @@ const ProductsPage = () => {
                           Customization Options
                         </h4>
                         <p className="text-xs font-medium text-gray-600 mb-3">
-                          Add customizable options with their additional prices (e.g., &quot;With Rabri&quot; - ₹20).
+                          Add customizable options with their additional prices
+                          (e.g., &quot;With Rabri&quot; - ₹20).
                         </p>
                       </div>
 
@@ -846,9 +893,10 @@ const ProductsPage = () => {
                             <button
                               type="button"
                               onClick={() => {
-                                const updatedOptions = formData.customizableOptions.filter(
-                                  (_, i) => i !== index
-                                );
+                                const updatedOptions =
+                                  formData.customizableOptions.filter(
+                                    (_, i) => i !== index
+                                  );
                                 setFormData({
                                   ...formData,
                                   customizableOptions: updatedOptions,
@@ -868,7 +916,9 @@ const ProductsPage = () => {
                                 type="text"
                                 value={option.option}
                                 onChange={(e) => {
-                                  const updatedOptions = [...formData.customizableOptions];
+                                  const updatedOptions = [
+                                    ...formData.customizableOptions,
+                                  ];
                                   updatedOptions[index] = {
                                     ...option,
                                     option: e.target.value,
@@ -890,21 +940,22 @@ const ProductsPage = () => {
                               </label>
                               <input
                                 type="number"
-                                value={option.price}
+                                value={option.price === 0 ? "" : option.price}
                                 onChange={(e) => {
-                                  const updatedOptions = [...formData.customizableOptions];
+                                  const val = e.target.value;
+                                  const updatedOptions = [
+                                    ...formData.customizableOptions,
+                                  ];
                                   updatedOptions[index] = {
                                     ...option,
-                                    price: parseFloat(e.target.value) || 0,
+                                    price: val === "" ? 0 : parseFloat(val),
                                   };
                                   setFormData({
                                     ...formData,
                                     customizableOptions: updatedOptions,
                                   });
                                 }}
-                                placeholder="0"
-                                min="0"
-                                step="0.01"
+                                step="1"
                                 className="w-full px-3 py-2 border border-gray-300 rounded-none text-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
                               />
                             </div>
@@ -920,7 +971,7 @@ const ProductsPage = () => {
                             customizableOptions: [
                               ...formData.customizableOptions,
                               {
-                                option: '',
+                                option: "",
                                 price: 0,
                               },
                             ],
@@ -1064,7 +1115,9 @@ const ProductsPage = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {(searchTerm ? filteredProducts : products).length > 0 ? (
                   (searchTerm ? filteredProducts : products).map((product) => (
-                    <tr key={product._id} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={product._id}
+                      className="hover:bg-gray-50 transition-colors">
                       {/* Product Info */}
                       <td className="px-4 py-4">
                         <div className="flex items-center space-x-3">
@@ -1098,34 +1151,44 @@ const ProductsPage = () => {
                           <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
                             {product.description}
                           </p>
-                          
+
                           <div className="flex items-center text-xs text-gray-500">
                             <FiClock className="mr-1 flex-shrink-0" />
                             <span>{product.prepTime}</span>
                           </div>
-                          
-                          {product.isCustomizable && product.customizableOptions && product.customizableOptions.length > 0 && (
-                            <div className="mt-2 p-2 bg-orange-50 rounded-md border border-orange-100">
-                              <div className="text-xs font-medium text-orange-700 mb-1">
-                                Customizable Options ({product.customizableOptions.length})
+
+                          {product.isCustomizable &&
+                            product.customizableOptions &&
+                            product.customizableOptions.length > 0 && (
+                              <div className="mt-2 p-2 bg-orange-50 rounded-md border border-orange-100">
+                                <div className="text-xs font-medium text-orange-700 mb-1">
+                                  Customizable Options (
+                                  {product.customizableOptions.length})
+                                </div>
+                                <div className="space-y-1">
+                                  {product.customizableOptions
+                                    .slice(0, 2)
+                                    .map((option, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="flex justify-between items-center text-xs">
+                                        <span className="text-gray-600 truncate pr-2">
+                                          {option.option}
+                                        </span>
+                                        <span className="text-orange-600 font-medium whitespace-nowrap">
+                                          +₹{option.price}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  {product.customizableOptions.length > 2 && (
+                                    <div className="text-xs text-orange-500 font-medium">
+                                      +{product.customizableOptions.length - 2}{" "}
+                                      more options
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              <div className="space-y-1">
-                                {product.customizableOptions.slice(0, 2).map((option, idx) => (
-                                  <div key={idx} className="flex justify-between items-center text-xs">
-                                    <span className="text-gray-600 truncate pr-2">{option.option}</span>
-                                    <span className="text-orange-600 font-medium whitespace-nowrap">
-                                      +₹{option.price}
-                                    </span>
-                                  </div>
-                                ))}
-                                {product.customizableOptions.length > 2 && (
-                                  <div className="text-xs text-orange-500 font-medium">
-                                    +{product.customizableOptions.length - 2} more options
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
+                            )}
                         </div>
                       </td>
 
@@ -1158,7 +1221,7 @@ const ProductsPage = () => {
                             <VegBadge isVeg={product.isVeg} />
                             <SpicyBadge level={product.spicyLevel} />
                           </div>
-                          
+
                           {/* Additional Properties */}
                           <div className="flex flex-wrap gap-1">
                             {product.isBestSeller && (
@@ -1209,9 +1272,22 @@ const ProductsPage = () => {
                         <div className="text-4xl text-gray-300">🍽️</div>
                         <div className="text-sm text-gray-500">
                           {searchTerm ? (
-                            <>No products found matching &ldquo;<span className="font-medium">{searchTerm}</span>&rdquo;</>
+                            <>
+                              No products found matching &ldquo;
+                              <span className="font-medium">{searchTerm}</span>
+                              &rdquo;
+                            </>
                           ) : (
-                            <>No products found in <span className="font-medium">{categories.find((c) => c.key === activeTab)?.label}</span> category</>
+                            <>
+                              No products found in{" "}
+                              <span className="font-medium">
+                                {
+                                  categories.find((c) => c.key === activeTab)
+                                    ?.label
+                                }
+                              </span>{" "}
+                              category
+                            </>
                           )}
                         </div>
                         {!searchTerm && totalCount === 0 && (
@@ -1241,13 +1317,17 @@ const ProductsPage = () => {
           <div className="flex-1 flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-700">
-                Showing <span className="font-medium">{((currentPage - 1) * pageSize) + 1}</span> to{" "}
+                Showing{" "}
+                <span className="font-medium">
+                  {(currentPage - 1) * pageSize + 1}
+                </span>{" "}
+                to{" "}
                 <span className="font-medium">
                   {Math.min(currentPage * pageSize, totalCount)}
                 </span>{" "}
                 of <span className="font-medium">{totalCount}</span> results
               </span>
-              
+
               <select
                 value={pageSize}
                 onChange={(e) => handlePageSizeChange(Number(e.target.value))}
@@ -1288,14 +1368,14 @@ const ProductsPage = () => {
                       onClick={() => handlePageChange(pageNum)}
                       className={`relative inline-flex items-center px-3 py-2 border text-sm font-medium rounded-md ${
                         currentPage === pageNum
-                          ? 'z-10 bg-red-50 border-red-500 text-red-600'
-                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                          ? "z-10 bg-red-50 border-red-500 text-red-600"
+                          : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
                       }`}>
                       {pageNum}
                     </button>
                   );
                 })}
-                
+
                 {totalPages > 5 && currentPage < totalPages - 2 && (
                   <>
                     <span className="text-gray-500">...</span>
@@ -1324,9 +1404,7 @@ const ProductsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
         <div className="bg-white p-4 rounded-none shadow-sm border">
           <h3 className="text-sm font-medium text-gray-500">Total Products</h3>
-          <p className="text-2xl font-bold text-gray-900 mt-1">
-            {totalCount}
-          </p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{totalCount}</p>
         </div>
         <div className="bg-white p-4 rounded-none shadow-sm border">
           <h3 className="text-sm font-medium text-gray-500">Vegetarian</h3>

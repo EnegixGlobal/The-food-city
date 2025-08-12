@@ -9,6 +9,7 @@ import Container from "../components/Container";
 import MainCard from "../components/MainCard";
 import { useEffect, useState } from "react";
 import MainCardSkeletonGrid from "../components/MainCardSkeleton";
+import { showAlert } from "../zustand/alertStore";
 
 interface CategoryPageProps {
   params: Promise<{ category: string }>;
@@ -38,8 +39,6 @@ const menuDatabase = {
   },
 };
 
-const baseUrl = process.env.PUBLIC_URL;
-
 export default function CategoryPage({ params }: CategoryPageProps) {
   const [category, setCategory] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
@@ -48,6 +47,10 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     .replace(" ", "-") as keyof typeof menuDatabase;
   const categoryData = menuDatabase[categoryKey] || menuDatabase.indian;
   const [products, setProducts] = useState([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(12);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -76,6 +79,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     const queryParams = new URLSearchParams({
       category: category,
     });
+    // pagination
+    queryParams.append("page", String(page));
+    queryParams.append("limit", String(limit));
 
     if (filters.isVeg) queryParams.append("isVeg", "true");
     if (filters.isBestSeller) queryParams.append("isBestSeller", "true");
@@ -95,22 +101,70 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     const fetchProducts = async () => {
       setLoading(true);
       try {
+        // simple client-side validations
+        const min = filters.minPrice ? parseFloat(filters.minPrice) : undefined;
+        const max = filters.maxPrice ? parseFloat(filters.maxPrice) : undefined;
+        if (
+          min !== undefined &&
+          max !== undefined &&
+          !Number.isNaN(min) &&
+          !Number.isNaN(max) &&
+          min > max
+        ) {
+          showAlert.warning(
+            "Invalid price range",
+            "Min price cannot be greater than max price."
+          );
+          setLoading(false);
+          return;
+        }
+
         const queryString = buildQueryString();
         const res = await fetch(`/api/product?${queryString}`, {
           cache: "no-store",
         });
         const data = await res.json();
-        setProducts(data.data.products || []);
+        if (!res.ok || data?.success === false) {
+          const msg =
+            data?.message || `Failed to fetch products (HTTP ${res.status})`;
+          showAlert.error("Could not load products", msg);
+        }
+        const productsData = data.data.products || [];
+        const count = data.data.totalCount || 0;
+        const pages = data.data.totalPages || 0;
+        setProducts(productsData);
+        setTotalCount(count);
+        setTotalPages(pages);
+
+        // If requested page is out of range, move to last available page
+        if (pages > 0 && page > pages) {
+          showAlert.info(
+            "Moved to last page",
+            "Adjusted to available results."
+          );
+          setPage(pages);
+          return;
+        }
+
+        if (res.ok && (data?.data?.totalCount ?? 0) === 0) {
+          showAlert.info("No items found", "Try adjusting your filters.");
+        }
       } catch (error) {
         console.error("Error fetching products:", error);
         setProducts([]);
+        setTotalCount(0);
+        setTotalPages(0);
+        showAlert.error(
+          "Network error",
+          "Please check your connection and try again."
+        );
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [category, filters]);
+  }, [category, filters, page, limit]);
 
   // Handle filter changes
   const handleFilterChange = (filterKey: string, value: any) => {
@@ -118,6 +172,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
       ...prev,
       [filterKey]: value,
     }));
+    setPage(1);
   };
 
   // Reset all filters
@@ -131,9 +186,10 @@ export default function CategoryPage({ params }: CategoryPageProps) {
       sortBy: "createdAt",
       sortOrder: "desc",
     });
+    setPage(1);
   };
 
-  console.log(products);
+
 
   return (
     <>
@@ -164,8 +220,8 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           {/* Filters Bar */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <h2 className="text-2xl font-bold text-red-900">
-              {products.length}{" "}
-              {products.length === 1 ? "Delicious Item" : "Delicious Items"}
+              {totalCount}{" "}
+              {totalCount === 1 ? "Delicious Item" : "Delicious Items"}
             </h2>
 
             <div className="flex flex-wrap gap-3">
@@ -360,14 +416,94 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           {loading ? (
             <MainCardSkeletonGrid rows={2} itemsPerRow={4} />
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-4 md:gap-6 gap-2">
-              {products?.map((product: any) => (
-                <MainCard
-                  key={product._id}
-                  item={product}
-                  category={category}
-                />
-              ))}
+            <div className="flex items-center justify-center">
+              <div className="grid grid-cols-2  sm:grid-cols-3 md:grid-cols-4 xs:grid-cols-3 md:gap-6 gap-2">
+                {products?.map((product: any) => (
+                  <MainCard
+                    key={product._id}
+                    item={product}
+                    category={category}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Pagination controls */}
+          {!loading && totalPages > 1 && (
+            <div className="flex flex-col md:flex-row items-center justify-between mt-8 gap-4">
+              <div className="text-sm text-gray-600">
+                Showing {(page - 1) * limit + (products.length ? 1 : 0)}-
+                {(page - 1) * limit + products.length} of {totalCount}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className={`px-3 py-2 rounded-md border text-sm ${
+                    page === 1
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white hover:bg-gray-50"
+                  }`}>
+                  Prev
+                </button>
+                {Array.from({ length: totalPages }).map((_, idx) => {
+                  const pg = idx + 1;
+                  // Only show a window around current page
+                  if (
+                    pg === 1 ||
+                    pg === totalPages ||
+                    (pg >= page - 2 && pg <= page + 2)
+                  ) {
+                    return (
+                      <button
+                        key={pg}
+                        onClick={() => setPage(pg)}
+                        className={`w-9 h-9 rounded-md border text-sm ${
+                          pg === page
+                            ? "bg-red-600 text-white border-red-600"
+                            : "bg-white hover:bg-gray-50"
+                        }`}>
+                        {pg}
+                      </button>
+                    );
+                  }
+                  if (
+                    (pg === page - 3 && pg > 1) ||
+                    (pg === page + 3 && pg < totalPages)
+                  ) {
+                    return (
+                      <span key={pg} className="px-1 text-gray-400">
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className={`px-3 py-2 rounded-md border text-sm ${
+                    page === totalPages
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white hover:bg-gray-50"
+                  }`}>
+                  Next
+                </button>
+                <select
+                  value={limit}
+                  onChange={(e) => {
+                    setLimit(parseInt(e.target.value));
+                    setPage(1);
+                  }}
+                  className="ml-2 px-2 py-2 border rounded-md text-sm">
+                  {[8, 12, 16, 20, 24, 32].map((n) => (
+                    <option key={n} value={n}>
+                      {n} / page
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
 

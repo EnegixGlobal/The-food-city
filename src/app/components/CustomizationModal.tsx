@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { FaRupeeSign, FaTimes, FaCheck } from "react-icons/fa";
-import { FiClock, FiStar } from "react-icons/fi";
 import Image from "next/image";
 import Button from "./Button";
 
@@ -50,10 +49,9 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
       return item.discountedPrice;
     } else if (item.price) {
       return item.price;
-    } else if (item.customizableOptions && item.customizableOptions.length > 0) {
-      return item.customizableOptions[0].price;
+    } else {
+      return 0; // Default to 0 if no price is set
     }
-    return 0;
   };
 
   const basePrice = getBasePrice();
@@ -109,7 +107,9 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
                 ) : (
                   <div className="flex items-center text-lg sm:text-xl font-bold text-orange-600">
                     <FaRupeeSign className="text-base" />
-                    {Math.min(...item.customizableOptions.map((opt) => opt.price))}
+                    {Math.min(
+                      ...item.customizableOptions.map((opt) => opt.price)
+                    )}
                   </div>
                 )}
               </div>
@@ -201,7 +201,9 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
                 </div>
               ) : (
                 <div className="flex items-center text-lg sm:text-xl font-bold text-gray-900">
-                  <span className="text-gray-500 mr-2 text-base sm:text-lg">Select an option</span>
+                  <span className="text-gray-500 mr-2 text-base sm:text-lg">
+                    Select an option
+                  </span>
                 </div>
               )}
             </div>

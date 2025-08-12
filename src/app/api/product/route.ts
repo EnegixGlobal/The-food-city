@@ -114,7 +114,7 @@ export const POST = asyncHandler(async (req) => {
 
 // get products which has some query params
 export const GET = asyncHandler(async (req) => {
-  connectDb();
+  await connectDb();
 
   const { searchParams } = new URL(req.url);
 
@@ -124,8 +124,13 @@ export const GET = asyncHandler(async (req) => {
   const minPrice = searchParams.get("minPrice");
   const maxPrice = searchParams.get("maxPrice");
   const minRating = searchParams.get("minRating");
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "10");
+  // Pagination + sorting
+  const parsedPage = parseInt(searchParams.get("page") || "1", 10);
+  const parsedLimit = parseInt(searchParams.get("limit") || "10", 10);
+  const page = Number.isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
+  // Clamp limit to a safe range [1, 50]
+  const rawLimit = Number.isNaN(parsedLimit) ? 10 : parsedLimit;
+  const limit = Math.max(1, Math.min(rawLimit, 50));
   const sortBy = searchParams.get("sortBy") || "createdAt";
   const sortOrder = searchParams.get("sortOrder") || "desc";
 
@@ -179,15 +184,13 @@ export const GET = asyncHandler(async (req) => {
   ];
 
   const products = await Product.aggregate(aggregation);
-  if (!products || products.length === 0) {
-    return apiResponse(404, "No products found");
-  }
-  const totalCount = products[0].totalCount[0]?.count || 0;
-  const productsData = products[0].data;
+  const totalCount = products?.[0]?.totalCount?.[0]?.count || 0;
+  const productsData = products?.[0]?.data || [];
   return apiResponse(200, "Products fetched successfully", {
     products: productsData,
     totalCount,
     currentPage: page,
-    totalPages: Math.ceil(totalCount / limit),
+    totalPages: Math.ceil(totalCount / limit) || 0,
+    pageSize: limit,
   });
 });
