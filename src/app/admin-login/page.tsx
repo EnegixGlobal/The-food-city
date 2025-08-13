@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiShield } from "react-icons/fi";
-import toast from "react-hot-toast";
+import { showAlert } from "../zustand/alertStore";
 import Button from "../components/Button";
 import Input from "../components/Input";
 import Spinner from "../components/Spinner";
@@ -64,7 +64,14 @@ const AdminLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      showAlert.warning(
+        "Validation Error",
+        "Please check all required fields and try again.",
+        4000
+      );
+      return;
+    }
 
     setIsLoading(true);
 
@@ -80,14 +87,32 @@ const AdminLogin = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        toast.success("Login successful! Welcome back, Admin.");
+        showAlert.success(
+          "Login Successful!",
+          "Welcome back, Admin. Redirecting to admin panel...",
+          3000
+        );
         router.push("/admin");
       } else {
-        toast.error(data.message || "Login failed. Please try again.");
+        // Handle different error scenarios
+  const errorTitle = "Login Failed";
+  const errorMessage = "Please check your credentials and try again.";
+        
+        
+        
+        showAlert.error(
+          errorTitle, 
+          data.message || errorMessage,
+          6000
+        );
       }
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("Something went wrong. Please try again.");
+      showAlert.error(
+        "Connection Error",
+        "Something went wrong. Please check your internet connection and try again.",
+        6000
+      );
     } finally {
       setIsLoading(false);
     }

@@ -85,7 +85,7 @@ const ProductsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [pageSize, setPageSize] = useState(40);
+  const [pageSize, setPageSize] = useState(100);
 
   const [formData, setFormData] = useState<ProductFormData>({
     title: "",
@@ -456,6 +456,12 @@ const ProductsPage = () => {
     setCurrentPage(1);
     fetchProducts(activeTab, 1);
   };
+
+  // Derive effective total pages (backend sets, but ensure correctness for 100/page scenario)
+  const effectiveTotalPages = Math.max(
+    1,
+    Math.ceil((totalCount || 0) / (pageSize || 100))
+  );
 
   // Utility components
   const StatusBadge = ({ available }: { available: boolean }) => (
@@ -1311,91 +1317,53 @@ const ProductsPage = () => {
         )}
       </div>
 
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-4 rounded-none shadow-sm">
-          <div className="flex-1 flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-700">
-                Showing{" "}
-                <span className="font-medium">
-                  {(currentPage - 1) * pageSize + 1}
-                </span>{" "}
-                to{" "}
-                <span className="font-medium">
-                  {Math.min(currentPage * pageSize, totalCount)}
-                </span>{" "}
-                of <span className="font-medium">{totalCount}</span> results
-              </span>
-
-              <select
-                value={pageSize}
-                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                className="ml-4 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-red-500 focus:border-red-500">
-                <option value={5}>5 per page</option>
-                <option value={10}>10 per page</option>
-                <option value={20}>20 per page</option>
-                <option value={50}>50 per page</option>
-              </select>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              {/* Previous Button */}
+      {/* Pagination Controls (Fixed 100 per page; total ~183 => 2 pages) */}
+      {effectiveTotalPages > 1 && (
+        <div className="bg-white px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-gray-200 sm:px-6 mt-4 rounded-none shadow-sm">
+          {/* Info */}
+          <div className="text-sm text-gray-700">
+            Showing <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> to
+            {" "}
+            <span className="font-medium">{Math.min(currentPage * pageSize, totalCount)}</span> of
+            {" "}
+            <span className="font-medium">{totalCount}</span> products (100 per page)
+          </div>
+          {/* Navigation */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-2 border border-gray-300 text-sm rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+              Previous
+            </button>
+            {/* Page 1 Button */}
+            <button
+              onClick={() => handlePageChange(1)}
+              className={`px-3 py-2 border text-sm rounded-md transition-colors ${
+                currentPage === 1
+                  ? "bg-red-50 border-red-500 text-red-600"
+                  : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
+              }`}>
+              1
+            </button>
+            {/* Page 2 Button (only if needed) */}
+            {effectiveTotalPages >= 2 && (
               <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                Previous
+                onClick={() => handlePageChange(2)}
+                className={`px-3 py-2 border text-sm rounded-md transition-colors ${
+                  currentPage === 2
+                    ? "bg-red-50 border-red-500 text-red-600"
+                    : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
+                }`}>
+                2
               </button>
-
-              {/* Page Numbers */}
-              <div className="flex items-center space-x-1">
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`relative inline-flex items-center px-3 py-2 border text-sm font-medium rounded-md ${
-                        currentPage === pageNum
-                          ? "z-10 bg-red-50 border-red-500 text-red-600"
-                          : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
-                      }`}>
-                      {pageNum}
-                    </button>
-                  );
-                })}
-
-                {totalPages > 5 && currentPage < totalPages - 2 && (
-                  <>
-                    <span className="text-gray-500">...</span>
-                    <button
-                      onClick={() => handlePageChange(totalPages)}
-                      className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-white hover:bg-gray-50">
-                      {totalPages}
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {/* Next Button */}
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                Next
-              </button>
-            </div>
+            )}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === effectiveTotalPages}
+              className="px-3 py-2 border border-gray-300 text-sm rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+              Next
+            </button>
           </div>
         </div>
       )}

@@ -96,7 +96,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const fetchCompanyData = async () => {
       try {
         setIsLoadingCompany(true);
-        const response = await fetch("/api/company/6888be3b6db74d474efde7f1");
+        const response = await fetch("/api/company/6899da8f97ccc3ed5dc9eaa8");
         const data = await response.json();
 
         if (response.ok && data.success) {

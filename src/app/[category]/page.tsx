@@ -50,7 +50,8 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
-  const [limit, setLimit] = useState<number>(12);
+  // Fixed page size: fetch 50 products at once as requested
+  const [limit, setLimit] = useState<number>(50);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -490,19 +491,8 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                   }`}>
                   Next
                 </button>
-                <select
-                  value={limit}
-                  onChange={(e) => {
-                    setLimit(parseInt(e.target.value));
-                    setPage(1);
-                  }}
-                  className="ml-2 px-2 py-2 border rounded-md text-sm">
-                  {[8, 12, 16, 20, 24, 32].map((n) => (
-                    <option key={n} value={n}>
-                      {n} / page
-                    </option>
-                  ))}
-                </select>
+                {/* Fixed page size (50); selector removed intentionally */}
+                <span className="ml-2 text-xs text-gray-500">50 / page</span>
               </div>
             </div>
           )}
