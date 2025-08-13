@@ -59,12 +59,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       icon: Users,
       current: pathname === "/admin/customers",
     },
-    {
-      name: "Add Ons",
-      href: "/admin/addons",
-      icon: Users,
-      current: pathname === "/admin/addons",
-    },
+    // {
+    //   name: "Add Ons",
+    //   href: "/admin/addons",
+    //   icon: Users,
+    //   current: pathname === "/admin/addons",
+    // },
     {
       name: "Menu Items",
       href: "/admin/products",
