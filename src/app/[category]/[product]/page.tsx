@@ -76,7 +76,7 @@ interface Product {
   }>;
   createdAt: string;
   updatedAt: string;
-  addOns: AddOn[];
+  addOns: AddOn[]; // retained for backward compatibility but no longer shown in UI
 }
 
 interface ApiResponse {
@@ -102,6 +102,9 @@ function ProductPage({ params }: ProductPageProps) {
   const [selectedAddons, setSelectedAddons] = useState<AddOn[]>([]);
   const [showCustomizationModal, setShowCustomizationModal] = useState(false);
   const [showReviewsModal, setShowReviewsModal] = useState(false);
+  // Similar products
+  const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
+  const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
 
   // Cart store
   const {
@@ -242,6 +245,8 @@ function ProductPage({ params }: ProductPageProps) {
         setProduct(data.data);
         // Fetch reviews after product is loaded
         fetchReviews(data.data._id);
+  // Fetch similar products
+  fetchSimilar(data.data);
       } else {
         setError(data.message || "Product not found");
       }
@@ -250,6 +255,51 @@ function ProductPage({ params }: ProductPageProps) {
       console.error("Error fetching product:", err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fetch similar products based on same category (excluding current) and optional spice/veg alignment
+  const fetchSimilar = async (base: Product) => {
+    try {
+      setIsLoadingSimilar(true);
+      // Build query: same category, larger limit to allow filtering; we'll show up to 30
+      const params = new URLSearchParams({
+        category: base.category,
+        page: "1",
+        // API caps limit to 50; requesting 60 gets clamped. Use 50 explicitly.
+        limit: "50",
+        sortBy: "rating",
+        sortOrder: "desc",
+      });
+      const res = await fetch(`/api/product?${params.toString()}`, { cache: "no-store" });
+      const data = await res.json();
+      if (res.ok && data?.data?.products) {
+        let candidates: Product[] = data.data.products.filter((p: Product) => p.slug !== base.slug);
+        // Optional: prioritize same veg status & similar spicyLevel
+        candidates = candidates.sort((a, b) => {
+          let scoreA = 0;
+          let scoreB = 0;
+          if (a.isVeg === base.isVeg) scoreA += 2; else scoreA -= 1;
+            if (b.isVeg === base.isVeg) scoreB += 2; else scoreB -= 1;
+          scoreA -= Math.abs(a.spicyLevel - base.spicyLevel);
+          scoreB -= Math.abs(b.spicyLevel - base.spicyLevel);
+          // Higher rating preference
+          scoreA += a.rating;
+          scoreB += b.rating;
+          return scoreB - scoreA;
+        });
+  const top = candidates.slice(0, 30);
+  // Debug log to verify count in browser console
+  console.log("Similar products fetched:", candidates.length, "showing", top.length);
+  setSimilarProducts(top);
+      } else {
+        setSimilarProducts([]);
+      }
+    } catch (e) {
+      console.error("Error fetching similar products", e);
+      setSimilarProducts([]);
+    } finally {
+      setIsLoadingSimilar(false);
     }
   };
 
@@ -965,41 +1015,49 @@ function ProductPage({ params }: ProductPageProps) {
             </div>
           </div>
 
-          {/* You May Also Like - Show Add-ons */}
+          {/* You May Also Like - Similar Products */}
           <div className="mt-8 sm:mt-12">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 px-4 sm:px-0">
               You May Also Like
             </h2>
-            <div className="">
-              {product.addOns && product.addOns.length > 0 ? (
-                product.addOns.map((addon) => (
+            {isLoadingSimilar ? (
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="animate-pulse flex md:px-20 border-t border-gray-300 py-4">
+                    <div className="flex-1 space-y-2 pr-4">
+                      <div className="h-4 bg-gray-200 rounded w-1/3" />
+                      <div className="h-4 bg-gray-200 rounded w-1/4" />
+                      <div className="h-3 bg-gray-200 rounded w-2/3" />
+                      <div className="h-3 bg-gray-200 rounded w-1/2" />
+                    </div>
+                    <div className="w-40 h-40 bg-gray-200 rounded-2xl" />
+                  </div>
+                ))}
+              </div>
+            ) : similarProducts.length > 0 ? (
+              <div>
+                {similarProducts.map((sp) => (
                   <RecommendationCard
-                    key={addon._id}
+                    key={sp._id}
                     item={{
-                      id: addon._id, // Use the actual _id from database
-                      name: addon.title,
-                      price: addon.price,
-                      rating: addon.rating || 4.5, // Default rating for add-ons
-                      image: addon.imageUrl,
-                      isVeg: addon.isVeg,
-                      description: addon.description,
-                      isCustomizable: addon.isCustomizable || false,
-                      customizableOptions:
-                        addon.customizableOptions
-                          ?.filter((option) => option.isAvailable)
-                          .map((option) => ({
-                            option: option.option,
-                            price: option.price,
-                          })) || [],
+                      id: sp._id,
+                      name: sp.title,
+                      price: sp.discountedPrice || sp.price,
+                      rating: sp.rating || 4.5,
+                      image: sp.imageUrl,
+                      isVeg: sp.isVeg,
+                      description: sp.description,
+                      isCustomizable: sp.isCustomizable,
+                      customizableOptions: sp.customizableOptions?.map(o => ({ option: o.option, price: o.price })) || [],
                     }}
                   />
-                ))
-              ) : (
-                <div className="text-gray-500 text-center py-8">
-                  No add-ons available for this product.
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-gray-500 text-center py-8">
+                No similar products found.
+              </div>
+            )}
           </div>
         </Container>
       </div>
