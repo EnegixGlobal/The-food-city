@@ -85,7 +85,9 @@ const ProductsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [pageSize, setPageSize] = useState(100);
+  // pageSize supports numeric (<=50 API cap) or 'all'
+  const [pageSize, setPageSize] = useState<number | 'all'>(20);
+  const [loadingAll, setLoadingAll] = useState(false);
 
   const [formData, setFormData] = useState<ProductFormData>({
     title: "",
@@ -182,24 +184,25 @@ const ProductsPage = () => {
 
   // Fetch products by category
   const fetchProducts = useCallback(
-    async (category: string, page: number = 1) => {
+    async (category: string, page: number = 1, sizeOverride?: number) => {
+      if (pageSize === 'all') {
+        // Delegate to fetchAllProducts
+        return;
+      }
+      const limit = sizeOverride ?? pageSize;
       try {
         setLoading(true);
         const response = await fetch(
-          `/api/product?category=${category}&page=${page}&limit=${pageSize}`
+          `/api/product?category=${category}&page=${page}&limit=${limit}`
         );
         const data = await response.json();
-
         if (response.ok && data.success) {
           setProducts(data.data.products || []);
           setTotalCount(data.data.totalCount || 0);
           setCurrentPage(data.data.currentPage || 1);
           setTotalPages(data.data.totalPages || 1);
         } else {
-          showAlert.error(
-            "Fetch Failed",
-            data.message || "Failed to fetch products"
-          );
+          showAlert.error("Fetch Failed", data.message || "Failed to fetch products");
           setProducts([]);
           setTotalCount(0);
           setTotalPages(1);
@@ -215,6 +218,50 @@ const ProductsPage = () => {
       }
     },
     [pageSize]
+  );
+
+  const fetchAllProducts = useCallback(
+    async (category: string) => {
+      try {
+        setLoading(true);
+        setLoadingAll(true);
+        // First page to get totalCount
+        const firstResp = await fetch(`/api/product?category=${category}&page=1&limit=50`);
+        const firstData = await firstResp.json();
+        if (!firstResp.ok || !firstData.success) {
+          showAlert.error("Fetch Failed", firstData.message || "Failed to fetch products");
+          setProducts([]);
+          setTotalCount(0);
+          setTotalPages(1);
+          return;
+        }
+        const total = firstData.data.totalCount || 0;
+        const pages = Math.ceil(total / 50);
+        let all: Product[] = firstData.data.products || [];
+        // Fetch remaining pages sequentially (could parallelize but keep simple / avoid overload)
+        for (let p = 2; p <= pages; p++) {
+          const resp = await fetch(`/api/product?category=${category}&page=${p}&limit=50`);
+            const d = await resp.json();
+            if (resp.ok && d.success) {
+              all = all.concat(d.data.products || []);
+            } else {
+              showAlert.warning("Partial Data", `Stopped loading at page ${p}`);
+              break;
+            }
+        }
+        setProducts(all);
+        setTotalCount(total);
+        setCurrentPage(1);
+        setTotalPages(1); // Single virtual page when viewing all
+      } catch (e) {
+        console.error("Error fetching all products", e);
+        showAlert.error("Error", "Failed to load all products");
+      } finally {
+        setLoading(false);
+        setLoadingAll(false);
+      }
+    },
+    []
   );
 
   // Fetch addons
@@ -447,21 +494,54 @@ const ProductsPage = () => {
 
   // Handle page change
   const handlePageChange = (page: number) => {
+    if (pageSize === 'all') return; // no-op in all mode
+    if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
 
   // Handle page size change
-  const handlePageSizeChange = (size: number) => {
+  const handlePageSizeChange = async (size: number | 'all') => {
     setPageSize(size);
     setCurrentPage(1);
-    fetchProducts(activeTab, 1);
+    if (size === 'all') {
+      await fetchAllProducts(activeTab);
+    } else {
+      await fetchProducts(activeTab, 1, size);
+    }
   };
 
   // Derive effective total pages (backend sets, but ensure correctness for 100/page scenario)
-  const effectiveTotalPages = Math.max(
-    1,
-    Math.ceil((totalCount || 0) / (pageSize || 100))
-  );
+  const effectiveTotalPages = pageSize === 'all'
+    ? 1
+    : Math.max(1, Math.ceil((totalCount || 0) / (Number(pageSize) || 1)));
+
+  // Build page numbers with ellipsis (for large page sets) when not in 'all'
+  const buildPageNumbers = () => {
+    if (pageSize === 'all') return [1];
+    const maxToShow = 7; // total elements including ellipsis
+    const pages: (number | 'ellipsis')[] = [];
+    if (effectiveTotalPages <= maxToShow) {
+      for (let i = 1; i <= effectiveTotalPages; i++) pages.push(i);
+      return pages;
+    }
+    const first = 1;
+    const last = effectiveTotalPages;
+    const current = currentPage;
+    pages.push(first);
+    let start = Math.max(2, current - 1);
+    let end = Math.min(last - 1, current + 1);
+    if (current <= 3) {
+      start = 2; end = 4;
+    } else if (current >= last - 2) {
+      start = last - 3; end = last - 1;
+    }
+    if (start > 2) pages.push('ellipsis');
+    for (let p = start; p <= end; p++) pages.push(p);
+    if (end < last - 1) pages.push('ellipsis');
+    pages.push(last);
+    return pages;
+  };
+  const pageNumbers = buildPageNumbers();
 
   // Utility components
   const StatusBadge = ({ available }: { available: boolean }) => (
@@ -1317,56 +1397,78 @@ const ProductsPage = () => {
         )}
       </div>
 
-      {/* Pagination Controls (Fixed 100 per page; total ~183 => 2 pages) */}
-      {effectiveTotalPages > 1 && (
-        <div className="bg-white px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-gray-200 sm:px-6 mt-4 rounded-none shadow-sm">
-          {/* Info */}
-          <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> to
-            {" "}
-            <span className="font-medium">{Math.min(currentPage * pageSize, totalCount)}</span> of
-            {" "}
-            <span className="font-medium">{totalCount}</span> products (100 per page)
-          </div>
-          {/* Navigation */}
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-2 border border-gray-300 text-sm rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-              Previous
-            </button>
-            {/* Page 1 Button */}
-            <button
-              onClick={() => handlePageChange(1)}
-              className={`px-3 py-2 border text-sm rounded-md transition-colors ${
-                currentPage === 1
-                  ? "bg-red-50 border-red-500 text-red-600"
-                  : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
-              }`}>
-              1
-            </button>
-            {/* Page 2 Button (only if needed) */}
-            {effectiveTotalPages >= 2 && (
-              <button
-                onClick={() => handlePageChange(2)}
-                className={`px-3 py-2 border text-sm rounded-md transition-colors ${
-                  currentPage === 2
-                    ? "bg-red-50 border-red-500 text-red-600"
-                    : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
-                }`}>
-                2
-              </button>
-            )}
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === effectiveTotalPages}
-              className="px-3 py-2 border border-gray-300 text-sm rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-              Next
-            </button>
-          </div>
+      {/* Pagination & Page Size Controls */}
+      <div className="bg-white px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-gray-200 sm:px-6 mt-4 rounded-none shadow-sm">
+        {/* Info */}
+        <div className="text-sm text-gray-700">
+          {pageSize === 'all' ? (
+            <>
+              Showing <span className="font-medium">1</span> to {" "}
+              <span className="font-medium">{products.length}</span> of {" "}
+              <span className="font-medium">{totalCount}</span> products (All Loaded)
+              {loadingAll && <span className="ml-2 text-gray-500">Loading all...</span>}
+            </>
+          ) : (
+            <>
+              Showing <span className="font-medium">{(currentPage - 1) * Number(pageSize) + 1}</span> to {" "}
+              <span className="font-medium">{Math.min(currentPage * Number(pageSize), totalCount)}</span> of {" "}
+              <span className="font-medium">{totalCount}</span> products ({Number(pageSize)} per page)
+            </>
+          )}
         </div>
-      )}
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+          {/* Page size selector */}
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-gray-500">Page Size:</label>
+              <select
+                value={pageSize === 'all' ? 'all' : String(pageSize)}
+                onChange={(e) => handlePageSizeChange(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+                className="border border-gray-300 text-sm px-2 py-1 bg-white rounded-none focus:outline-none focus:ring-1 focus:ring-red-500">
+                {[20, 30, 40, 50].map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+                <option value="all">All</option>
+              </select>
+            </div>
+          {/* Navigation */}
+          {pageSize !== 'all' && (
+            <div className="flex items-center flex-wrap gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 border border-gray-300 text-xs rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                Prev
+              </button>
+              {pageNumbers.map((p, idx) => p === 'ellipsis' ? (
+                <span key={idx} className="px-2 text-gray-400">...</span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => handlePageChange(p as number)}
+                  className={`px-3 py-2 border text-xs rounded-md transition-colors ${
+                    currentPage === p
+                      ? 'bg-red-50 border-red-500 text-red-600'
+                      : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >{p}</button>
+              ))}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === effectiveTotalPages}
+                className="px-3 py-2 border border-gray-300 text-xs rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                Next
+              </button>
+            </div>
+          )}
+          {pageSize === 'all' && (
+            <div className="text-xs text-gray-500 flex items-center gap-2">
+              <FiLoader className={` ${loadingAll ? 'animate-spin' : 'hidden'}`} />
+              <span>{loadingAll ? 'Fetching all pages...' : 'All products loaded'}</span>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
