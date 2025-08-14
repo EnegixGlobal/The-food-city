@@ -86,8 +86,10 @@ const ProductsPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   // pageSize supports numeric (<=50 API cap) or 'all'
-  const [pageSize, setPageSize] = useState<number | 'all'>(20);
+  const [pageSize, setPageSize] = useState<number | 'all'>(50);
   const [loadingAll, setLoadingAll] = useState(false);
+  // Image preview modal state
+  const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
 
   const [formData, setFormData] = useState<ProductFormData>({
     title: "",
@@ -515,31 +517,37 @@ const ProductsPage = () => {
     ? 1
     : Math.max(1, Math.ceil((totalCount || 0) / (Number(pageSize) || 1)));
 
-  // Build page numbers with ellipsis (for large page sets) when not in 'all'
+  // Build page numbers with ellipsis ensuring no duplicates
   const buildPageNumbers = () => {
     if (pageSize === 'all') return [1];
-    const maxToShow = 7; // total elements including ellipsis
-    const pages: (number | 'ellipsis')[] = [];
-    if (effectiveTotalPages <= maxToShow) {
-      for (let i = 1; i <= effectiveTotalPages; i++) pages.push(i);
-      return pages;
+    const total = effectiveTotalPages;
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
     }
-    const first = 1;
-    const last = effectiveTotalPages;
     const current = currentPage;
-    pages.push(first);
-    let start = Math.max(2, current - 1);
-    let end = Math.min(last - 1, current + 1);
-    if (current <= 3) {
-      start = 2; end = 4;
-    } else if (current >= last - 2) {
-      start = last - 3; end = last - 1;
+    const windowSize = 2; // pages on each side of current
+    const nums = new Set<number>();
+    nums.add(1);
+    nums.add(total);
+    for (let p = current - windowSize; p <= current + windowSize; p++) {
+      if (p > 1 && p < total) nums.add(p);
     }
-    if (start > 2) pages.push('ellipsis');
-    for (let p = start; p <= end; p++) pages.push(p);
-    if (end < last - 1) pages.push('ellipsis');
-    pages.push(last);
-    return pages;
+    // Add a little bias to start/end to avoid narrow windows near edges
+    if (current <= 3) {
+      for (let p = 2; p <= 5; p++) if (p < total) nums.add(p);
+    }
+    if (current >= total - 2) {
+      for (let p = total - 4; p < total; p++) if (p > 1) nums.add(p);
+    }
+    const sorted = Array.from(nums).sort((a, b) => a - b);
+    const result: (number | 'ellipsis')[] = [];
+    for (let i = 0; i < sorted.length; i++) {
+      result.push(sorted[i]);
+      if (i < sorted.length - 1 && sorted[i + 1] - sorted[i] > 1) {
+        result.push('ellipsis');
+      }
+    }
+    return result;
   };
   const pageNumbers = buildPageNumbers();
 
@@ -586,6 +594,16 @@ const ProductsPage = () => {
       </div>
     );
   };
+
+  // Close image preview with ESC
+  useEffect(() => {
+    if (!previewProduct) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPreviewProduct(null);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [previewProduct]);
 
   return (
     <div className="">
@@ -1213,11 +1231,12 @@ const ProductsPage = () => {
                               alt={product.title}
                               height={56}
                               width={56}
-                              className="w-14 h-14 rounded-lg object-cover border border-gray-200"
+                              className="w-14 h-14 rounded-lg object-cover border border-gray-200 cursor-pointer transition-transform hover:scale-105"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src =
                                   "/placeholder-food.svg";
                               }}
+                              onClick={() => setPreviewProduct(product)}
                             />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1418,21 +1437,19 @@ const ProductsPage = () => {
         </div>
         {/* Controls */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-          {/* Page size selector */}
+          {/* Page size selector (only 50 or All) */}
             <div className="flex items-center gap-2">
               <label className="text-xs font-medium text-gray-500">Page Size:</label>
               <select
-                value={pageSize === 'all' ? 'all' : String(pageSize)}
-                onChange={(e) => handlePageSizeChange(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+                value={pageSize === 'all' ? 'all' : '50'}
+                onChange={(e) => handlePageSizeChange(e.target.value === 'all' ? 'all' : 50)}
                 className="border border-gray-300 text-sm px-2 py-1 bg-white rounded-none focus:outline-none focus:ring-1 focus:ring-red-500">
-                {[20, 30, 40, 50].map(size => (
-                  <option key={size} value={size}>{size}</option>
-                ))}
+                <option value="50">50</option>
                 <option value="all">All</option>
               </select>
             </div>
           {/* Navigation */}
-          {pageSize !== 'all' && (
+          {pageSize !== 'all' && effectiveTotalPages > 1 && (
             <div className="flex items-center flex-wrap gap-2">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
@@ -1469,6 +1486,96 @@ const ProductsPage = () => {
           )}
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      {previewProduct && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${previewProduct.title} image preview`}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPreviewProduct(null);
+          }}
+        >
+          <div className="relative bg-white rounded-md shadow-2xl max-w-5xl w-full overflow-hidden">
+            <button
+              onClick={() => setPreviewProduct(null)}
+              className="absolute top-3 right-3 text-white bg-black/50 hover:bg-black/70 rounded-full w-9 h-9 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-red-500"
+              aria-label="Close preview"
+            >
+              ✕
+            </button>
+            <div className="bg-gray-900 flex items-center justify-center max-h-[75vh]">
+              <Image
+                src={previewProduct.imageUrl || '/placeholder-food.svg'}
+                alt={previewProduct.title}
+                width={1400}
+                height={900}
+                className="w-full h-auto object-contain max-h-[75vh] select-none"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/placeholder-food.svg';
+                }}
+                priority
+              />
+            </div>
+            <div className="p-5 flex flex-col md:flex-row md:items-start gap-6">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xl font-semibold text-gray-900 truncate">{previewProduct.title}</h3>
+                <p className="text-sm text-gray-600 mt-3 leading-relaxed max-h-40 overflow-y-auto pr-1">
+                  {previewProduct.description}
+                </p>
+              </div>
+              <div className="text-right space-y-2 w-56 flex-shrink-0">
+                <div className="text-3xl font-bold text-gray-900 flex items-center justify-end">
+                  <FaRupeeSign className="text-lg mr-1" />
+                  {previewProduct.discountedPrice || previewProduct.price}
+                </div>
+                {previewProduct.discountedPrice && (
+                  <div className="space-y-1">
+                    <div className="text-sm text-gray-500 line-through flex items-center justify-end">
+                      <FaRupeeSign className="text-xs mr-1" />
+                      {previewProduct.price}
+                    </div>
+                    <div className="text-xs text-green-600 font-medium">
+                      {previewProduct.discountPercentage}% OFF
+                    </div>
+                  </div>
+                )}
+                <div className="flex flex-wrap justify-end gap-2 pt-2">
+                  {previewProduct.isVeg ? (
+                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">Veg</span>
+                  ) : (
+                    <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">Non-Veg</span>
+                  )}
+                  {previewProduct.isBestSeller && (
+                    <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded">Best Seller</span>
+                  )}
+                  {previewProduct.isCustomizable && (
+                    <span className="px-2 py-1 bg-orange-100 text-orange-600 text-xs font-medium rounded">Customizable</span>
+                  )}
+                  {typeof previewProduct.spicyLevel === 'number' && previewProduct.spicyLevel > 0 && (
+                    <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-medium rounded flex items-center gap-1">
+                      {Array.from({ length: previewProduct.spicyLevel }).map((_, i) => (
+                        <span key={i}>🌶️</span>
+                      ))}
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs text-gray-500">Prep: {previewProduct.prepTime}</div>
+                <a
+                  href={previewProduct.imageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block mt-2 text-xs text-blue-600 hover:text-blue-700 underline"
+                >
+                  Open original in new tab
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
