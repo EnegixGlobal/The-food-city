@@ -39,7 +39,6 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
 
   // State for customization modal
   const [showCustomizationModal, setShowCustomizationModal] = useState(false);
-  const [cartRefreshKey, setCartRefreshKey] = useState(0); // Force re-render when cart updates
   const [showImageModal, setShowImageModal] = useState(false);
 
   // Close modal handler
@@ -55,13 +54,10 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
     return () => window.removeEventListener("keydown", handler);
   }, [showImageModal, closeImageModal]);
 
-  // Handle cart update callback
-  const handleCartUpdate = () => {
-    setCartRefreshKey(prev => prev + 1);
-  };
-
   // Derive cart info for this product (any variant)
-  const productCartItems = cart.filter((c: any) => c._id === item.id.toString());
+  const productCartItems = cart.filter(
+    (c: any) => c._id === item.id.toString()
+  );
   const primaryCartItem = productCartItems[0] || null;
   const isItemInCart = productCartItems.length > 0;
   const itemQuantityInCart = primaryCartItem ? primaryCartItem.quantity : 0;
@@ -94,11 +90,13 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
         isVeg: item.isVeg,
         isBestSeller: item.isBestSeller,
         spicyLevel: item.spicyLevel || 0,
-        prepTime: typeof item.prepTime === "string" ? parseInt(item.prepTime) || 30 : item.prepTime || 30,
+        prepTime:
+          typeof item.prepTime === "string"
+            ? parseInt(item.prepTime) || 30
+            : item.prepTime || 30,
         rating: item.rating,
       };
       addProductToCart(normalizedProduct, 1, [], null);
-      setCartRefreshKey((k) => k + 1);
     } catch (e) {
       console.error("Error adding product to cart from recommendation:", e);
     }
@@ -146,7 +144,10 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
     customizableOptions: item.customizableOptions || [],
   };
 
-  const handleCustomizationAdd = (selectedOption: { option: string; price: number }) => {
+  const handleCustomizationAdd = (selectedOption: {
+    option: string;
+    price: number;
+  }) => {
     try {
       const normalizedProduct = {
         _id: item.id.toString(),
@@ -160,17 +161,18 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
         isVeg: item.isVeg,
         isBestSeller: item.isBestSeller,
         spicyLevel: item.spicyLevel || 0,
-        prepTime: typeof item.prepTime === "string" ? parseInt(item.prepTime) || 30 : item.prepTime || 30,
+        prepTime:
+          typeof item.prepTime === "string"
+            ? parseInt(item.prepTime) || 30
+            : item.prepTime || 30,
         rating: item.rating,
       };
       addProductToCart(normalizedProduct, 1, [], selectedOption);
       setShowCustomizationModal(false);
-      setCartRefreshKey((k) => k + 1);
     } catch (e) {
       console.error("Error adding customized product to cart:", e);
     }
   };
-
 
   return (
     <div
@@ -210,8 +212,7 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
             {item.isCustomizable && (
               <button
                 onClick={handleEditCustomization}
-                className="text-xs text-blue-600 underline hover:text-blue-700"
-              >
+                className="text-xs text-blue-600 underline hover:text-blue-700">
                 Edit
               </button>
             )}
@@ -290,22 +291,18 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
         <div
           className="fixed inset-0 z-[999] flex items-center justify-center px-4 py-10 backdrop-blur-sm"
           aria-modal="true"
-          role="dialog"
-        >
+          role="dialog">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 animate-fadeIn"
             onClick={closeImageModal}
           />
           {/* Modal content */}
-          <div
-            className="relative z-10 w-full max-w-md md:max-w-lg bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-scaleIn"
-          >
+          <div className="relative z-10 w-full max-w-md md:max-w-lg bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-scaleIn">
             <button
               onClick={closeImageModal}
               aria-label="Close image preview"
-              className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur hover:bg-red-600 hover:text-white text-gray-600 shadow transition"
-            >
+              className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur hover:bg-red-600 hover:text-white text-gray-600 shadow transition">
               ✕
             </button>
             <div className="p-3 sm:p-4">
@@ -336,18 +333,8 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
               <div className="mt-4 flex justify-end gap-2">
                 <button
                   onClick={closeImageModal}
-                  className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
-                >
+                  className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition">
                   Close
-                </button>
-                <button
-                  onClick={() => {
-                    closeImageModal();
-                    handleAddToCart();
-                  }}
-                  className="px-5 py-2 rounded-full text-sm font-semibold bg-red-600 text-white hover:bg-red-700 shadow-sm transition flex items-center gap-2"
-                >
-                  <FaCartPlus /> Add
                 </button>
               </div>
             </div>

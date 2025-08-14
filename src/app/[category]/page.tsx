@@ -97,6 +97,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
   // fetching products according to category and filters
   useEffect(() => {
+    window.scrollTo(0, 0);
     if (!category) return;
 
     const fetchProducts = async () => {

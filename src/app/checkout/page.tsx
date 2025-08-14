@@ -2,7 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { FiPlus, FiMinus } from "react-icons/fi";
-import { FaUser, FaRupeeSign, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
+import {
+  FaUser,
+  FaRupeeSign,
+  FaCreditCard,
+  FaMoneyBillWave,
+} from "react-icons/fa";
 import {
   FiUser,
   FiMapPin,
@@ -60,9 +65,11 @@ const CheckoutPage = () => {
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
-  
+
   // Payment method state
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"online" | "cod">("online");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
+    "online" | "cod"
+  >("online");
 
   // Load Razorpay script
   const loadRazorpayScript = () => {
@@ -262,7 +269,6 @@ const CheckoutPage = () => {
 
     setLoadingAddresses(true);
     try {
-      console.log("Fetching addresses for user:", user.name);
 
       const response = await fetch("/api/users/address", {
         method: "GET",
@@ -274,31 +280,16 @@ const CheckoutPage = () => {
 
       const data = await response.json();
 
+      console.log(response);
+
       if (response.ok && data.success) {
         const addressList = data.data || [];
         setAddresses(addressList);
       } else {
-        // Handle API errors
-        console.error("Failed to fetch addresses:", data.message);
-        if (response.status === 404) {
-          // No addresses found is not really an error
-          setAddresses([]);
-        } else {
-          // Other errors
-          setAddresses([]);
-          console.error("API Error:", data.message);
-          if (response.status === 401) {
-            showAlert.error(
-              "Authentication Error",
-              "Please login to view your addresses"
-            );
-          } else {
-            showAlert.error(
-              "Failed to Load",
-              "Could not fetch your saved addresses"
-            );
-          }
-        }
+        showAlert.warning(
+        "No Addresses Found",
+        "Please add an address to proceed",
+      );
       }
     } catch (error) {
       console.error("Network error fetching addresses:", error);
@@ -555,7 +546,8 @@ const CheckoutPage = () => {
         slug: item.slug || item.title.toLowerCase().replace(/\s+/g, "-"),
         // Store combined price (base + customization)
         price: item.selectedCustomization
-          ? (item.effectivePrice || item.price) + item.selectedCustomization.price
+          ? (item.effectivePrice || item.price) +
+            item.selectedCustomization.price
           : item.effectivePrice || item.price,
         quantity: item.quantity,
         imageUrl: item.imageUrl || "",
@@ -578,7 +570,8 @@ const CheckoutPage = () => {
           : addon.title,
         // Store combined price (base + customization)
         price: addon.selectedCustomization
-          ? (addon.effectivePrice || addon.price) + addon.selectedCustomization.price
+          ? (addon.effectivePrice || addon.price) +
+            addon.selectedCustomization.price
           : addon.effectivePrice || addon.price,
         quantity: addon.quantity,
         image: addon.imageUrl || "",
@@ -692,7 +685,7 @@ const CheckoutPage = () => {
 
         if (orderResult) {
           setCreatingOrder(false);
-          
+
           if (selectedPaymentMethod === "online") {
             // Process online payment with Razorpay
             await processPayment(orderResult);
@@ -757,7 +750,9 @@ const CheckoutPage = () => {
             </div>
             <div className="text-left ">
               {user ? (
-                <Link href="/my-account" className="hover:text-red-600 transition-colors">
+                <Link
+                  href="/my-account"
+                  className="hover:text-red-600 transition-colors">
                   <div className="text-sm md:text-base font-bold text-gray-900 hover:text-yellow-400 transition-colors">
                     {user.name}
                   </div>
@@ -766,10 +761,9 @@ const CheckoutPage = () => {
                   </div>
                 </Link>
               ) : (
-                <button 
+                <button
                   onClick={openLogin}
-                  className="text-sm md:text-base font-bold text-gray-900 hover:text-red-600 transition-colors"
-                >
+                  className="text-sm md:text-base font-bold text-gray-900 hover:text-red-600 transition-colors">
                   Login
                 </button>
               )}
@@ -987,11 +981,12 @@ const CheckoutPage = () => {
                           : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
                       }`}>
                       <div className="flex items-center space-x-3">
-                        <div className={`p-3 rounded-full ${
-                          selectedPaymentMethod === "online" 
-                            ? "bg-blue-100 text-blue-600" 
-                            : "bg-gray-100 text-gray-600"
-                        }`}>
+                        <div
+                          className={`p-3 rounded-full ${
+                            selectedPaymentMethod === "online"
+                              ? "bg-blue-100 text-blue-600"
+                              : "bg-gray-100 text-gray-600"
+                          }`}>
                           <FaCreditCard className="text-xl" />
                         </div>
                         <div className="flex-1">
@@ -1007,11 +1002,12 @@ const CheckoutPage = () => {
                             </span>
                           </div>
                         </div>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          selectedPaymentMethod === "online"
-                            ? "border-blue-500 bg-blue-500"
-                            : "border-gray-300"
-                        }`}>
+                        <div
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            selectedPaymentMethod === "online"
+                              ? "border-blue-500 bg-blue-500"
+                              : "border-gray-300"
+                          }`}>
                           {selectedPaymentMethod === "online" && (
                             <div className="w-2 h-2 bg-white rounded-full"></div>
                           )}
@@ -1028,11 +1024,12 @@ const CheckoutPage = () => {
                           : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
                       }`}>
                       <div className="flex items-center space-x-3">
-                        <div className={`p-3 rounded-full ${
-                          selectedPaymentMethod === "cod" 
-                            ? "bg-green-100 text-green-600" 
-                            : "bg-gray-100 text-gray-600"
-                        }`}>
+                        <div
+                          className={`p-3 rounded-full ${
+                            selectedPaymentMethod === "cod"
+                              ? "bg-green-100 text-green-600"
+                              : "bg-gray-100 text-gray-600"
+                          }`}>
                           <FaMoneyBillWave className="text-xl" />
                         </div>
                         <div className="flex-1">
@@ -1048,11 +1045,12 @@ const CheckoutPage = () => {
                             </span>
                           </div>
                         </div>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          selectedPaymentMethod === "cod"
-                            ? "border-green-500 bg-green-500"
-                            : "border-gray-300"
-                        }`}>
+                        <div
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            selectedPaymentMethod === "cod"
+                              ? "border-green-500 bg-green-500"
+                              : "border-gray-300"
+                          }`}>
                           {selectedPaymentMethod === "cod" && (
                             <div className="w-2 h-2 bg-white rounded-full"></div>
                           )}
@@ -1107,9 +1105,13 @@ const CheckoutPage = () => {
                       <div className="flex items-start space-x-3">
                         <FaCreditCard className="text-blue-500 mt-1" />
                         <div>
-                          <h4 className="font-semibold text-gray-900">Secure Online Payment</h4>
+                          <h4 className="font-semibold text-gray-900">
+                            Secure Online Payment
+                          </h4>
                           <p className="text-sm text-gray-600">
-                            Your payment is processed securely through Razorpay. We accept UPI, Credit Cards, Debit Cards, and Net Banking.
+                            Your payment is processed securely through Razorpay.
+                            We accept UPI, Credit Cards, Debit Cards, and Net
+                            Banking.
                           </p>
                         </div>
                       </div>
@@ -1117,9 +1119,12 @@ const CheckoutPage = () => {
                       <div className="flex items-start space-x-3">
                         <FaMoneyBillWave className="text-green-500 mt-1" />
                         <div>
-                          <h4 className="font-semibold text-gray-900">Cash on Delivery</h4>
+                          <h4 className="font-semibold text-gray-900">
+                            Cash on Delivery
+                          </h4>
                           <p className="text-sm text-gray-600">
-                            Pay with cash when your order is delivered to your doorstep. Please keep exact change ready.
+                            Pay with cash when your order is delivered to your
+                            doorstep. Please keep exact change ready.
                           </p>
                         </div>
                       </div>
@@ -1142,37 +1147,40 @@ const CheckoutPage = () => {
                 {/* Continue/Place Order Button */}
                 {/* For logged in users: don't show Continue on login step (it doesn't exist) */}
                 {/* For non-logged users: don't show Continue on login step (they use login button instead) */}
-                {!(needsLogin && activeStep < 3) && 
-                 !((needsLogin && activeStep === 3) || (!needsLogin && activeStep === 2)) && (
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={
-                      creatingOrder ||
-                      processingPayment ||
-                      (needsLogin && activeStep === 1)
-                    }
-                    className={`ml-auto px-6 py-3 rounded-none font-medium ${
-                      activeStep < maxSteps
-                        ? "bg-red-900! text-white hover:bg-red-800"
-                        : "bg-red-900! text-white hover:bg-red-800"
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}>
-                    {creatingOrder ? (
-                      <div className="flex items-center">
-                        <Spinner h={20} className="mr-2 text-white" />
-                        Creating Order...
-                      </div>
-                    ) : processingPayment ? (
-                      <div className="flex items-center">
-                        <Spinner h={20} className="mr-2 text-white" />
-                        Processing Payment...
-                      </div>
-                    ) : activeStep < maxSteps ? (
-                      "Continue"
-                    ) : (
-                      "Place Order"
-                    )}
-                  </Button>
-                )}
+                {!(needsLogin && activeStep < 3) &&
+                  !(
+                    (needsLogin && activeStep === 3) ||
+                    (!needsLogin && activeStep === 2)
+                  ) && (
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={
+                        creatingOrder ||
+                        processingPayment ||
+                        (needsLogin && activeStep === 1)
+                      }
+                      className={`ml-auto px-6 py-3 rounded-none font-medium ${
+                        activeStep < maxSteps
+                          ? "bg-red-900! text-white hover:bg-red-800"
+                          : "bg-red-900! text-white hover:bg-red-800"
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}>
+                      {creatingOrder ? (
+                        <div className="flex items-center">
+                          <Spinner h={20} className="mr-2 text-white" />
+                          Creating Order...
+                        </div>
+                      ) : processingPayment ? (
+                        <div className="flex items-center">
+                          <Spinner h={20} className="mr-2 text-white" />
+                          Processing Payment...
+                        </div>
+                      ) : activeStep < maxSteps ? (
+                        "Continue"
+                      ) : (
+                        "Place Order"
+                      )}
+                    </Button>
+                  )}
               </div>
             </div>
           </div>
@@ -1415,17 +1423,6 @@ const CheckoutPage = () => {
               {/* Order Totals */}
               {!cartSummary.isEmpty && (
                 <div className="border-t border-gray-200 pt-4 space-y-3">
-                  {/* Products Subtotal */}
-                  {cartSummary.productCount > 0 && (
-                    <div className="flex justify-between text-gray-600">
-                      <span>🍽️ Food Items ({cartSummary.productCount})</span>
-                      <span className="flex items-center">
-                        <FaRupeeSign size={12} className="mr-1" />
-                        {cartSummary.productTotal?.toFixed(2) || "0.00"}
-                      </span>
-                    </div>
-                  )}
-
                   {/* Addons Subtotal */}
                   {cartSummary.addonCount > 0 && (
                     <div className="flex justify-between text-gray-600">
@@ -1449,9 +1446,7 @@ const CheckoutPage = () => {
                   <div className="flex justify-between text-gray-600">
                     <span>Delivery Fee</span>
                     <span className="flex items-center text-green-500">
-                      {cartSummary.deliveryFee === 0
-                        ? "Free"
-                        : `₹${cartSummary.deliveryFee?.toFixed(2) || "0.00"}`}
+                      Free
                     </span>
                   </div>
 
@@ -1496,7 +1491,7 @@ const CheckoutPage = () => {
                   )}
 
                   <div className="flex justify-between text-lg font-semibold text-gray-900 pt-2 border-t">
-                    <span>Total</span>
+                    <span>Grand Total</span>
                     <span className="flex items-center">
                       <FaRupeeSign size={14} className="mr-1" />
                       {cartSummary.grandTotal?.toFixed(2) || "0.00"}

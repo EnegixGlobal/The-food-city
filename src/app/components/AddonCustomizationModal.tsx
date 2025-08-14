@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { FaRupeeSign, FaTimes, FaCheck } from "react-icons/fa";
-import { FiClock, FiStar } from "react-icons/fi";
 import Image from "next/image";
 import Button from "./Button";
 import { useAddonStore } from "../zustand/addonStore";

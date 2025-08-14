@@ -346,18 +346,7 @@ const CartPage = () => {
 
               {/* Pricing Breakdown */}
               <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
-                {/* Products Subtotal */}
-                {cartSummary.productCount > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs md:text-sm text-gray-600">
-                      🍽️ Food Items ({cartSummary.productCount})
-                    </span>
-                    <span className="font-semibold text-sm md:text-base flex items-center">
-                      <FaRupeeSign className="text-xs" />
-                      {cartSummary.productTotal?.toFixed(2) || "0.00"}
-                    </span>
-                  </div>
-                )}
+                
 
                 {/* Addons Subtotal */}
                 {cartSummary.addonCount > 0 && (
@@ -375,7 +364,7 @@ const CartPage = () => {
                 {/* Subtotal */}
                 {(cartSummary.productCount > 0 ||
                   cartSummary.addonCount > 0) && (
-                  <div className="flex justify-between items-center border-t pt-2 mt-2">
+                  <div className="flex justify-between items-center">
                     <span className="text-sm md:text-base text-gray-700 font-medium">
                       Subtotal
                     </span>
@@ -386,14 +375,14 @@ const CartPage = () => {
                   </div>
                 )}
 
+             
+
                 <div className="flex justify-between items-center">
                   <span className="text-xs md:text-sm text-gray-600">
                     Delivery
                   </span>
                   <span className="font-medium text-xs md:text-sm text-green-600">
-                    {cartSummary.deliveryFee === 0
-                      ? "Free"
-                      : `₹${cartSummary.deliveryFee?.toFixed(2) || "0.00"}`}
+                    Free
                   </span>
                 </div>
                 {cartSummary.discount > 0 && (
@@ -409,7 +398,7 @@ const CartPage = () => {
 
                 <div className="flex justify-between items-center border-t pt-3 mt-3 bg-gray-50 -mx-4 md:-mx-6 px-4 md:px-6 py-3 rounded-b-2xl">
                   <span className="text-gray-900 font-bold text-base md:text-xl">
-                    Total
+                    Grand Total
                   </span>
                   <span className="font-bold text-lg md:text-2xl flex items-center text-red-600">
                     <FaRupeeSign className="text-sm md:text-lg" />

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import Card from "../Card";
 import { FaArrowRight } from "react-icons/fa";
 import Link from "next/link";
 import MainCard from "../MainCard";

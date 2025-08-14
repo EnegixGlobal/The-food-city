@@ -143,14 +143,21 @@ const SpecialOffers = () => {
 
   if (!offers.length) {
     return (
-      <div className="relative bg-gray-100 md:py-12 py-8 md:px-4 text-gray-800 overflow-hidden">
+      <div className="relative bg-white md:py-12 py-8 md:px-4 text-gray-800 overflow-hidden">
         <div className="mx-auto px-4 relative z-10">
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-2 text-red-800">
             Special Offers
           </h2>
-          <p className="text-center text-gray-600 mb-6 max-w-2xl mx-auto text-sm">
+          <p className="text-center text-gray-600 mb-6 max-w-2xl mx-auto text-sm md:text-2xl">
             No special offers available right now. Check back soon!
           </p>
+          <Image 
+            src="https://img.freepik.com/premium-vector/no-offer-found-illustration-icon_842098-19.jpg"
+            alt="No offers available"
+            width={300}
+            height={200}
+            className="mx-auto mb-6"
+          />
         </div>
       </div>
     );

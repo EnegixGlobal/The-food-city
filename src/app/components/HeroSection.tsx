@@ -1,24 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Container from "./Container";
 import Button from "./Button";
-import { FaArrowRight, FaPercent, FaGift, FaFire } from "react-icons/fa";
+import { FaArrowRight} from "react-icons/fa";
 import Link from "next/link";
 
-interface Coupon {
-  _id: string;
-  code: string;
-  discountType: string;
-  discountValue: number;
-  applicableItems: string[];
-  startDate: string;
-  endDate: string;
-  usageLimit: number;
-  isActive: boolean;
-  offerImage?: string;
-}
+
 
 function HeroSection() {
   const categories = [

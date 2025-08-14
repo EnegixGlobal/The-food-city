@@ -245,8 +245,8 @@ function ProductPage({ params }: ProductPageProps) {
         setProduct(data.data);
         // Fetch reviews after product is loaded
         fetchReviews(data.data._id);
-  // Fetch similar products
-  fetchSimilar(data.data);
+        // Fetch similar products
+        fetchSimilar(data.data);
       } else {
         setError(data.message || "Product not found");
       }
@@ -271,16 +271,22 @@ function ProductPage({ params }: ProductPageProps) {
         sortBy: "rating",
         sortOrder: "desc",
       });
-      const res = await fetch(`/api/product?${params.toString()}`, { cache: "no-store" });
+      const res = await fetch(`/api/product?${params.toString()}`, {
+        cache: "no-store",
+      });
       const data = await res.json();
       if (res.ok && data?.data?.products) {
-        let candidates: Product[] = data.data.products.filter((p: Product) => p.slug !== base.slug);
+        let candidates: Product[] = data.data.products.filter(
+          (p: Product) => p.slug !== base.slug
+        );
         // Optional: prioritize same veg status & similar spicyLevel
         candidates = candidates.sort((a, b) => {
           let scoreA = 0;
           let scoreB = 0;
-          if (a.isVeg === base.isVeg) scoreA += 2; else scoreA -= 1;
-            if (b.isVeg === base.isVeg) scoreB += 2; else scoreB -= 1;
+          if (a.isVeg === base.isVeg) scoreA += 2;
+          else scoreA -= 1;
+          if (b.isVeg === base.isVeg) scoreB += 2;
+          else scoreB -= 1;
           scoreA -= Math.abs(a.spicyLevel - base.spicyLevel);
           scoreB -= Math.abs(b.spicyLevel - base.spicyLevel);
           // Higher rating preference
@@ -288,10 +294,15 @@ function ProductPage({ params }: ProductPageProps) {
           scoreB += b.rating;
           return scoreB - scoreA;
         });
-  const top = candidates.slice(0, 30);
-  // Debug log to verify count in browser console
-  console.log("Similar products fetched:", candidates.length, "showing", top.length);
-  setSimilarProducts(top);
+        const top = candidates.slice(0, 30);
+        // Debug log to verify count in browser console
+        console.log(
+          "Similar products fetched:",
+          candidates.length,
+          "showing",
+          top.length
+        );
+        setSimilarProducts(top);
       } else {
         setSimilarProducts([]);
       }
@@ -324,6 +335,7 @@ function ProductPage({ params }: ProductPageProps) {
 
   // Use useEffect to handle the async params
   useEffect(() => {
+    window.scrollTo(0, 0);
     const getParams = async () => {
       const resolvedParams = await params;
       setProductSlug(resolvedParams.product);
@@ -821,7 +833,7 @@ function ProductPage({ params }: ProductPageProps) {
                           <span className="flex items-center justify-center gap-1 sm:gap-2">
                             <FaCartPlus className="text-sm" />
                             <span className="hidden sm:inline">
-                              ADD TO CART {" "}
+                              ADD TO CART{" "}
                             </span>
                             <span className="sm:hidden">ADD</span>
                           </span>
@@ -1023,7 +1035,9 @@ function ProductPage({ params }: ProductPageProps) {
             {isLoadingSimilar ? (
               <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="animate-pulse flex md:px-20 border-t border-gray-300 py-4">
+                  <div
+                    key={i}
+                    className="animate-pulse flex md:px-20 border-t border-gray-300 py-4">
                     <div className="flex-1 space-y-2 pr-4">
                       <div className="h-4 bg-gray-200 rounded w-1/3" />
                       <div className="h-4 bg-gray-200 rounded w-1/4" />
@@ -1048,7 +1062,11 @@ function ProductPage({ params }: ProductPageProps) {
                       isVeg: sp.isVeg,
                       description: sp.description,
                       isCustomizable: sp.isCustomizable,
-                      customizableOptions: sp.customizableOptions?.map(o => ({ option: o.option, price: o.price })) || [],
+                      customizableOptions:
+                        sp.customizableOptions?.map((o) => ({
+                          option: o.option,
+                          price: o.price,
+                        })) || [],
                     }}
                   />
                 ))}

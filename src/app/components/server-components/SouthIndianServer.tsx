@@ -1,5 +1,4 @@
 import React from "react";
-import Indian from "../categories/Indian";
 import { fetchSouthIndianProducts } from "@/app/fetch/product";
 import SouthIndian from "../categories/SouthIndian";
 
