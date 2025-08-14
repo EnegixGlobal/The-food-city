@@ -178,17 +178,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <div className="flex items-center">
               <div className="flex flex-col">
                 <Image
-                  src="/logo.png"
+                  src="/new_logo.png"
                   alt="FoodExpress Admin"
                   width={120}
                   height={32}
-                  className="h-10 -rotate-12 w-auto"
+                  className="h-14 -rotate-12 w-14"
                 />
-                {companyData && (
-                  <span className="text-xs text-gray-600 mt-1 font-medium">
-                    {companyData.name}
-                  </span>
-                )}
+               
               </div>
             </div>
             <button
