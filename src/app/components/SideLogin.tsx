@@ -37,14 +37,6 @@ const SideLogin = ({
   const setUser = useUserStore((state) => state.setUser);
   const addAlert = useAlertStore((state) => state.addAlert);
 
-  const fetchUserData = async () => {
-    const response = await fetch("/api/users/me");
-    if (response.ok) {
-      const userData = await response.json();
-      setUser(userData.data);
-    }
-  };
-
   // Determine which API endpoint to call based on current state
   const getApiEndpoint = () => {
     if (!isLogin) {
@@ -64,30 +56,30 @@ const SideLogin = ({
     // Basic validation
     if (!formData.phone || formData.phone.length < 10) {
       addAlert({
-        type: 'warning',
-        title: 'Invalid Phone Number',
-        message: 'Please enter a valid 10-digit phone number.',
-        duration: 4000
+        type: "warning",
+        title: "Invalid Phone Number",
+        message: "Please enter a valid 10-digit phone number.",
+        duration: 4000,
       });
       return;
     }
 
     if (!isLogin && (!formData.name || !formData.email)) {
       addAlert({
-        type: 'warning',
-        title: 'Missing Information',
-        message: 'Please fill in all required fields.',
-        duration: 4000
+        type: "warning",
+        title: "Missing Information",
+        message: "Please fill in all required fields.",
+        duration: 4000,
       });
       return;
     }
 
     if (isLogin && isOtpSent && (!formData.otp || formData.otp.length !== 6)) {
       addAlert({
-        type: 'warning',
-        title: 'Invalid OTP',
-        message: 'Please enter the complete 6-digit OTP.',
-        duration: 4000
+        type: "warning",
+        title: "Invalid OTP",
+        message: "Please enter the complete 6-digit OTP.",
+        duration: 4000,
       });
       return;
     }
@@ -99,10 +91,10 @@ const SideLogin = ({
 
     if (!endpoint) {
       addAlert({
-        type: 'error',
-        title: 'Invalid Operation',
-        message: 'Please try again or contact support.',
-        duration: 4000
+        type: "error",
+        title: "Invalid Operation",
+        message: "Please try again or contact support.",
+        duration: 4000,
       });
       setLoading(false);
       return;
@@ -115,10 +107,10 @@ const SideLogin = ({
         if (!isLogin) {
           // Signup successful
           addAlert({
-            type: 'success',
-            title: 'Account Created Successfully!',
-            message: 'Your account has been created. You can now log in.',
-            duration: 5000
+            type: "success",
+            title: "Account Created Successfully!",
+            message: "Your account has been created. You can now log in.",
+            duration: 5000,
           });
           setIsLogin(true);
           reset(); // Clear form
@@ -126,10 +118,10 @@ const SideLogin = ({
         } else if (isLogin && !isOtpSent) {
           // OTP sent successfully
           addAlert({
-            type: 'success',
-            title: 'OTP Sent Successfully!',
+            type: "success",
+            title: "OTP Sent Successfully!",
             message: `Please check your phone for the verification code. ${response.data.data.otp}`,
-            duration: 6000
+            duration: 6000,
           });
           setIsOtpSent(true);
           setTimer(30);
@@ -137,57 +129,60 @@ const SideLogin = ({
         } else if (isLogin && isOtpSent) {
           // OTP verified and login successful
           addAlert({
-            type: 'success',
-            title: 'Login Successful!',
-            message: 'Welcome back! You have been logged in successfully.',
-            duration: 4000
+            type: "success",
+            title: "Login Successful!",
+            message: "Welcome back! You have been logged in successfully.",
+            duration: 4000,
           });
-          
+
           // Set user data from the response
           if (response.data.data && response.data.data.user) {
             setUser(response.data.data.user);
           }
-          
+
           onClose(); // Close the login modal
         }
       } else {
         // Handle case where response is not successful
         addAlert({
-          type: 'warning',
-          title: 'Unexpected Response',
-          message: response.data.message || 'Please try again.',
-          duration: 4000
+          type: "warning",
+          title: "Unexpected Response",
+          message: response.data.message || "Please try again.",
+          duration: 4000,
         });
       }
     } catch (error: any) {
       console.error("Error:", error);
-      
+
       // More specific error handling
-      let errorMessage = 'Something went wrong. Please try again.';
-      let errorTitle = 'Operation Failed';
-      
+      let errorMessage = "Something went wrong. Please try again.";
+      let errorTitle = "Operation Failed";
+
       if (error.response?.status === 400) {
-        errorTitle = 'Invalid Request';
-        errorMessage = error.response?.data?.message || 'Please check your input and try again.';
+        errorTitle = "Invalid Request";
+        errorMessage =
+          error.response?.data?.message ||
+          "Please check your input and try again.";
       } else if (error.response?.status === 401) {
-        errorTitle = 'Authentication Failed';
-        errorMessage = 'Invalid credentials. Please try again.';
+        errorTitle = "Authentication Failed";
+        errorMessage = "Invalid credentials. Please try again.";
       } else if (error.response?.status === 429) {
-        errorTitle = 'Too Many Attempts';
-        errorMessage = 'Please wait a moment before trying again.';
+        errorTitle = "Too Many Attempts";
+        errorMessage = "Please wait a moment before trying again.";
       } else if (error.response?.status === 500) {
-        errorTitle = 'Server Error';
-        errorMessage = 'Our servers are experiencing issues. Please try again later.';
-      } else if (error.code === 'NETWORK_ERROR') {
-        errorTitle = 'Network Error';
-        errorMessage = 'Please check your internet connection and try again.';
+        errorTitle = "Server Error";
+        errorMessage =
+          "Our servers are experiencing issues. Please try again later.";
+      } else if (error.code === "NETWORK_ERROR") {
+        errorTitle = "Network Error";
+        errorMessage = "Please check your internet connection and try again.";
       }
-      
+
       addAlert({
-        type: 'error',
+        type: "error",
         title: errorTitle,
         message: errorMessage,
-        duration: 5000
+        duration: 5000,
       });
     } finally {
       setLoading(false);
@@ -223,39 +218,41 @@ const SideLogin = ({
 
       if (response.data.success) {
         addAlert({
-          type: 'success',
-          title: 'OTP Resent Successfully!',
+          type: "success",
+          title: "OTP Resent Successfully!",
           message: `A new verification code has been sent to your phone. ${response.data.data.otp}`,
-          duration: 6000
+          duration: 6000,
         });
         setTimer(30);
         setIsResendDisabled(true);
       } else {
         addAlert({
-          type: 'warning',
-          title: 'Resend Failed',
-          message: response.data.message || 'Unable to resend OTP at this time.',
-          duration: 4000
+          type: "warning",
+          title: "Resend Failed",
+          message:
+            response.data.message || "Unable to resend OTP at this time.",
+          duration: 4000,
         });
       }
     } catch (error: any) {
       console.error("Error resending OTP:", error);
-      
-      let errorMessage = 'Unable to resend verification code. Please try again.';
-      let errorTitle = 'Failed to Resend OTP';
-      
+
+      let errorMessage =
+        "Unable to resend verification code. Please try again.";
+      let errorTitle = "Failed to Resend OTP";
+
       if (error.response?.status === 429) {
-        errorTitle = 'Too Many Requests';
-        errorMessage = 'Please wait before requesting another OTP.';
+        errorTitle = "Too Many Requests";
+        errorMessage = "Please wait before requesting another OTP.";
       } else if (error.response?.status === 400) {
-        errorMessage = 'Invalid phone number. Please check and try again.';
+        errorMessage = "Invalid phone number. Please check and try again.";
       }
-      
+
       addAlert({
-        type: 'error',
+        type: "error",
         title: errorTitle,
         message: errorMessage,
-        duration: 5000
+        duration: 5000,
       });
     } finally {
       setLoading(false);
@@ -270,14 +267,8 @@ const SideLogin = ({
     setIsResendDisabled(true);
     reset(); // Clear form
     setData({ phone: "", name: "", email: "", otp: "" });
-    
-    // Show info alert when switching modes
-    addAlert({
-      type: 'info',
-      title: `Switched to ${!isLogin ? 'Login' : 'Sign Up'}`,
-      message: 'Form has been cleared. Please enter your details.',
-      duration: 3000
-    });
+
+
   };
 
   return (

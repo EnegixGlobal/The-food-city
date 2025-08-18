@@ -112,8 +112,8 @@ export const PATCH = async (
       // Only set paymentCompletedAt when transitioning to paid first time
       if (order.paymentStatus !== paymentStatus) {
         if (paymentStatus === "paid" && order.paymentStatus !== "paid") {
-          // @ts-ignore - field exists in schema
-          order.paymentCompletedAt = new Date();
+          // Assign paymentCompletedAt if schema supports it
+          (order as any).paymentCompletedAt = new Date();
         }
         order.paymentStatus = paymentStatus as typeof order.paymentStatus;
         changed = true;
