@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FiClock, FiTag, FiPercent, FiShoppingBag, FiChevronRight } from "react-icons/fi";
+import {
+  FiClock,
+  FiTag,
+  FiPercent,
+  FiShoppingBag,
+  FiChevronRight,
+} from "react-icons/fi";
 import { useRouter } from "next/navigation";
 
 import Navbar from "../components/Navbar";
@@ -39,7 +45,9 @@ const OffersPage = () => {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedOffers, setExpandedOffers] = useState<{ [key: string]: boolean }>({});
+  const [expandedOffers, setExpandedOffers] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   // Handle product click - redirect to search page with product name
   const handleProductClick = (productTitle: string) => {
@@ -52,9 +60,9 @@ const OffersPage = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch('/api/coupon');
+      const response = await fetch(`${process.env.PUBLIC_URL}/api/coupon`);
       const data: ApiResponse = await response.json();
-      
+
       if (data.success) {
         setCoupons(data.data);
       } else {
@@ -73,9 +81,9 @@ const OffersPage = () => {
   }, []);
 
   const toggleExpanded = (couponId: string) => {
-    setExpandedOffers(prev => ({
+    setExpandedOffers((prev) => ({
       ...prev,
-      [couponId]: !prev[couponId]
+      [couponId]: !prev[couponId],
     }));
   };
 
@@ -90,10 +98,10 @@ const OffersPage = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
     });
   };
 
@@ -102,7 +110,9 @@ const OffersPage = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
+          <div
+            key={i}
+            className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
             <div className="h-48 md:h-64 bg-gray-200 animate-pulse"></div>
             <div className="p-4">
               <div className="h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
@@ -124,12 +134,13 @@ const OffersPage = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
       <div className="text-center py-12">
         <div className="text-6xl text-red-500 mb-4">😕</div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Failed to Load Offers</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Failed to Load Offers
+        </h2>
         <p className="text-gray-600 mb-4">{error}</p>
-        <button 
+        <button
           onClick={fetchCoupons}
-          className="bg-red-900 text-white px-6 py-2 rounded-lg hover:bg-red-800 transition"
-        >
+          className="bg-red-900 text-white px-6 py-2 rounded-lg hover:bg-red-800 transition">
           Try Again
         </button>
       </div>
@@ -223,14 +234,17 @@ const OffersPage = () => {
               {coupons.map((coupon) => (
                 <div
                   key={coupon._id}
-                  className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl hover:scale-105 transition-all duration-300"
-                >
+                  className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl hover:scale-105 transition-all duration-300">
                   {/* Offer Header */}
                   <div className="bg-gradient-to-r from-green-500 to-green-600 p-4 text-white">
                     <div className="flex items-center justify-between mb-2">
                       <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-sm font-bold">
                         <FiPercent className="inline mr-1" />
-                        {formatDiscount(coupon.discountType, coupon.discountValue)} OFF
+                        {formatDiscount(
+                          coupon.discountType,
+                          coupon.discountValue
+                        )}{" "}
+                        OFF
                       </div>
                       <div className="text-sm opacity-90">
                         <FiClock className="inline mr-1" />
@@ -238,7 +252,11 @@ const OffersPage = () => {
                       </div>
                     </div>
                     <h3 className="text-xl font-bold mb-1">
-                      Save {formatDiscount(coupon.discountType, coupon.discountValue)}
+                      Save{" "}
+                      {formatDiscount(
+                        coupon.discountType,
+                        coupon.discountValue
+                      )}
                     </h3>
                     <p className="text-sm opacity-90">
                       On {coupon.applicableProducts.length} selected items
@@ -252,75 +270,92 @@ const OffersPage = () => {
                         <FiShoppingBag className="mr-2 text-red-600" />
                         Applicable Items ({coupon.applicableProducts.length})
                       </h4>
-                      
+
                       {/* Show first 3 products */}
                       <div className="grid grid-cols-3 gap-2 mb-3">
-                        {coupon.applicableProducts.slice(0, 3).map((product) => (
-                          <div 
-                            key={product._id} 
-                            className="text-center cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
-                            onClick={() => handleProductClick(product.title)}
-                          >
-                            <div className="w-full h-16 bg-gray-100 rounded-lg mb-2 overflow-hidden">
-                              <Image
-                                src={product.imageUrl || '/placeholder-food.svg'}
-                                alt={product.title}
-                                width={80}
-                                height={64}
-                                className="w-full h-full object-cover hover:scale-105 transition-transform"
-                              />
+                        {coupon.applicableProducts
+                          .slice(0, 3)
+                          .map((product) => (
+                            <div
+                              key={product._id}
+                              className="text-center cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                              onClick={() => handleProductClick(product.title)}>
+                              <div className="w-full h-16 bg-gray-100 rounded-lg mb-2 overflow-hidden">
+                                <Image
+                                  src={
+                                    product.imageUrl || "/placeholder-food.svg"
+                                  }
+                                  alt={product.title}
+                                  width={80}
+                                  height={64}
+                                  className="w-full h-full object-cover hover:scale-105 transition-transform"
+                                />
+                              </div>
+                              <p className="text-xs text-gray-600 font-medium line-clamp-2 hover:text-red-600 transition-colors">
+                                {product.title}
+                              </p>
+                              <p className="text-xs text-red-600 font-bold">
+                                ₹{product.price}
+                              </p>
                             </div>
-                            <p className="text-xs text-gray-600 font-medium line-clamp-2 hover:text-red-600 transition-colors">
-                              {product.title}
-                            </p>
-                            <p className="text-xs text-red-600 font-bold">
-                              ₹{product.price}
-                            </p>
-                          </div>
-                        ))}
+                          ))}
                       </div>
 
                       {/* Show more button if there are more than 3 products */}
                       {coupon.applicableProducts.length > 3 && (
                         <button
                           onClick={() => toggleExpanded(coupon._id)}
-                          className="w-full text-center text-red-600 text-sm font-medium hover:text-red-700 transition flex items-center justify-center"
-                        >
-                          {expandedOffers[coupon._id] ? 'Show Less' : `+${coupon.applicableProducts.length - 3} More Items`}
-                          <FiChevronRight className={`ml-1 transition-transform ${expandedOffers[coupon._id] ? 'rotate-90' : ''}`} />
+                          className="w-full text-center text-red-600 text-sm font-medium hover:text-red-700 transition flex items-center justify-center">
+                          {expandedOffers[coupon._id]
+                            ? "Show Less"
+                            : `+${
+                                coupon.applicableProducts.length - 3
+                              } More Items`}
+                          <FiChevronRight
+                            className={`ml-1 transition-transform ${
+                              expandedOffers[coupon._id] ? "rotate-90" : ""
+                            }`}
+                          />
                         </button>
                       )}
 
                       {/* Expanded products */}
-                      {expandedOffers[coupon._id] && coupon.applicableProducts.length > 3 && (
-                        <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100">
-                          {coupon.applicableProducts.slice(3).map((product) => (
-                            <div 
-                              key={product._id} 
-                              className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
-                              onClick={() => handleProductClick(product.title)}
-                            >
-                              <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                                <Image
-                                  src={product.imageUrl || '/placeholder-food.svg'}
-                                  alt={product.title}
-                                  width={48}
-                                  height={48}
-                                  className="w-full h-full object-cover hover:scale-105 transition-transform"
-                                />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 line-clamp-1 hover:text-red-600 transition-colors">
-                                  {product.title}
-                                </p>
-                                <p className="text-sm text-red-600 font-bold">
-                                  ₹{product.price}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      {expandedOffers[coupon._id] &&
+                        coupon.applicableProducts.length > 3 && (
+                          <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100">
+                            {coupon.applicableProducts
+                              .slice(3)
+                              .map((product) => (
+                                <div
+                                  key={product._id}
+                                  className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                                  onClick={() =>
+                                    handleProductClick(product.title)
+                                  }>
+                                  <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                    <Image
+                                      src={
+                                        product.imageUrl ||
+                                        "/placeholder-food.svg"
+                                      }
+                                      alt={product.title}
+                                      width={48}
+                                      height={48}
+                                      className="w-full h-full object-cover hover:scale-105 transition-transform"
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 line-clamp-1 hover:text-red-600 transition-colors">
+                                      {product.title}
+                                    </p>
+                                    <p className="text-sm text-red-600 font-bold">
+                                      ₹{product.price}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        )}
                     </div>
 
                     {/* Coupon Code */}
@@ -332,15 +367,15 @@ const OffersPage = () => {
                             {coupon.code}
                           </span>
                         </div>
-                        <button 
+                        <button
                           onClick={() => copyToClipboard(coupon.code)}
-                          className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
-                        >
+                          className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
                           Copy Code
                         </button>
                       </div>
                       <div className="mt-2 text-xs text-gray-600">
-                        Usage limit: {coupon.usageLimit} • Status: {coupon.isActive ? 'Active' : 'Inactive'}
+                        Usage limit: {coupon.usageLimit} • Status:{" "}
+                        {coupon.isActive ? "Active" : "Inactive"}
                       </div>
                     </div>
                   </div>

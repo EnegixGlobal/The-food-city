@@ -86,7 +86,7 @@ const ProductsPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   // pageSize supports numeric (<=50 API cap) or 'all'
-  const [pageSize, setPageSize] = useState<number | 'all'>(50);
+  const [pageSize, setPageSize] = useState<number | "all">(50);
   const [loadingAll, setLoadingAll] = useState(false);
   // Image preview modal state
   const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
@@ -107,6 +107,8 @@ const ProductsPage = () => {
     isCustomizable: false,
     customizableOptions: [],
   });
+
+  const baseUrl = process.env.PUBLIC_URL || "";
 
   const categories = [
     { key: "indian", label: "Indian" },
@@ -136,7 +138,7 @@ const ProductsPage = () => {
       const uploadFormData = new FormData();
       uploadFormData.append("file", file);
 
-      const response = await fetch("/api/upload", {
+      const response = await fetch(`${baseUrl}/api/upload`, {
         method: "POST",
         body: uploadFormData,
       });
@@ -187,7 +189,7 @@ const ProductsPage = () => {
   // Fetch products by category
   const fetchProducts = useCallback(
     async (category: string, page: number = 1, sizeOverride?: number) => {
-      if (pageSize === 'all') {
+      if (pageSize === "all") {
         // Delegate to fetchAllProducts
         return;
       }
@@ -195,7 +197,7 @@ const ProductsPage = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `/api/product?category=${category}&page=${page}&limit=${limit}`
+          `${baseUrl}/api/product?category=${category}&page=${page}&limit=${limit}`
         );
         const data = await response.json();
         if (response.ok && data.success) {
@@ -204,7 +206,10 @@ const ProductsPage = () => {
           setCurrentPage(data.data.currentPage || 1);
           setTotalPages(data.data.totalPages || 1);
         } else {
-          showAlert.error("Fetch Failed", data.message || "Failed to fetch products");
+          showAlert.error(
+            "Fetch Failed",
+            data.message || "Failed to fetch products"
+          );
           setProducts([]);
           setTotalCount(0);
           setTotalPages(1);
@@ -222,61 +227,51 @@ const ProductsPage = () => {
     [pageSize]
   );
 
-  const fetchAllProducts = useCallback(
-    async (category: string) => {
-      try {
-        setLoading(true);
-        setLoadingAll(true);
-        // First page to get totalCount
-        const firstResp = await fetch(`/api/product?category=${category}&page=1&limit=50`);
-        const firstData = await firstResp.json();
-        if (!firstResp.ok || !firstData.success) {
-          showAlert.error("Fetch Failed", firstData.message || "Failed to fetch products");
-          setProducts([]);
-          setTotalCount(0);
-          setTotalPages(1);
-          return;
-        }
-        const total = firstData.data.totalCount || 0;
-        const pages = Math.ceil(total / 50);
-        let all: Product[] = firstData.data.products || [];
-        // Fetch remaining pages sequentially (could parallelize but keep simple / avoid overload)
-        for (let p = 2; p <= pages; p++) {
-          const resp = await fetch(`/api/product?category=${category}&page=${p}&limit=50`);
-            const d = await resp.json();
-            if (resp.ok && d.success) {
-              all = all.concat(d.data.products || []);
-            } else {
-              showAlert.warning("Partial Data", `Stopped loading at page ${p}`);
-              break;
-            }
-        }
-        setProducts(all);
-        setTotalCount(total);
-        setCurrentPage(1);
-        setTotalPages(1); // Single virtual page when viewing all
-      } catch (e) {
-        console.error("Error fetching all products", e);
-        showAlert.error("Error", "Failed to load all products");
-      } finally {
-        setLoading(false);
-        setLoadingAll(false);
-      }
-    },
-    []
-  );
-
-  // Fetch addons
-  const fetchAddOns = useCallback(async () => {
+  const fetchAllProducts = useCallback(async (category: string) => {
     try {
-      const response = await fetch("/api/addons");
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setAddOns(data.data || []);
+      setLoading(true);
+      setLoadingAll(true);
+      // First page to get totalCount
+      const firstResp = await fetch(
+        `${baseUrl}/api/product?category=${category}&page=1&limit=50`
+      );
+      const firstData = await firstResp.json();
+      if (!firstResp.ok || !firstData.success) {
+        showAlert.error(
+          "Fetch Failed",
+          firstData.message || "Failed to fetch products"
+        );
+        setProducts([]);
+        setTotalCount(0);
+        setTotalPages(1);
+        return;
       }
-    } catch (error) {
-      console.error("Error fetching addons:", error);
+      const total = firstData.data.totalCount || 0;
+      const pages = Math.ceil(total / 50);
+      let all: Product[] = firstData.data.products || [];
+      // Fetch remaining pages sequentially (could parallelize but keep simple / avoid overload)
+      for (let p = 2; p <= pages; p++) {
+        const resp = await fetch(
+          `${baseUrl}/api/product?category=${category}&page=${p}&limit=50`
+        );
+        const d = await resp.json();
+        if (resp.ok && d.success) {
+          all = all.concat(d.data.products || []);
+        } else {
+          showAlert.warning("Partial Data", `Stopped loading at page ${p}`);
+          break;
+        }
+      }
+      setProducts(all);
+      setTotalCount(total);
+      setCurrentPage(1);
+      setTotalPages(1); // Single virtual page when viewing all
+    } catch (e) {
+      console.error("Error fetching all products", e);
+      showAlert.error("Error", "Failed to load all products");
+    } finally {
+      setLoading(false);
+      setLoadingAll(false);
     }
   }, []);
 
@@ -341,14 +336,17 @@ const ProductsPage = () => {
 
       if (editingProduct) {
         // Update existing product
-        response = await fetch(`/api/product/${editingProduct.slug}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(productData),
-        });
+        response = await fetch(
+          `${baseUrl}/api/product/${editingProduct.slug}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(productData),
+          }
+        );
       } else {
         // Create new product
-        response = await fetch("/api/product", {
+        response = await fetch(`${baseUrl}/api/product`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(productData),
@@ -386,7 +384,7 @@ const ProductsPage = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`/api/product/${product.slug}`, {
+      const response = await fetch(`${baseUrl}/api/product/${product.slug}`, {
         method: "DELETE",
       });
 
@@ -482,10 +480,7 @@ const ProductsPage = () => {
   useEffect(() => {
     setCurrentPage(1); // Reset to first page when changing tabs
     fetchProducts(activeTab, 1);
-    if (addOns.length === 0) {
-      fetchAddOns();
-    }
-  }, [activeTab, addOns.length, fetchProducts, fetchAddOns]);
+  }, [activeTab, addOns.length, fetchProducts]);
 
   // Load data when page changes
   useEffect(() => {
@@ -496,16 +491,16 @@ const ProductsPage = () => {
 
   // Handle page change
   const handlePageChange = (page: number) => {
-    if (pageSize === 'all') return; // no-op in all mode
+    if (pageSize === "all") return; // no-op in all mode
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
 
   // Handle page size change
-  const handlePageSizeChange = async (size: number | 'all') => {
+  const handlePageSizeChange = async (size: number | "all") => {
     setPageSize(size);
     setCurrentPage(1);
-    if (size === 'all') {
+    if (size === "all") {
       await fetchAllProducts(activeTab);
     } else {
       await fetchProducts(activeTab, 1, size);
@@ -513,13 +508,14 @@ const ProductsPage = () => {
   };
 
   // Derive effective total pages (backend sets, but ensure correctness for 100/page scenario)
-  const effectiveTotalPages = pageSize === 'all'
-    ? 1
-    : Math.max(1, Math.ceil((totalCount || 0) / (Number(pageSize) || 1)));
+  const effectiveTotalPages =
+    pageSize === "all"
+      ? 1
+      : Math.max(1, Math.ceil((totalCount || 0) / (Number(pageSize) || 1)));
 
   // Build page numbers with ellipsis ensuring no duplicates
   const buildPageNumbers = () => {
-    if (pageSize === 'all') return [1];
+    if (pageSize === "all") return [1];
     const total = effectiveTotalPages;
     if (total <= 7) {
       return Array.from({ length: total }, (_, i) => i + 1);
@@ -540,11 +536,11 @@ const ProductsPage = () => {
       for (let p = total - 4; p < total; p++) if (p > 1) nums.add(p);
     }
     const sorted = Array.from(nums).sort((a, b) => a - b);
-    const result: (number | 'ellipsis')[] = [];
+    const result: (number | "ellipsis")[] = [];
     for (let i = 0; i < sorted.length; i++) {
       result.push(sorted[i]);
       if (i < sorted.length - 1 && sorted[i + 1] - sorted[i] > 1) {
-        result.push('ellipsis');
+        result.push("ellipsis");
       }
     }
     return result;
@@ -599,10 +595,10 @@ const ProductsPage = () => {
   useEffect(() => {
     if (!previewProduct) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setPreviewProduct(null);
+      if (e.key === "Escape") setPreviewProduct(null);
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [previewProduct]);
 
   return (
@@ -1420,36 +1416,50 @@ const ProductsPage = () => {
       <div className="bg-white px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-gray-200 sm:px-6 mt-4 rounded-none shadow-sm">
         {/* Info */}
         <div className="text-sm text-gray-700">
-          {pageSize === 'all' ? (
+          {pageSize === "all" ? (
             <>
-              Showing <span className="font-medium">1</span> to {" "}
-              <span className="font-medium">{products.length}</span> of {" "}
-              <span className="font-medium">{totalCount}</span> products (All Loaded)
-              {loadingAll && <span className="ml-2 text-gray-500">Loading all...</span>}
+              Showing <span className="font-medium">1</span> to{" "}
+              <span className="font-medium">{products.length}</span> of{" "}
+              <span className="font-medium">{totalCount}</span> products (All
+              Loaded)
+              {loadingAll && (
+                <span className="ml-2 text-gray-500">Loading all...</span>
+              )}
             </>
           ) : (
             <>
-              Showing <span className="font-medium">{(currentPage - 1) * Number(pageSize) + 1}</span> to {" "}
-              <span className="font-medium">{Math.min(currentPage * Number(pageSize), totalCount)}</span> of {" "}
-              <span className="font-medium">{totalCount}</span> products ({Number(pageSize)} per page)
+              Showing{" "}
+              <span className="font-medium">
+                {(currentPage - 1) * Number(pageSize) + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(currentPage * Number(pageSize), totalCount)}
+              </span>{" "}
+              of <span className="font-medium">{totalCount}</span> products (
+              {Number(pageSize)} per page)
             </>
           )}
         </div>
         {/* Controls */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           {/* Page size selector (only 50 or All) */}
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-gray-500">Page Size:</label>
-              <select
-                value={pageSize === 'all' ? 'all' : '50'}
-                onChange={(e) => handlePageSizeChange(e.target.value === 'all' ? 'all' : 50)}
-                className="border border-gray-300 text-sm px-2 py-1 bg-white rounded-none focus:outline-none focus:ring-1 focus:ring-red-500">
-                <option value="50">50</option>
-                <option value="all">All</option>
-              </select>
-            </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-500">
+              Page Size:
+            </label>
+            <select
+              value={pageSize === "all" ? "all" : "50"}
+              onChange={(e) =>
+                handlePageSizeChange(e.target.value === "all" ? "all" : 50)
+              }
+              className="border border-gray-300 text-sm px-2 py-1 bg-white rounded-none focus:outline-none focus:ring-1 focus:ring-red-500">
+              <option value="50">50</option>
+              <option value="all">All</option>
+            </select>
+          </div>
           {/* Navigation */}
-          {pageSize !== 'all' && effectiveTotalPages > 1 && (
+          {pageSize !== "all" && effectiveTotalPages > 1 && (
             <div className="flex items-center flex-wrap gap-2">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
@@ -1457,19 +1467,24 @@ const ProductsPage = () => {
                 className="px-3 py-2 border border-gray-300 text-xs rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                 Prev
               </button>
-              {pageNumbers.map((p, idx) => p === 'ellipsis' ? (
-                <span key={idx} className="px-2 text-gray-400">...</span>
-              ) : (
-                <button
-                  key={p}
-                  onClick={() => handlePageChange(p as number)}
-                  className={`px-3 py-2 border text-xs rounded-md transition-colors ${
-                    currentPage === p
-                      ? 'bg-red-50 border-red-500 text-red-600'
-                      : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
-                  }`}
-                >{p}</button>
-              ))}
+              {pageNumbers.map((p, idx) =>
+                p === "ellipsis" ? (
+                  <span key={idx} className="px-2 text-gray-400">
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => handlePageChange(p as number)}
+                    className={`px-3 py-2 border text-xs rounded-md transition-colors ${
+                      currentPage === p
+                        ? "bg-red-50 border-red-500 text-red-600"
+                        : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
+                    }`}>
+                    {p}
+                  </button>
+                )
+              )}
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === effectiveTotalPages}
@@ -1478,10 +1493,14 @@ const ProductsPage = () => {
               </button>
             </div>
           )}
-          {pageSize === 'all' && (
+          {pageSize === "all" && (
             <div className="text-xs text-gray-500 flex items-center gap-2">
-              <FiLoader className={` ${loadingAll ? 'animate-spin' : 'hidden'}`} />
-              <span>{loadingAll ? 'Fetching all pages...' : 'All products loaded'}</span>
+              <FiLoader
+                className={` ${loadingAll ? "animate-spin" : "hidden"}`}
+              />
+              <span>
+                {loadingAll ? "Fetching all pages..." : "All products loaded"}
+              </span>
             </div>
           )}
         </div>
@@ -1496,32 +1515,32 @@ const ProductsPage = () => {
           aria-label={`${previewProduct.title} image preview`}
           onClick={(e) => {
             if (e.target === e.currentTarget) setPreviewProduct(null);
-          }}
-        >
+          }}>
           <div className="relative bg-white rounded-md shadow-2xl max-w-5xl w-full overflow-hidden">
             <button
               onClick={() => setPreviewProduct(null)}
               className="absolute top-3 right-3 text-white bg-black/50 hover:bg-black/70 rounded-full w-9 h-9 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-red-500"
-              aria-label="Close preview"
-            >
+              aria-label="Close preview">
               ✕
             </button>
             <div className="bg-gray-900 flex items-center justify-center max-h-[75vh]">
               <Image
-                src={previewProduct.imageUrl || '/placeholder-food.svg'}
+                src={previewProduct.imageUrl || "/placeholder-food.svg"}
                 alt={previewProduct.title}
                 width={1400}
                 height={900}
                 className="w-full h-auto object-contain max-h-[75vh] select-none"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/placeholder-food.svg';
+                  (e.target as HTMLImageElement).src = "/placeholder-food.svg";
                 }}
                 priority
               />
             </div>
             <div className="p-5 flex flex-col md:flex-row md:items-start gap-6">
               <div className="flex-1 min-w-0">
-                <h3 className="text-xl font-semibold text-gray-900 truncate">{previewProduct.title}</h3>
+                <h3 className="text-xl font-semibold text-gray-900 truncate">
+                  {previewProduct.title}
+                </h3>
                 <p className="text-sm text-gray-600 mt-3 leading-relaxed max-h-40 overflow-y-auto pr-1">
                   {previewProduct.description}
                 </p>
@@ -1544,31 +1563,43 @@ const ProductsPage = () => {
                 )}
                 <div className="flex flex-wrap justify-end gap-2 pt-2">
                   {previewProduct.isVeg ? (
-                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">Veg</span>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
+                      Veg
+                    </span>
                   ) : (
-                    <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">Non-Veg</span>
-                  )}
-                  {previewProduct.isBestSeller && (
-                    <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded">Best Seller</span>
-                  )}
-                  {previewProduct.isCustomizable && (
-                    <span className="px-2 py-1 bg-orange-100 text-orange-600 text-xs font-medium rounded">Customizable</span>
-                  )}
-                  {typeof previewProduct.spicyLevel === 'number' && previewProduct.spicyLevel > 0 && (
-                    <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-medium rounded flex items-center gap-1">
-                      {Array.from({ length: previewProduct.spicyLevel }).map((_, i) => (
-                        <span key={i}>🌶️</span>
-                      ))}
+                    <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">
+                      Non-Veg
                     </span>
                   )}
+                  {previewProduct.isBestSeller && (
+                    <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded">
+                      Best Seller
+                    </span>
+                  )}
+                  {previewProduct.isCustomizable && (
+                    <span className="px-2 py-1 bg-orange-100 text-orange-600 text-xs font-medium rounded">
+                      Customizable
+                    </span>
+                  )}
+                  {typeof previewProduct.spicyLevel === "number" &&
+                    previewProduct.spicyLevel > 0 && (
+                      <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-medium rounded flex items-center gap-1">
+                        {Array.from({ length: previewProduct.spicyLevel }).map(
+                          (_, i) => (
+                            <span key={i}>🌶️</span>
+                          )
+                        )}
+                      </span>
+                    )}
                 </div>
-                <div className="text-xs text-gray-500">Prep: {previewProduct.prepTime}</div>
+                <div className="text-xs text-gray-500">
+                  Prep: {previewProduct.prepTime}
+                </div>
                 <a
                   href={previewProduct.imageUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block mt-2 text-xs text-blue-600 hover:text-blue-700 underline"
-                >
+                  className="inline-block mt-2 text-xs text-blue-600 hover:text-blue-700 underline">
                   Open original in new tab
                 </a>
               </div>

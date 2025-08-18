@@ -1,8 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { FaRupeeSign, FaPlus, FaEdit, FaTrash, FaPercentage, FaCalendarAlt, FaTicketAlt, FaTimes, FaUpload, FaSearch } from 'react-icons/fa';
-import { FiCheckCircle, FiLoader } from 'react-icons/fi';
+import React, { useState, useEffect } from "react";
+import {
+  FaRupeeSign,
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaPercentage,
+  FaCalendarAlt,
+  FaTicketAlt,
+  FaTimes,
+  FaUpload,
+  FaSearch,
+} from "react-icons/fa";
+import { FiCheckCircle, FiLoader } from "react-icons/fi";
 import { showAlert } from "../../zustand/alertStore";
 import Input from "../../components/Input";
 import Image from "next/image";
@@ -18,7 +29,7 @@ interface Coupon {
   _id: string;
   code: string;
   offerImage?: string;
-  discountType: 'percentage' | 'fixed';
+  discountType: "percentage" | "fixed";
   discountValue: number;
   applicableItems: string[];
   applicableProducts?: Product[];
@@ -34,7 +45,7 @@ interface Coupon {
 interface CouponFormData {
   code: string;
   offerImage: string;
-  discountType: 'percentage' | 'fixed';
+  discountType: "percentage" | "fixed";
   discountValue: string;
   applicableItems: string[];
   startDate: string;
@@ -52,18 +63,18 @@ const CouponsPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [formData, setFormData] = useState<CouponFormData>({
-    code: '',
-    offerImage: '',
-    discountType: 'percentage',
-    discountValue: '',
+    code: "",
+    offerImage: "",
+    discountType: "percentage",
+    discountValue: "",
     applicableItems: [],
-    startDate: '',
-    endDate: '',
-    usageLimit: '',
-    isActive: true
+    startDate: "",
+    endDate: "",
+    usageLimit: "",
+    isActive: true,
   });
 
-  console.log(coupons, "Coupons Data");
+  const baseUrl = process.env.PUBLIC_URL || "";
 
   // Image upload handler
   const handleImageUpload = async (file: File) => {
@@ -86,7 +97,7 @@ const CouponsPage = () => {
       const uploadFormData = new FormData();
       uploadFormData.append("file", file);
 
-      const response = await fetch("/api/upload", {
+      const response = await fetch(`${baseUrl}/api/upload`, {
         method: "POST",
         body: uploadFormData,
       });
@@ -117,7 +128,7 @@ const CouponsPage = () => {
   const fetchCoupons = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/coupon");
+      const response = await fetch(`${baseUrl}/api/coupon`);
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -143,7 +154,7 @@ const CouponsPage = () => {
   // Fetch products for dropdown
   const fetchProducts = async () => {
     try {
-      const response = await fetch("/api/product");
+      const response = await fetch(`${baseUrl}/api/product`);
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -158,13 +169,22 @@ const CouponsPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.code || !formData.discountValue || !formData.startDate || !formData.endDate || !formData.usageLimit) {
+    if (
+      !formData.code ||
+      !formData.discountValue ||
+      !formData.startDate ||
+      !formData.endDate ||
+      !formData.usageLimit
+    ) {
       showAlert.error("Missing Fields", "Please fill in all required fields");
       return;
     }
 
     if (formData.applicableItems.length === 0) {
-      showAlert.error("Missing Products", "Please select at least one applicable product");
+      showAlert.error(
+        "Missing Products",
+        "Please select at least one applicable product"
+      );
       return;
     }
 
@@ -186,7 +206,9 @@ const CouponsPage = () => {
     };
 
     try {
-      const url = editingCoupon ? `/api/coupon/${editingCoupon._id}` : "/api/coupon";
+      const url = editingCoupon
+        ? `${baseUrl}/api/coupon/${editingCoupon._id}`
+        : `${baseUrl}/api/coupon`;
       const method = editingCoupon ? "PATCH" : "POST";
 
       const response = await fetch(url, {
@@ -209,7 +231,8 @@ const CouponsPage = () => {
       } else {
         showAlert.error(
           editingCoupon ? "Update Failed" : "Creation Failed",
-          data.message || `Failed to ${editingCoupon ? "update" : "create"} coupon`
+          data.message ||
+            `Failed to ${editingCoupon ? "update" : "create"} coupon`
         );
       }
     } catch (error) {
@@ -223,12 +246,12 @@ const CouponsPage = () => {
     setEditingCoupon(coupon);
     setFormData({
       code: coupon.code,
-      offerImage: coupon.offerImage || '',
+      offerImage: coupon.offerImage || "",
       discountType: coupon.discountType,
       discountValue: coupon.discountValue.toString(),
       applicableItems: coupon.applicableItems,
-      startDate: coupon.startDate.split('T')[0], // Format for input[type="date"]
-      endDate: coupon.endDate.split('T')[0],
+      startDate: coupon.startDate.split("T")[0], // Format for input[type="date"]
+      endDate: coupon.endDate.split("T")[0],
       usageLimit: coupon.usageLimit.toString(),
       isActive: coupon.isActive,
     });
@@ -242,7 +265,7 @@ const CouponsPage = () => {
     }
 
     try {
-      const response = await fetch(`/api/coupon/${coupon._id}`, {
+      const response = await fetch(`${baseUrl}/api/coupon/${coupon._id}`, {
         method: "DELETE",
       });
 
@@ -252,7 +275,10 @@ const CouponsPage = () => {
         showAlert.success("Coupon Deleted", data.message);
         fetchCoupons();
       } else {
-        showAlert.error("Delete Failed", data.message || "Failed to delete coupon");
+        showAlert.error(
+          "Delete Failed",
+          data.message || "Failed to delete coupon"
+        );
       }
     } catch (error) {
       console.error("Error deleting coupon:", error);
@@ -263,15 +289,15 @@ const CouponsPage = () => {
   // Reset form
   const resetForm = () => {
     setFormData({
-      code: '',
-      offerImage: '',
-      discountType: 'percentage',
-      discountValue: '',
+      code: "",
+      offerImage: "",
+      discountType: "percentage",
+      discountValue: "",
       applicableItems: [],
-      startDate: '',
-      endDate: '',
-      usageLimit: '',
-      isActive: true
+      startDate: "",
+      endDate: "",
+      usageLimit: "",
+      isActive: true,
     });
     setEditingCoupon(null);
     setShowForm(false);
@@ -286,17 +312,20 @@ const CouponsPage = () => {
   const statusBadge = (coupon: Coupon) => {
     const isExpired = new Date() > new Date(coupon.endDate);
     const isActive = coupon.isActive && !isExpired;
-    
+
     return (
-      <span className={`px-2 py-1 rounded-full text-xs flex items-center ${
-        isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-      }`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs flex items-center ${
+          isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+        }`}>
         {isActive ? (
           <>
             <FiCheckCircle className="mr-1" /> Active
           </>
+        ) : isExpired ? (
+          "Expired"
         ) : (
-          isExpired ? 'Expired' : 'Inactive'
+          "Inactive"
         )}
       </span>
     );
@@ -304,7 +333,7 @@ const CouponsPage = () => {
 
   const discountDisplay = (coupon: Coupon) => (
     <div className="flex items-center">
-      {coupon.discountType === 'percentage' ? (
+      {coupon.discountType === "percentage" ? (
         <>
           <FaPercentage className="text-gray-500 mr-1" size={12} />
           <span className="font-medium">{coupon.discountValue}%</span>
@@ -339,8 +368,7 @@ const CouponsPage = () => {
             </div>
             <button
               onClick={() => setShowForm(true)}
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-none flex items-center gap-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-none flex items-center gap-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl">
               <FaPlus /> Create New Coupon
             </button>
           </div>
@@ -365,7 +393,9 @@ const CouponsPage = () => {
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <FiLoader className="animate-spin text-4xl text-orange-500" />
-              <span className="ml-3 text-lg text-gray-600">Loading coupons...</span>
+              <span className="ml-3 text-lg text-gray-600">
+                Loading coupons...
+              </span>
             </div>
           ) : filteredCoupons.length === 0 ? (
             <div className="text-center py-12">
@@ -381,8 +411,7 @@ const CouponsPage = () => {
               {!searchTerm && (
                 <button
                   onClick={() => setShowForm(true)}
-                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-none flex items-center gap-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl mx-auto"
-                >
+                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-none flex items-center gap-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl mx-auto">
                   <FaPlus /> Create Your First Coupon
                 </button>
               )}
@@ -420,7 +449,9 @@ const CouponsPage = () => {
                 {/* Table Body */}
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredCoupons.map((coupon) => (
-                    <tr key={coupon._id} className="hover:bg-gray-50 transition-colors duration-200">
+                    <tr
+                      key={coupon._id}
+                      className="hover:bg-gray-50 transition-colors duration-200">
                       {/* Coupon Details */}
                       <td className="px-6 py-4">
                         <div className="flex items-center">
@@ -447,7 +478,10 @@ const CouponsPage = () => {
                               </span>
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
-                              Created: {new Date(coupon.createdAt).toLocaleDateString('en-IN')}
+                              Created:{" "}
+                              {new Date(coupon.createdAt).toLocaleDateString(
+                                "en-IN"
+                              )}
                             </div>
                           </div>
                         </div>
@@ -459,7 +493,9 @@ const CouponsPage = () => {
                           {discountDisplay(coupon)}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {coupon.discountType === 'percentage' ? 'Percentage' : 'Fixed Amount'}
+                          {coupon.discountType === "percentage"
+                            ? "Percentage"
+                            : "Fixed Amount"}
                         </div>
                       </td>
 
@@ -479,11 +515,19 @@ const CouponsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm">
                           <div className="flex items-center text-gray-900">
-                            <FaCalendarAlt className="mr-1 text-gray-400" size={12} />
-                            {new Date(coupon.startDate).toLocaleDateString('en-IN')}
+                            <FaCalendarAlt
+                              className="mr-1 text-gray-400"
+                              size={12}
+                            />
+                            {new Date(coupon.startDate).toLocaleDateString(
+                              "en-IN"
+                            )}
                           </div>
                           <div className="text-xs text-gray-500">
-                            to {new Date(coupon.endDate).toLocaleDateString('en-IN')}
+                            to{" "}
+                            {new Date(coupon.endDate).toLocaleDateString(
+                              "en-IN"
+                            )}
                           </div>
                         </div>
                       </td>
@@ -499,23 +543,25 @@ const CouponsPage = () => {
                           <div className="font-medium text-gray-900">
                             {coupon.applicableProducts?.length || 0} products
                           </div>
-                          {coupon.applicableProducts && coupon.applicableProducts.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {coupon.applicableProducts.slice(0, 2).map((product) => (
-                                <span
-                                  key={product._id}
-                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
-                                >
-                                  {product.title}
-                                </span>
-                              ))}
-                              {coupon.applicableProducts.length > 2 && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600">
-                                  +{coupon.applicableProducts.length - 2} more
-                                </span>
-                              )}
-                            </div>
-                          )}
+                          {coupon.applicableProducts &&
+                            coupon.applicableProducts.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {coupon.applicableProducts
+                                  .slice(0, 2)
+                                  .map((product) => (
+                                    <span
+                                      key={product._id}
+                                      className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                                      {product.title}
+                                    </span>
+                                  ))}
+                                {coupon.applicableProducts.length > 2 && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600">
+                                    +{coupon.applicableProducts.length - 2} more
+                                  </span>
+                                )}
+                              </div>
+                            )}
                         </div>
                       </td>
 
@@ -525,15 +571,13 @@ const CouponsPage = () => {
                           <button
                             onClick={() => handleEdit(coupon)}
                             className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-none transition-colors duration-200"
-                            title="Edit Coupon"
-                          >
+                            title="Edit Coupon">
                             <FaEdit className="text-sm" />
                           </button>
                           <button
                             onClick={() => handleDelete(coupon)}
                             className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-none transition-colors duration-200"
-                            title="Delete Coupon"
-                          >
+                            title="Delete Coupon">
                             <FaTrash className="text-sm" />
                           </button>
                         </div>
@@ -550,16 +594,26 @@ const CouponsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
           <div className="bg-white p-4 rounded-none shadow-sm border border-gray-100">
             <h3 className="text-sm font-medium text-gray-500">Total Coupons</h3>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{coupons.length}</p>
-          </div>
-          <div className="bg-white p-4 rounded-none shadow-sm border border-gray-100">
-            <h3 className="text-sm font-medium text-gray-500">Active Coupons</h3>
-            <p className="text-2xl font-bold text-green-600 mt-1">
-              {coupons.filter(c => c.isActive && new Date() <= new Date(c.endDate)).length}
+            <p className="text-2xl font-bold text-gray-900 mt-1">
+              {coupons.length}
             </p>
           </div>
           <div className="bg-white p-4 rounded-none shadow-sm border border-gray-100">
-            <h3 className="text-sm font-medium text-gray-500">Total Redeemed</h3>
+            <h3 className="text-sm font-medium text-gray-500">
+              Active Coupons
+            </h3>
+            <p className="text-2xl font-bold text-green-600 mt-1">
+              {
+                coupons.filter(
+                  (c) => c.isActive && new Date() <= new Date(c.endDate)
+                ).length
+              }
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-none shadow-sm border border-gray-100">
+            <h3 className="text-sm font-medium text-gray-500">
+              Total Redeemed
+            </h3>
             <p className="text-2xl font-bold text-blue-600 mt-1">
               {coupons.reduce((sum, coupon) => sum + coupon.usedCount, 0)}
             </p>
@@ -567,10 +621,17 @@ const CouponsPage = () => {
           <div className="bg-white p-4 rounded-none shadow-sm border border-gray-100">
             <h3 className="text-sm font-medium text-gray-500">Avg. Discount</h3>
             <p className="text-2xl font-bold text-orange-600 mt-1">
-              {coupons.length > 0 
-                ? Math.round(coupons.reduce((sum, coupon) => sum + coupon.discountValue, 0) / coupons.length)
+              {coupons.length > 0
+                ? Math.round(
+                    coupons.reduce(
+                      (sum, coupon) => sum + coupon.discountValue,
+                      0
+                    ) / coupons.length
+                  )
                 : 0}
-              {coupons.length > 0 && coupons[0]?.discountType === 'percentage' ? '%' : '₹'}
+              {coupons.length > 0 && coupons[0]?.discountType === "percentage"
+                ? "%"
+                : "₹"}
             </p>
           </div>
         </div>
@@ -586,8 +647,7 @@ const CouponsPage = () => {
               </h2>
               <button
                 onClick={resetForm}
-                className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
-              >
+                className="text-gray-500 hover:text-gray-700 transition-colors duration-200">
                 <FaTimes className="text-xl" />
               </button>
             </div>
@@ -613,8 +673,7 @@ const CouponsPage = () => {
                         onClick={() =>
                           setFormData({ ...formData, offerImage: "" })
                         }
-                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors duration-200"
-                      >
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors duration-200">
                         <FaTimes />
                       </button>
                     </div>
@@ -639,8 +698,7 @@ const CouponsPage = () => {
                         htmlFor="image-upload"
                         className={`bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-none cursor-pointer transition-colors duration-200 ${
                           uploadingImage ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      >
+                        }`}>
                         {uploadingImage ? (
                           <>
                             <FiLoader className="inline animate-spin mr-2" />
@@ -660,11 +718,14 @@ const CouponsPage = () => {
                 {/* Coupon Code */}
 
                 <Input
-                label='Coupon Code *'
+                  label="Coupon Code *"
                   type="text"
                   value={formData.code}
                   onChange={(e) =>
-                    setFormData({ ...formData, code: e.target.value.toUpperCase() })
+                    setFormData({
+                      ...formData,
+                      code: e.target.value.toUpperCase(),
+                    })
                   }
                   placeholder="Enter coupon code (e.g., SAVE20)"
                   required
@@ -678,11 +739,13 @@ const CouponsPage = () => {
                   <select
                     value={formData.discountType}
                     onChange={(e) =>
-                      setFormData({ ...formData, discountType: e.target.value as 'percentage' | 'fixed' })
+                      setFormData({
+                        ...formData,
+                        discountType: e.target.value as "percentage" | "fixed",
+                      })
                     }
                     className="w-full border border-gray-300 rounded-none p-3 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
-                    required
-                  >
+                    required>
                     <option value="percentage">Percentage (%)</option>
                     <option value="fixed">Fixed Amount (₹)</option>
                   </select>
@@ -693,16 +756,26 @@ const CouponsPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Discount Value */}
                 <Input
-                  label={`Discount ${formData.discountType === 'percentage' ? 'Percentage (%)' : 'Amount (₹)'} *`}
+                  label={`Discount ${
+                    formData.discountType === "percentage"
+                      ? "Percentage (%)"
+                      : "Amount (₹)"
+                  } *`}
                   type="number"
                   value={formData.discountValue}
                   onChange={(e) =>
                     setFormData({ ...formData, discountValue: e.target.value })
                   }
-                  placeholder={formData.discountType === 'percentage' ? "e.g., 20" : "e.g., 100"}
+                  placeholder={
+                    formData.discountType === "percentage"
+                      ? "e.g., 20"
+                      : "e.g., 100"
+                  }
                   step="0.01"
                   min="0"
-                  max={formData.discountType === 'percentage' ? "100" : undefined}
+                  max={
+                    formData.discountType === "percentage" ? "100" : undefined
+                  }
                   required
                 />
 
@@ -789,24 +862,36 @@ const CouponsPage = () => {
                 </label>
                 <div className="border border-gray-300 rounded-none p-4 max-h-60 overflow-y-auto">
                   {products.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">No products available</p>
+                    <p className="text-gray-500 text-center py-4">
+                      No products available
+                    </p>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {products.map((product) => (
-                        <label key={product._id} className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <label
+                          key={product._id}
+                          className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
                           <input
                             type="checkbox"
-                            checked={formData.applicableItems.includes(product._id)}
+                            checked={formData.applicableItems.includes(
+                              product._id
+                            )}
                             onChange={(e) => {
                               if (e.target.checked) {
                                 setFormData({
                                   ...formData,
-                                  applicableItems: [...formData.applicableItems, product._id]
+                                  applicableItems: [
+                                    ...formData.applicableItems,
+                                    product._id,
+                                  ],
                                 });
                               } else {
                                 setFormData({
                                   ...formData,
-                                  applicableItems: formData.applicableItems.filter(id => id !== product._id)
+                                  applicableItems:
+                                    formData.applicableItems.filter(
+                                      (id) => id !== product._id
+                                    ),
                                 });
                               }
                             }}
@@ -845,15 +930,15 @@ const CouponsPage = () => {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-none font-medium transition-colors duration-200"
-                >
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-none font-medium transition-colors duration-200">
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={uploadingImage || formData.applicableItems.length === 0}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-none font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                  disabled={
+                    uploadingImage || formData.applicableItems.length === 0
+                  }
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-none font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                   {editingCoupon ? "Update Coupon" : "Create Coupon"}
                 </button>
               </div>

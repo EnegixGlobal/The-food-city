@@ -28,7 +28,10 @@ export const GET = async (
     const order = await Order.findOne({ _id: id, userId: user.id });
 
     if (!order) {
-      return apiResponse(404, "Order not found or you don't have permission to view this order");
+      return apiResponse(
+        404,
+        "Order not found or you don't have permission to view this order"
+      );
     }
 
     return apiResponse(200, "Order fetched successfully", order);
@@ -60,10 +63,16 @@ export const DELETE = async (
     }
 
     // Find and delete order only if it belongs to the authenticated user
-    const deletedOrder = await Order.findOneAndDelete({ _id: id, userId: user.id });
+    const deletedOrder = await Order.findOneAndDelete({
+      _id: id,
+      userId: user.id,
+    });
 
     if (!deletedOrder) {
-      return apiResponse(404, "Order not found or you don't have permission to delete this order");
+      return apiResponse(
+        404,
+        "Order not found or you don't have permission to delete this order"
+      );
     }
 
     return apiResponse(200, "Order deleted successfully", deletedOrder);
@@ -112,12 +121,18 @@ export const PATCH = async (
     const order = await Order.findOne({ _id: id, userId: user.id });
 
     if (!order) {
-      return apiResponse(404, "Order not found or you don't have permission to update this order");
+      return apiResponse(
+        404,
+        "Order not found or you don't have permission to update this order"
+      );
     }
 
     // Users can only cancel their own orders, not change to other statuses
     if (status !== "cancelled") {
-      return apiResponse(403, "You can only cancel your own orders. Other status changes are restricted.");
+      return apiResponse(
+        403,
+        "You can only cancel your own orders. Other status changes are restricted."
+      );
     }
 
     // Update order status

@@ -127,10 +127,12 @@ function ProductPage({ params }: ProductPageProps) {
     });
   };
 
+  const baseUrl = process.env.PUBLIC_URL || "";
+
   // Handle helpful status update
   const handleHelpfulUpdate = async (reviewId: string, isHelpful: boolean) => {
     try {
-      const response = await fetch(`/api/review/${reviewId}`, {
+      const response = await fetch(`${baseUrl}/api/review/${reviewId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -161,7 +163,7 @@ function ProductPage({ params }: ProductPageProps) {
   // Handle review deletion
   const handleDeleteReview = async (reviewId: string) => {
     try {
-      const response = await fetch(`/api/review/${reviewId}`, {
+      const response = await fetch(`${baseUrl}/api/review/${reviewId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -194,7 +196,7 @@ function ProductPage({ params }: ProductPageProps) {
     updatedData: { rating: number; comment: string; imageUrl?: string }
   ) => {
     try {
-      const response = await fetch(`/api/review/${reviewId}`, {
+      const response = await fetch(`${baseUrl}/api/review/${reviewId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -238,7 +240,7 @@ function ProductPage({ params }: ProductPageProps) {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(`/api/product/${slug}`);
+      const response = await fetch(`${baseUrl}/api/product/${slug}`);
       const data: ApiResponse = await response.json();
 
       if (data.success) {
@@ -271,7 +273,7 @@ function ProductPage({ params }: ProductPageProps) {
         sortBy: "rating",
         sortOrder: "desc",
       });
-      const res = await fetch(`/api/product?${params.toString()}`, {
+      const res = await fetch(`${baseUrl}/api/product?${params.toString()}`, {
         cache: "no-store",
       });
       const data = await res.json();
@@ -318,7 +320,7 @@ function ProductPage({ params }: ProductPageProps) {
   const fetchReviews = async (productId: string) => {
     try {
       setIsLoadingReviews(true);
-      const response = await fetch(`/api/review?productId=${productId}`);
+      const response = await fetch(`${baseUrl}/api/review?productId=${productId}`);
       const data = await response.json();
 
       if (data.success) {

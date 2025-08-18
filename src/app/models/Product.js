@@ -82,7 +82,6 @@ const ProductSchema = new mongoose.Schema(
       default: "30 min",
     },
 
-    // Customizable options for products
     isCustomizable: {
       type: Boolean,
       default: false,
@@ -130,19 +129,19 @@ ProductSchema.index({ createdAt: -1 }); // latest dishes
 ProductSchema.index({ category: 1, isVeg: 1, isAvailable: 1 }); // veg filtering combo
 
 // Pre-save middleware to handle data migration from old structure
-ProductSchema.pre('save', function(next) {
+ProductSchema.pre("save", function (next) {
   if (this.customizableOptions && Array.isArray(this.customizableOptions)) {
-    this.customizableOptions = this.customizableOptions.map(option => {
+    this.customizableOptions = this.customizableOptions.map((option) => {
       // Convert old structure to new structure
       if (option.label !== undefined || option.value !== undefined) {
         return {
-          option: option.label || option.value || '',
+          option: option.label || option.value || "",
           price: option.price || 0,
         };
       }
       // Keep new structure as is
       return {
-        option: option.option || '',
+        option: option.option || "",
         price: option.price || 0,
       };
     });
@@ -151,26 +150,33 @@ ProductSchema.pre('save', function(next) {
 });
 
 // Pre-update middleware for findOneAndUpdate operations
-ProductSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], function(next) {
-  const update = this.getUpdate();
-  if (update && update.customizableOptions && Array.isArray(update.customizableOptions)) {
-    update.customizableOptions = update.customizableOptions.map(option => {
-      // Convert old structure to new structure
-      if (option.label !== undefined || option.value !== undefined) {
+ProductSchema.pre(
+  ["findOneAndUpdate", "updateOne", "updateMany"],
+  function (next) {
+    const update = this.getUpdate();
+    if (
+      update &&
+      update.customizableOptions &&
+      Array.isArray(update.customizableOptions)
+    ) {
+      update.customizableOptions = update.customizableOptions.map((option) => {
+        // Convert old structure to new structure
+        if (option.label !== undefined || option.value !== undefined) {
+          return {
+            option: option.label || option.value || "",
+            price: option.price || 0,
+          };
+        }
+        // Keep new structure as is
         return {
-          option: option.label || option.value || '',
+          option: option.option || "",
           price: option.price || 0,
         };
-      }
-      // Keep new structure as is
-      return {
-        option: option.option || '',
-        price: option.price || 0,
-      };
-    });
+      });
+    }
+    next();
   }
-  next();
-});
+);
 
 // Virtual for discount percentage
 ProductSchema.virtual("discountPercentage").get(function () {

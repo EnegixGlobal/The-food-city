@@ -6,8 +6,10 @@ import Review from "@/app/models/Review";
 import mongoose from "mongoose";
 
 export const POST = asyncHandler(async (req) => {
-  connectDb();
+  await connectDb();
   const { productId, userId, rating, comment, imageUrl } = await req.json();
+
+  console.log(productId, userId, rating, comment, imageUrl);
 
   // Validate required fields
   const requiredFields = { productId, userId, rating };
@@ -20,12 +22,6 @@ export const POST = asyncHandler(async (req) => {
   }
   if (rating < 1 || rating > 5) {
     return apiResponse(400, "Rating must be between 1 and 5");
-  }
-
-  // Check if the product exists
-  const product = await Product.findById(productId);
-  if (!product) {
-    return apiResponse(404, "Product not found");
   }
 
   // Create the review
@@ -43,7 +39,13 @@ export const POST = asyncHandler(async (req) => {
   const reviews = await Review.find({ productId });
   const averageRating =
     reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length;
-  await Product.findByIdAndUpdate(productId, { rating: averageRating });
+
+  const product = await Product.findById(productId);
+  if (!product) {
+    return apiResponse(404, "Product not found");
+  }
+
+  product.rating = averageRating;
   product.ratingCount = reviews.length;
   await product.save();
 
@@ -75,7 +77,7 @@ export const GET = asyncHandler(async (req) => {
       },
     },
     {
-      $unwind: "$userDetails"
+      $unwind: "$userDetails",
     },
     {
       $project: {
@@ -83,7 +85,7 @@ export const GET = asyncHandler(async (req) => {
         productId: 1,
         userId: {
           _id: "$userDetails._id",
-          name: "$userDetails.name"
+          name: "$userDetails.name",
         },
         rating: 1,
         comment: 1,
@@ -95,8 +97,8 @@ export const GET = asyncHandler(async (req) => {
       },
     },
     {
-      $sort: { createdAt: -1 }
-    }
+      $sort: { createdAt: -1 },
+    },
   ]);
 
   return apiResponse(

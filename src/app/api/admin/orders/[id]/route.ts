@@ -26,8 +26,10 @@ export const GET = async (
     }
 
     // Find order (admin can view any order)
-    const order = await Order.findById(id)
-      .populate('userId', 'name phone email');
+    const order = await Order.findById(id).populate(
+      "userId",
+      "name phone email"
+    );
 
     if (!order) {
       return apiResponse(404, "Order not found");
@@ -60,36 +62,72 @@ export const PATCH = async (
       return apiResponse(400, "Order ID is required");
     }
 
-    const { status } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { status, paymentStatus } = body as {
+      status?: string;
+      paymentStatus?: string;
+    };
 
-    if (
-      status !== "pending" &&
-      status !== "confirmed" &&
-      status !== "preparing" &&
-      status !== "out_for_delivery" &&
-      status !== "delivered" &&
-      status !== "cancelled"
-    ) {
-      return apiResponse(
-        400,
-        "Invalid status. Allowed values are: pending, confirmed, preparing, out_for_delivery, delivered, cancelled"
-      );
+    if (status === undefined && paymentStatus === undefined) {
+      return apiResponse(400, "Nothing to update");
     }
 
-    // Find and update order (admin can update any order)
     const order = await Order.findById(id);
-
     if (!order) {
       return apiResponse(404, "Order not found");
     }
 
-    // Update order status
-    order.status = status;
-    await order.save();
+    const allowedStatuses = [
+      "pending",
+      "confirmed",
+      "preparing",
+      "out_for_delivery",
+      "delivered",
+      "cancelled",
+    ];
+    const allowedPaymentStatuses = ["pending", "paid", "failed", "refunded"];
 
-    return apiResponse(200, "Order status updated successfully", order);
+    let changed = false;
+
+    if (status !== undefined) {
+      if (!allowedStatuses.includes(status)) {
+        return apiResponse(
+          400,
+          `Invalid status. Allowed: ${allowedStatuses.join(", ")}`
+        );
+      }
+      if (order.status !== status) {
+        order.status = status as typeof order.status;
+        changed = true;
+      }
+    }
+
+    if (paymentStatus !== undefined) {
+      if (!allowedPaymentStatuses.includes(paymentStatus)) {
+        return apiResponse(
+          400,
+          `Invalid paymentStatus. Allowed: ${allowedPaymentStatuses.join(", ")}`
+        );
+      }
+      // Only set paymentCompletedAt when transitioning to paid first time
+      if (order.paymentStatus !== paymentStatus) {
+        if (paymentStatus === "paid" && order.paymentStatus !== "paid") {
+          // @ts-ignore - field exists in schema
+          order.paymentCompletedAt = new Date();
+        }
+        order.paymentStatus = paymentStatus as typeof order.paymentStatus;
+        changed = true;
+      }
+    }
+
+    if (!changed) {
+      return apiResponse(200, "No changes applied", order);
+    }
+
+    await order.save();
+    return apiResponse(200, "Order updated successfully", order);
   } catch (error) {
-    console.error("Error updating order status:", error);
+    console.error("Error updating order status/payment:", error);
     return apiError(500, "Internal server error");
   }
 };

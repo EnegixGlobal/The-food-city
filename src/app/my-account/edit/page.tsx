@@ -38,11 +38,13 @@ export default function EditProfilePage() {
     isResending: false,
   });
 
+  const baseUrl = process.env.PUBLIC_URL;
+
   // Fetch user data
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/users/me", {
+      const response = await fetch(`${baseUrl}/api/users/me`, {
         credentials: "include",
       });
 
@@ -81,7 +83,7 @@ export default function EditProfilePage() {
   // Send OTP for phone verification
   const sendOtp = async (phone: string) => {
     try {
-      const response = await fetch("/api/users/send-otp", {
+      const response = await fetch(`${baseUrl}/api/users/send-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -115,7 +117,7 @@ export default function EditProfilePage() {
     try {
       setOtpModal((prev) => ({ ...prev, isVerifying: true }));
 
-      const response = await fetch("/api/users/verify-otp", {
+      const response = await fetch(`${baseUrl}/api/users/verify-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -217,7 +219,7 @@ export default function EditProfilePage() {
     try {
       setSubmitting(true);
 
-      const response = await fetch("/api/users/update", {
+      const response = await fetch(`${baseUrl}/api/users/update`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -243,7 +245,9 @@ export default function EditProfilePage() {
         toast.error(data.message || "Failed to update profile");
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update profile");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update profile"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -301,10 +305,9 @@ export default function EditProfilePage() {
                 {isEditing ? "Edit Profile" : "My Profile"}
               </h1>
               <p className="text-sm text-gray-600 mt-1">
-                {isEditing 
-                  ? "Update your personal information" 
-                  : "View and manage your personal information"
-                }
+                {isEditing
+                  ? "Update your personal information"
+                  : "View and manage your personal information"}
               </p>
             </div>
             {!isEditing && (
@@ -435,12 +438,19 @@ export default function EditProfilePage() {
                   <div>
                     <span className="text-gray-600">Member since:</span>
                     <span className="ml-2 font-medium text-gray-900">
-                      {user ? new Date(parseInt(user._id.toString().substring(0,8), 16) * 1000).toLocaleDateString() : 'N/A'}
+                      {user
+                        ? new Date(
+                            parseInt(user._id.toString().substring(0, 8), 16) *
+                              1000
+                          ).toLocaleDateString()
+                        : "N/A"}
                     </span>
                   </div>
                   <div>
                     <span className="text-gray-600">Profile Status:</span>
-                    <span className="ml-2 font-medium text-green-600">Active</span>
+                    <span className="ml-2 font-medium text-green-600">
+                      Active
+                    </span>
                   </div>
                 </div>
               </div>
@@ -456,8 +466,8 @@ export default function EditProfilePage() {
                 Verify Phone Number
               </h2>
               <p className="text-sm text-gray-600 mb-4">
-                We&apos;ve sent an OTP to <strong>{otpModal.newPhone}</strong>. Please
-                enter it below to verify your new phone number.
+                We&apos;ve sent an OTP to <strong>{otpModal.newPhone}</strong>.
+                Please enter it below to verify your new phone number.
               </p>
 
               <div className="space-y-4">

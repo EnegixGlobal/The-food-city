@@ -27,6 +27,8 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
   const [comment, setComment] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Store a preview URL so we can revoke it properly (avoid recreating each render)
+  const [previewUrl, setPreviewUrl] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
@@ -35,12 +37,13 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
 
   // Cleanup function to revoke object URLs
   useEffect(() => {
+    // Cleanup old preview URL when file changes or component unmounts
     return () => {
-      if (selectedFile) {
-        URL.revokeObjectURL(URL.createObjectURL(selectedFile));
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
       }
     };
-  }, [selectedFile]);
+  }, [previewUrl]);
 
   if (!isOpen) return null;
 
@@ -73,13 +76,14 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
       return;
     }
 
-    setSelectedFile(file);
+  setSelectedFile(file);
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  setPreviewUrl(URL.createObjectURL(file));
     setError("");
   };
 
   const uploadImage = async (): Promise<string | null> => {
-    if (!selectedFile) return null;
-
+    if (!selectedFile) return null; // optional image
     setIsUploading(true);
     try {
       const formData = new FormData();
@@ -90,20 +94,44 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
         body: formData,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        return data.url;
-      } else {
+      let data: any = {};
+      try {
+        data = await response.json();
+      } catch (e) {
         addAlert({
           type: "error",
           title: "Image upload failed",
-          message: data.error || "Please try uploading again.",
+          message: "Invalid server response.",
         });
-        setError(data.error || "Failed to upload image");
+        setError("Invalid server response during image upload");
         return null;
       }
+
+      if (!response.ok) {
+        addAlert({
+          type: "error",
+          title: "Image upload failed",
+          message: data.error || data.message || "Please try uploading again.",
+        });
+        setError(data.error || data.message || "Failed to upload image");
+        return null;
+      }
+
+      // Support multiple response shapes: { url }, { secure_url }, { data: { secure_url } }
+      const secureUrl = data?.data?.secure_url || data?.secure_url || data?.url;
+      if (!secureUrl) {
+        addAlert({
+          type: "error",
+          title: "Image upload failed",
+          message: "Upload succeeded but no image URL returned.",
+        });
+        setError("Upload succeeded but no image URL returned");
+        return null;
+      }
+      setImageUrl(secureUrl);
+      return secureUrl;
     } catch (err) {
+      console.error("Image upload error", err);
       addAlert({
         type: "error",
         title: "Image upload failed",
@@ -133,13 +161,15 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
     try {
       // Upload image if one is selected
       let uploadedImageUrl: string | undefined = imageUrl;
-      if (selectedFile) {
+      if (selectedFile && !imageUrl) {
         const uploadResult = await uploadImage();
-        if (!uploadResult) {
+        if (uploadResult) {
+          uploadedImageUrl = uploadResult;
+        } else {
+          // Image upload failed; proceed WITHOUT image or stop? We'll stop to respect user intent.
           setIsSubmitting(false);
-          return; // Error already set in uploadImage
+          return;
         }
-        uploadedImageUrl = uploadResult;
       }
 
       // Get user ID from localStorage or wherever you store it
@@ -182,6 +212,10 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
         setComment("");
         setImageUrl("");
         setSelectedFile(null);
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+          setPreviewUrl("");
+        }
         setError("");
 
         // Call callback if provided
@@ -353,13 +387,13 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
               {(selectedFile || imageUrl) && (
                 <div className="mt-3">
                   <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-gray-200">
-                    {selectedFile ? (
-                      <img
-                        src={URL.createObjectURL(selectedFile)}
-                        alt="Review preview"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : imageUrl ? (
+                      {previewUrl ? (
+                        <img
+                          src={previewUrl}
+                          alt="Review preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : imageUrl ? (
                       <Image
                         src={imageUrl}
                         alt="Review preview"
@@ -374,6 +408,10 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
                       onClick={() => {
                         setSelectedFile(null);
                         setImageUrl("");
+                        if (previewUrl) {
+                          URL.revokeObjectURL(previewUrl);
+                          setPreviewUrl("");
+                        }
                       }}
                       className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors">
                       <FaTimes className="text-xs" />

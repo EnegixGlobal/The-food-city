@@ -1,5 +1,6 @@
 "use client";
 
+import { showAlert } from "@/app/zustand/alertStore";
 import Image from "next/image";
 import React, { useState, useEffect, useCallback } from "react";
 import {
@@ -119,6 +120,7 @@ const AdminOrdersPage = () => {
   const [limit] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [paid, setPaid] = useState(false);
 
   const statusOptions = [
     { value: "", label: "All Orders" },
@@ -146,6 +148,8 @@ const AdminOrdersPage = () => {
     refunded: "bg-gray-100 text-gray-800 border border-gray-300",
   };
 
+  const baseUrl = process.env.PUBLIC_URL || "";
+
   // Fetch orders
   const fetchOrders = useCallback(async () => {
     try {
@@ -160,7 +164,7 @@ const AdminOrdersPage = () => {
       if (searchTerm) params.append("search", searchTerm);
       if (statusFilter) params.append("status", statusFilter);
 
-      const response = await fetch(`/api/admin/orders?${params}`, {
+      const response = await fetch(`${baseUrl}/api/admin/orders?${params}`, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -192,7 +196,7 @@ const AdminOrdersPage = () => {
     try {
       setUpdatingStatus(true);
 
-      const response = await fetch(`/api/admin/orders/${orderId}`, {
+      const response = await fetch(`${baseUrl}/api/admin/orders/${orderId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -246,7 +250,7 @@ const AdminOrdersPage = () => {
     }
 
     try {
-      const response = await fetch(`/api/admin/orders/${orderId}`, {
+      const response = await fetch(`${baseUrl}/api/admin/orders/${orderId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -287,7 +291,7 @@ const AdminOrdersPage = () => {
     try {
       setLoading(true);
 
-      const response = await fetch(`/api/admin/orders/${orderId}`, {
+      const response = await fetch(`${baseUrl}/api/admin/orders/${orderId}`, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -347,10 +351,29 @@ const AdminOrdersPage = () => {
     setCurrentPage(1);
   };
 
+  const updatePaymentStatus = async (orderId: string, status: string) => {
+    try {
+      const response = await fetch(`${baseUrl}/api/admin/orders/${orderId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ paymentStatus: status }),
+      });
+
+      if (response.ok) {
+        showAlert.success("Payment status updated successfully", "", 3000);
+        setPaid(true);
+      }
+    } catch (error) {
+      console.log("Error updating payment status:", error);
+    }
+  };
+
   // Effects
   useEffect(() => {
     fetchOrders();
-  }, [currentPage, statusFilter, fetchOrders]);
+  }, [currentPage, statusFilter, fetchOrders, paid]);
 
   return (
     <div className="min-h-screen bg-gray-50 ">
@@ -495,13 +518,27 @@ const AdminOrdersPage = () => {
                               }`}>
                               {order.status.replace("_", " ")}
                             </span>
-                            <span
-                              className={`inline-flex px-2 py-1 text-xs font-semibold ${
-                                paymentStatusColors[order.paymentStatus]
-                              }`}>
-                              {order.paymentStatus} •{" "}
-                              {order.paymentMethod.toUpperCase()}
-                            </span>
+                            <div>
+                              {order.paymentStatus === "pending" && (
+                                <span
+                                  onClick={() => {
+                                    updatePaymentStatus(order._id, "paid");
+                                  }}
+                                  className={`inline-flex px-2 py-1 text-xs font-semibold mx-2 text-green-400 border-green-400 border cursor-pointer`}>
+                                  Mark Paid
+                                </span>
+                              )}
+                              <span
+                                className={`inline-flex px-2 py-1 text-xs font-semibold ${
+                                  paymentStatusColors[order.paymentStatus]
+                                }`}>
+                                {order.paymentStatus} •{" "}
+                                {order.paymentMethod.toUpperCase()}
+                              </span>
+                              <p className="text-xs my-2">
+                                Mark paid if Customer paid after in COD.
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>

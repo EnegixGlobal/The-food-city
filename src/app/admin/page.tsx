@@ -116,7 +116,8 @@ const DashboardPage = () => {
         endDate: dateRange.endDate,
       });
 
-      const response = await fetch(`/api/dashboard?${params.toString()}`, {
+      const baseUrl = process.env.PUBLIC_URL || "";
+      const response = await fetch(`${baseUrl}/api/dashboard?${params.toString()}`, {
         headers: {
           "Content-Type": "application/json",
         },

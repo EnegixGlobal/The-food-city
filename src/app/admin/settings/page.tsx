@@ -83,11 +83,13 @@ const SettingsPage = () => {
   const [modalImageSrc, setModalImageSrc] = useState("");
   const [modalImageAlt, setModalImageAlt] = useState("");
 
+  const baseUrl = process.env.PUBLIC_URL || "";
+
   // Fetch company data
   const fetchCompany = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/company/${COMPANY_ID}`, {
+      const response = await fetch(`${baseUrl}/api/company/${COMPANY_ID}`, {
         headers: { "Content-Type": "application/json" },
       });
 
@@ -117,7 +119,7 @@ const SettingsPage = () => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/employee", {
+      const response = await fetch(`${baseUrl}/api/employee`, {
         headers: { "Content-Type": "application/json" },
       });
 
@@ -140,7 +142,7 @@ const SettingsPage = () => {
   const updateCompany = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/company/${COMPANY_ID}`, {
+      const response = await fetch(`${baseUrl}/api/company/${COMPANY_ID}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(companyForm),
@@ -170,7 +172,7 @@ const SettingsPage = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/upload", {
+      const response = await fetch(`${baseUrl}/api/upload`, {
         method: "POST",
         body: formData,
       });
@@ -220,7 +222,7 @@ const SettingsPage = () => {
   const createEmployee = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/employee", {
+      const response = await fetch(`${baseUrl}/api/employee`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(employeeForm),
@@ -248,7 +250,7 @@ const SettingsPage = () => {
   const updateEmployee = async (id: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/employee/${id}`, {
+      const response = await fetch(`${baseUrl}/api/employee/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(employeeForm),
@@ -280,7 +282,7 @@ const SettingsPage = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`/api/employee/${id}`, {
+      const response = await fetch(`${baseUrl}/api/employee/${id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });

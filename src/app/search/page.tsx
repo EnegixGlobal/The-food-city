@@ -100,7 +100,9 @@ const SearchContent = () => {
 
     try {
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(query)}&page=${page}&limit=12`
+        `${process.env.PUBLIC_URL}/api/search?q=${encodeURIComponent(
+          query
+        )}&page=${page}&limit=12`
       );
       const data: SearchResponse = await response.json();
 

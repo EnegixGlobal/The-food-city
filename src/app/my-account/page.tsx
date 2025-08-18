@@ -114,20 +114,8 @@ export default function OrdersPage() {
     });
   };
 
-  console.log(orders);
-
-  // Handle review submitted
-  const handleReviewSubmitted = () => {
-    // You could refresh orders or show a success message here
-    console.log("Review submitted successfully!");
-  };
-
-  const handleStatusChange = (status: string) => {
-    setSelectedStatus(status);
-    setCurrentPage(1);
-  };
-
   const router = useRouter();
+  const baseUrl = process.env.PUBLIC_URL || "this";
 
   const fetchOrders = async (page: number = 1, status: string = "") => {
     try {
@@ -138,7 +126,7 @@ export default function OrdersPage() {
         ...(status && { status }),
       });
 
-      const response = await fetch(`/api/order?${queryParams}`, {
+      const response = await fetch(`${baseUrl}/api/order?${queryParams}`, {
         credentials: "include",
       });
 
@@ -190,7 +178,7 @@ export default function OrdersPage() {
       }
 
       // Create payment order
-      const response = await fetch("/api/payment/create-order", {
+      const response = await fetch(`${baseUrl}/api/payment/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -213,17 +201,20 @@ export default function OrdersPage() {
         handler: async (response: any) => {
           try {
             // Verify payment
-            const verifyResponse = await fetch("/api/payment/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                orderId: order.orderId,
-              }),
-            });
+            const verifyResponse = await fetch(
+              `${baseUrl}/api/payment/verify`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  orderId: order.orderId,
+                }),
+              }
+            );
 
             const verifyData = await verifyResponse.json();
             if (verifyResponse.ok && verifyData.success) {
@@ -607,7 +598,7 @@ export default function OrdersPage() {
                                     item.imageUrl
                                   );
                                 }}
-                                className="w-full flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-none hover:from-orange-600 hover:to-orange-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md">
+                                className="w-full flex items-center justify-start text-orange-500 gap-2  cursor-pointer hover:text-orange-400">
                                 <svg
                                   className="w-4 h-4"
                                   fill="none"
@@ -732,7 +723,6 @@ export default function OrdersPage() {
         productId={reviewModal.productId}
         productTitle={reviewModal.productTitle}
         productImage={reviewModal.productImage}
-        onReviewSubmitted={handleReviewSubmitted}
       />
     </div>
   );
