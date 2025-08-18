@@ -100,7 +100,7 @@ const SearchContent = () => {
 
     try {
       const response = await fetch(
-        `${process.env.PUBLIC_URL}/api/search?q=${encodeURIComponent(
+        `/api/search?q=${encodeURIComponent(
           query
         )}&page=${page}&limit=12`
       );

@@ -114,7 +114,7 @@ export default function OrdersPage() {
       });
 
       const response = await fetch(
-        `${process.env.PUBLIC_URL}/api/order?${queryParams}`,
+        `/api/order?${queryParams}`,
         {
           credentials: "include",
         }

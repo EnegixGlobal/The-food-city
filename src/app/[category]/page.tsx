@@ -121,10 +121,10 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           return;
         }
 
-        const baseUrl = process.env.PUBLIC_URL;
+
 
         const queryString = buildQueryString();
-        const res = await fetch(`${baseUrl}/api/product?${queryString}`, {
+        const res = await fetch(`/api/product?${queryString}`, {
           cache: "no-store",
         });
         const data = await res.json();

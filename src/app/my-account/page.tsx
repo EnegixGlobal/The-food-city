@@ -126,7 +126,7 @@ export default function OrdersPage() {
         ...(status && { status }),
       });
 
-      const response = await fetch(`${baseUrl}/api/order?${queryParams}`, {
+      const response = await fetch(`/api/order?${queryParams}`, {
         credentials: "include",
       });
 
@@ -178,7 +178,7 @@ export default function OrdersPage() {
       }
 
       // Create payment order
-      const response = await fetch(`${baseUrl}/api/payment/create-order`, {
+      const response = await fetch(`/api/payment/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -202,7 +202,7 @@ export default function OrdersPage() {
           try {
             // Verify payment
             const verifyResponse = await fetch(
-              `${baseUrl}/api/payment/verify`,
+              `/api/payment/verify`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

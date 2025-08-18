@@ -38,13 +38,12 @@ export default function EditProfilePage() {
     isResending: false,
   });
 
-  const baseUrl = process.env.PUBLIC_URL;
 
   // Fetch user data
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${baseUrl}/api/users/me`, {
+      const response = await fetch(`/api/users/me`, {
         credentials: "include",
       });
 
@@ -83,7 +82,7 @@ export default function EditProfilePage() {
   // Send OTP for phone verification
   const sendOtp = async (phone: string) => {
     try {
-      const response = await fetch(`${baseUrl}/api/users/send-otp`, {
+      const response = await fetch(`/api/users/send-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +116,7 @@ export default function EditProfilePage() {
     try {
       setOtpModal((prev) => ({ ...prev, isVerifying: true }));
 
-      const response = await fetch(`${baseUrl}/api/users/verify-otp`, {
+      const response = await fetch(`/api/users/verify-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -219,7 +218,7 @@ export default function EditProfilePage() {
     try {
       setSubmitting(true);
 
-      const response = await fetch(`${baseUrl}/api/users/update`, {
+      const response = await fetch(`/api/users/update`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

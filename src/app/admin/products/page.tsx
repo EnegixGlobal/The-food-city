@@ -108,7 +108,6 @@ const ProductsPage = () => {
     customizableOptions: [],
   });
 
-  const baseUrl = process.env.PUBLIC_URL || "";
 
   const categories = [
     { key: "indian", label: "Indian" },
@@ -138,7 +137,7 @@ const ProductsPage = () => {
       const uploadFormData = new FormData();
       uploadFormData.append("file", file);
 
-      const response = await fetch(`${baseUrl}/api/upload`, {
+      const response = await fetch(`/api/upload`, {
         method: "POST",
         body: uploadFormData,
       });
@@ -197,7 +196,7 @@ const ProductsPage = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `${baseUrl}/api/product?category=${category}&page=${page}&limit=${limit}`
+          `/api/product?category=${category}&page=${page}&limit=${limit}`
         );
         const data = await response.json();
         if (response.ok && data.success) {
@@ -233,7 +232,7 @@ const ProductsPage = () => {
       setLoadingAll(true);
       // First page to get totalCount
       const firstResp = await fetch(
-        `${baseUrl}/api/product?category=${category}&page=1&limit=50`
+        `/api/product?category=${category}&page=1&limit=50`
       );
       const firstData = await firstResp.json();
       if (!firstResp.ok || !firstData.success) {
@@ -252,7 +251,7 @@ const ProductsPage = () => {
       // Fetch remaining pages sequentially (could parallelize but keep simple / avoid overload)
       for (let p = 2; p <= pages; p++) {
         const resp = await fetch(
-          `${baseUrl}/api/product?category=${category}&page=${p}&limit=50`
+          `/api/product?category=${category}&page=${p}&limit=50`
         );
         const d = await resp.json();
         if (resp.ok && d.success) {
@@ -337,7 +336,7 @@ const ProductsPage = () => {
       if (editingProduct) {
         // Update existing product
         response = await fetch(
-          `${baseUrl}/api/product/${editingProduct.slug}`,
+          `/api/product/${editingProduct.slug}`,
           {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -346,7 +345,7 @@ const ProductsPage = () => {
         );
       } else {
         // Create new product
-        response = await fetch(`${baseUrl}/api/product`, {
+        response = await fetch(`/api/product`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(productData),
@@ -384,7 +383,7 @@ const ProductsPage = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${baseUrl}/api/product/${product.slug}`, {
+      const response = await fetch(`/api/product/${product.slug}`, {
         method: "DELETE",
       });
 

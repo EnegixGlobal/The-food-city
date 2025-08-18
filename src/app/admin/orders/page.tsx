@@ -148,7 +148,7 @@ const AdminOrdersPage = () => {
     refunded: "bg-gray-100 text-gray-800 border border-gray-300",
   };
 
-  const baseUrl = process.env.PUBLIC_URL || "";
+
 
   // Fetch orders
   const fetchOrders = useCallback(async () => {
@@ -164,7 +164,7 @@ const AdminOrdersPage = () => {
       if (searchTerm) params.append("search", searchTerm);
       if (statusFilter) params.append("status", statusFilter);
 
-      const response = await fetch(`${baseUrl}/api/admin/orders?${params}`, {
+      const response = await fetch(`/api/admin/orders?${params}`, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -196,7 +196,7 @@ const AdminOrdersPage = () => {
     try {
       setUpdatingStatus(true);
 
-      const response = await fetch(`${baseUrl}/api/admin/orders/${orderId}`, {
+      const response = await fetch(`/api/admin/orders/${orderId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -250,7 +250,7 @@ const AdminOrdersPage = () => {
     }
 
     try {
-      const response = await fetch(`${baseUrl}/api/admin/orders/${orderId}`, {
+      const response = await fetch(`/api/admin/orders/${orderId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -291,7 +291,7 @@ const AdminOrdersPage = () => {
     try {
       setLoading(true);
 
-      const response = await fetch(`${baseUrl}/api/admin/orders/${orderId}`, {
+      const response = await fetch(`/api/admin/orders/${orderId}`, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -353,7 +353,7 @@ const AdminOrdersPage = () => {
 
   const updatePaymentStatus = async (orderId: string, status: string) => {
     try {
-      const response = await fetch(`${baseUrl}/api/admin/orders/${orderId}`, {
+      const response = await fetch(`/api/admin/orders/${orderId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

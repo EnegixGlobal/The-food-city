@@ -30,12 +30,12 @@ export default function AddressesPage() {
   const [editLandmark, setEditLandmark] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const baseUrl = process.env.PUBLIC_URL || "";
+
 
   const fetchAddresses = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${baseUrl}/api/users/address`, {
+      const response = await fetch(`/api/users/address`, {
         credentials: "include",
       });
 
@@ -71,7 +71,7 @@ export default function AddressesPage() {
 
     try {
       setSubmitting(true);
-      const response = await fetch(`${baseUrl}/api/users/address`, {
+      const response = await fetch(`/api/users/address`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -129,7 +129,7 @@ export default function AddressesPage() {
 
     try {
       setSubmitting(true);
-      const response = await fetch(`${baseUrl}/api/users/address/${addressId}`, {
+      const response = await fetch(`/api/users/address/${addressId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -178,7 +178,7 @@ export default function AddressesPage() {
 
     try {
       setSubmitting(true);
-      const response = await fetch(`${baseUrl}/api/users/address/${addressId}`, {
+      const response = await fetch(`/api/users/address/${addressId}`, {
         method: "DELETE",
         credentials: "include",
       });

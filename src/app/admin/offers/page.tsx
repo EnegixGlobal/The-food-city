@@ -74,7 +74,7 @@ const CouponsPage = () => {
     isActive: true,
   });
 
-  const baseUrl = process.env.PUBLIC_URL || "";
+
 
   // Image upload handler
   const handleImageUpload = async (file: File) => {
@@ -97,7 +97,7 @@ const CouponsPage = () => {
       const uploadFormData = new FormData();
       uploadFormData.append("file", file);
 
-      const response = await fetch(`${baseUrl}/api/upload`, {
+      const response = await fetch(`/api/upload`, {
         method: "POST",
         body: uploadFormData,
       });
@@ -128,7 +128,7 @@ const CouponsPage = () => {
   const fetchCoupons = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${baseUrl}/api/coupon`);
+      const response = await fetch(`/api/coupon`);
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -154,7 +154,7 @@ const CouponsPage = () => {
   // Fetch products for dropdown
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${baseUrl}/api/product`);
+      const response = await fetch(`/api/product`);
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -207,8 +207,8 @@ const CouponsPage = () => {
 
     try {
       const url = editingCoupon
-        ? `${baseUrl}/api/coupon/${editingCoupon._id}`
-        : `${baseUrl}/api/coupon`;
+        ? `/api/coupon/${editingCoupon._id}`
+        : `/api/coupon`;
       const method = editingCoupon ? "PATCH" : "POST";
 
       const response = await fetch(url, {
@@ -265,7 +265,7 @@ const CouponsPage = () => {
     }
 
     try {
-      const response = await fetch(`${baseUrl}/api/coupon/${coupon._id}`, {
+      const response = await fetch(`/api/coupon/${coupon._id}`, {
         method: "DELETE",
       });
 

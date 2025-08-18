@@ -60,10 +60,11 @@ const OffersPage = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(`${process.env.PUBLIC_URL}/api/coupon`);
+      const response = await fetch(`/api/coupon`);
       const data: ApiResponse = await response.json();
 
       if (data.success) {
+        
         setCoupons(data.data);
       } else {
         setError(data.message || "Failed to fetch offers");
