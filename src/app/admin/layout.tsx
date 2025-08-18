@@ -184,7 +184,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   height={32}
                   className="h-14  w-14"
                 />
-               
               </div>
             </div>
             <button
