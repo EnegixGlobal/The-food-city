@@ -201,20 +201,17 @@ export default function OrdersPage() {
         handler: async (response: any) => {
           try {
             // Verify payment
-            const verifyResponse = await fetch(
-              `/api/payment/verify`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  orderId: order.orderId,
-                }),
-              }
-            );
+            const verifyResponse = await fetch(`/api/payment/verify`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                orderId: order.orderId,
+              }),
+            });
 
             const verifyData = await verifyResponse.json();
             if (verifyResponse.ok && verifyData.success) {
@@ -427,6 +424,11 @@ export default function OrdersPage() {
                           {order.paymentMethod === "online" ? "ONLINE" : "COD"}
                         </span>
                       </div>
+                      {order.status === "delivered" && (
+                        <span className="text-sm font-bold flex items-center">
+                          Delivered
+                        </span>
+                      )}
                     </div>
 
                     {/* Right side - Payment Status and Amount */}

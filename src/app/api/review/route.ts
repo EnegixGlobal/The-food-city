@@ -9,8 +9,6 @@ export const POST = asyncHandler(async (req) => {
   await connectDb();
   const { productId, userId, rating, comment, imageUrl } = await req.json();
 
-  console.log(productId, userId, rating, comment, imageUrl);
-
   // Validate required fields
   const requiredFields = { productId, userId, rating };
   const missingFields = Object.entries(requiredFields).filter(
@@ -40,14 +38,16 @@ export const POST = asyncHandler(async (req) => {
   const averageRating =
     reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length;
 
-  const product = await Product.findById(productId);
-  if (!product) {
-    return apiResponse(404, "Product not found");
-  }
-
-  product.rating = averageRating;
-  product.ratingCount = reviews.length;
-  await product.save();
+  await Product.findByIdAndUpdate(
+    productId,
+    {
+      $set: {
+        rating: averageRating,
+        ratingCount: reviews.length,
+      },
+    },
+    { new: true }
+  );
 
   return apiResponse(200, "Review added successfully", { review: savedReview });
 });
