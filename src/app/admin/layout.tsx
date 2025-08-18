@@ -182,7 +182,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   alt="FoodExpress Admin"
                   width={120}
                   height={32}
-                  className="h-14 -rotate-12 w-14"
+                  className="h-14  w-14"
                 />
                
               </div>

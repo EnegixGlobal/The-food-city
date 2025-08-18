@@ -161,7 +161,7 @@ function Navbar() {
                     alt="Food City Logo"
                     width={60}
                     height={60}
-                    className="transform -rotate-12 mr-3"
+                    className="transform mr-3"
                   />
 
                   <h1 className="text-2xl font-bold tracking-tight hidden sm:block">
