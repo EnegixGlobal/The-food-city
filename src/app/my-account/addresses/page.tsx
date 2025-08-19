@@ -30,13 +30,12 @@ export default function AddressesPage() {
   const [editLandmark, setEditLandmark] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-
-
   const fetchAddresses = async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/users/address`, {
-        credentials: "include",
+        cache: "no-store",
+        credentials : "include",
       });
 
       if (!response.ok) {

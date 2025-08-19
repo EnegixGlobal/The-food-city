@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import React from "react";
+import InstallAppButton from "./InstallAppButton";
 import Container from "./Container";
 import Button from "./Button";
 import { FaArrowRight} from "react-icons/fa";
@@ -90,6 +91,7 @@ function HeroSection() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button className="py-3! px-8! ">Order Now</Button>
+                  <InstallAppButton className="animate-pulse" />
                 </div>
               </div>
             </div>

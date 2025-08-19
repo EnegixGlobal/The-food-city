@@ -269,27 +269,22 @@ const CheckoutPage = () => {
 
     setLoadingAddresses(true);
     try {
-
       const response = await fetch("/api/users/address", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
+        cache: "no-store",
       });
 
       const data = await response.json();
 
-      console.log(response);
+      console.log(data)
 
       if (response.ok && data.success) {
         const addressList = data.data || [];
         setAddresses(addressList);
       } else {
         showAlert.warning(
-        "No Addresses Found",
-        "Please add an address to proceed",
-      );
+          "No Addresses Found",
+          "Please add an address to proceed"
+        );
       }
     } catch (error) {
       console.error("Network error fetching addresses:", error);

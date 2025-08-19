@@ -20,11 +20,11 @@ const Footer = () => {
           {/* Column 1: About */}
           <div className="mb-6">
             <h3 className="text-xl font-bold mb-4 border-b-2 border-yellow-400 pb-2 inline-block">
-              The Food Circle
+              The Food City
             </h3>
             <p className="mb-4 font-medium">
               Delivering delicious meals straight to your doorstep. Fast, fresh,
-              and flavorful!
+              and flavorful in Ranchi!
             </p>
             <div className="flex space-x-4">
               <a
@@ -57,39 +57,39 @@ const Footer = () => {
             </h3>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/"
                   className="font-medium hover:text-yellow-400 transition">
                   Home
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/search"
                   className="font-medium hover:text-yellow-400 transition">
                   Menu
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/offers"
                   className="font-medium hover:text-yellow-400 transition">
                   Offers
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/#about"
                   className="font-medium hover:text-yellow-400 transition">
                   About Us
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/#contact"
                   className="font-medium hover:text-yellow-400 transition">
                   Contact
-                </a>
+                </Link>
               </li>
               <li>
                 <Link
@@ -116,15 +116,15 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center font-medium">
                 <FaMapMarkerAlt className="mr-2 text-yellow-400" />
-                123 Food Street, City
+                Ground Floor, beside Apsara Hotel, P&T Colony, Lalpur, Ranchi, Jharkhand 834001
               </li>
               <li className="flex items-center font-medium">
                 <FaPhone className="mr-2 text-yellow-400" />
-                +1 (123) 456-7890
+                <a href="tel:9386372101" className="hover:text-yellow-400 transition">93863 72101</a>
               </li>
               <li className="flex items-center font-medium">
                 <FaEnvelope className="mr-2 text-yellow-400" />
-                contact@thefoodcircle.com
+                <a href="mailto:thefoodcity@gmai.com" className="hover:text-yellow-400 transition">thefoodcity@gmai.com</a>
               </li>
             </ul>
           </div>
@@ -154,7 +154,7 @@ const Footer = () => {
         <div className="flex border-t border-red-800 items-center justify-between text-sm">
           <div className=" pt-6">
             <p className="font-bold">
-              © {new Date().getFullYear()} The Food Circle. All Rights Reserved.
+              © {new Date().getFullYear()} The Food City. All Rights Reserved.
             </p>
             <div className="flex justify-center space-x-6 mt-4">
               <a

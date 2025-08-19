@@ -3,6 +3,10 @@ import { apiResponse, asyncHandler } from "@/app/lib";
 import Address from "@/app/models/Address";
 import { getDataFromToken } from "@/app/utils/getDataFromToken";
 
+// Force dynamic rendering & disable static caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const GET = asyncHandler(async (req) => {
   connectDb();
   // Authenticate user first
@@ -12,9 +16,9 @@ export const GET = asyncHandler(async (req) => {
     return apiResponse(401, "Authentication failed");
   }
 
-  const address = await Address.find({ user: userId });
+  const address = await Address.find({ user: userId }).lean();
 
-  if (!address) {
+  if (!address || address.length === 0) {
     return apiResponse(404, "No addresses found for this user");
   }
 
@@ -44,7 +48,7 @@ export const POST = asyncHandler(async (req) => {
   }
 
   try {
-    const newAddress = new Address({
+  const newAddress = new Address({
       user: userId,
       fullAddress: fullAddress.trim(),
       pincode: pincode,
@@ -54,7 +58,7 @@ export const POST = asyncHandler(async (req) => {
 
     await newAddress.save();
 
-    return apiResponse(201, "Address created successfully", newAddress);
+  return apiResponse(201, "Address created successfully", newAddress);
   } catch (error) {
     console.error("Error creating address:", error);
     return apiResponse(500, "Internal server error");
