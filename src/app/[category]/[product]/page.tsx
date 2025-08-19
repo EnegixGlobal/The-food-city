@@ -127,7 +127,6 @@ function ProductPage({ params }: ProductPageProps) {
     });
   };
 
-
   // Handle helpful status update
   const handleHelpfulUpdate = async (reviewId: string, isHelpful: boolean) => {
     try {
@@ -707,7 +706,7 @@ function ProductPage({ params }: ProductPageProps) {
                   <div className="flex items-center bg-yellow-100 px-2 py-1 rounded-full flex-shrink-0">
                     <FiStar className="text-yellow-500 mr-1 text-sm" />
                     <span className="font-bold text-sm">
-                      {product.rating || "New"}
+                      {product.rating?.toFixed(1) || "New"}
                     </span>
                   </div>
                 </div>
@@ -736,7 +735,7 @@ function ProductPage({ params }: ProductPageProps) {
                     <p className="text-xl sm:text-2xl font-bold text-red-900">
                       ₹
                       {product.customizableOptions?.[0]?.price?.toFixed(2) ||
-                        product.price.toFixed(2)}
+                        product.price.toFixed(1)}
                     </p>
                   )}
                 </div>

@@ -262,9 +262,9 @@ export default function OrdersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
+      <div className="min-h-screen bg-gray-50 md:p-4 p-2">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-none shadow-sm p-6">
+          <div className="bg-white rounded-none shadow-sm md:p-6 p-2">
             <div className="animate-pulse">
               <div className="h-6 bg-gray-200 rounded w-1/4 mb-6"></div>
               {[1, 2, 3].map((i) => (

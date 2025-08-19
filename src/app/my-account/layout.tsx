@@ -166,7 +166,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ children }) => {
             </div>
 
             {/* Main content */}
-            <main className="flex-1 lg:mr-2 mb-2 p-4 lg:p-6 overflow-y-auto rounded-none lg:rounded-xl">
+            <main className="flex-1 lg:mr-2 mb-2  lg:p-6 overflow-y-auto rounded-none lg:rounded-xl">
               {children}
             </main>
           </div>

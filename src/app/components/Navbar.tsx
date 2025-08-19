@@ -12,6 +12,9 @@ import { useCartStore } from "../zustand/cartStore";
 import useUserStore from "../zustand/userStore";
 import { useAlertStore } from "../zustand/alertStore";
 import SideLogin from "./SideLogin";
+import dynamic from "next/dynamic";
+// Dynamically import InstallAppButton to avoid SSR issues
+const InstallAppButton = dynamic(() => import("./InstallAppButton"), { ssr: false });
 import { useRouter } from "next/navigation";
 import { MdOutlineWorkHistory } from "react-icons/md";
 
@@ -523,6 +526,10 @@ function Navbar() {
                   Cart ({isHydrated ? getTotalItems() : 0})
                 </Button>
               </Link>
+              {/* Install App Button for mobile sidebar */}
+              <div className="px-6 py-4">
+                <InstallAppButton className="w-full" />
+              </div>
             </div>
           </div>
         </div>
