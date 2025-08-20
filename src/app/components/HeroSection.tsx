@@ -12,26 +12,22 @@ function HeroSection() {
   const categories = [
     {
       name: "Indian",
-      bgImage:
-        "/indian.webp",
+      bgImage: "/indian.webp",
       href: "/indian",
     },
     {
       name: "Chinese",
-      bgImage:
-        "/chinese.webp",
+      bgImage: "/chinese.webp",
       href: "/chinese",
     },
     {
       name: "South",
-      bgImage:
-        "/south.webp",
+      bgImage: "/south.webp",
       href: "/south-indian",
     },
     {
       name: "Tandoor",
-      bgImage:
-        "/tandoor.webp",
+      bgImage: "/tandoor.webp",
       href: "/tandoor",
     },
   ];
@@ -108,11 +104,11 @@ function HeroSection() {
                   experiences.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button className="py-3! px-8! ">Order Now</Button>
+                  <Button className="py-3! px-8! mb-2">Order Now</Button>
                   {deferredPrompt && (
                     <Button
                       onClick={handleInstallClick}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700">
+                      className="py-3! px-8!">
                       📲 Install App
                     </Button>
                   )}
