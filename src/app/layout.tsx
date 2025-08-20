@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AlertContainer from "./components/AlertContainer";
+import ServiceWorkerRegister from "./components/ServiceWorkerRegister";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +17,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "The Food City | Online Food Delivery in Ranchi",
   description: "Delicious food delivered to your doorstep",
-  themeColor: "#fbbf24", // 👈 you can directly add theme-color here
-  manifest: "/manifest.json", // 👈 also add manifest here
+  manifest: "/manifest.json",
+  themeColor: "#2563eb",
+  icons: {
+    icon: "/new_logo.png",
+    apple: "/new_logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -30,6 +35,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {children}
         <AlertContainer />
+        <ServiceWorkerRegister />
       </body>
     </html>
   );
