@@ -10,6 +10,7 @@ import MainCard from "../components/MainCard";
 import { useEffect, useState } from "react";
 import MainCardSkeletonGrid from "../components/MainCardSkeleton";
 import { showAlert } from "../zustand/alertStore";
+import BottomCart from "../components/BottomCart";
 
 interface CategoryPageProps {
   params: Promise<{ category: string }>;
@@ -121,11 +122,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           return;
         }
 
-
-
         const queryString = buildQueryString();
         const res = await fetch(`/api/product?${queryString}`, {
-          cache: "no-store",
+          next: { revalidate: 3600 }, // revalidate every hour
         });
         const data = await res.json();
         if (!res.ok || data?.success === false) {
@@ -519,6 +518,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           )}
         </Container>
       </div>
+      <BottomCart />
       <Footer />
     </>
   );

@@ -15,6 +15,7 @@ import { FiClock, FiLoader } from "react-icons/fi";
 import { showAlert } from "../../zustand/alertStore";
 import Input from "../../components/Input";
 import Image from "next/image";
+import { revalidate } from "@/app/api/users/address/route";
 
 interface Product {
   _id: string;
@@ -108,7 +109,6 @@ const ProductsPage = () => {
     customizableOptions: [],
   });
 
-
   const categories = [
     { key: "indian", label: "Indian" },
     { key: "chinese", label: "Chinese" },
@@ -196,7 +196,8 @@ const ProductsPage = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `/api/product?category=${category}&page=${page}&limit=${limit}`
+          `/api/product?category=${category}&page=${page}&limit=${limit}`,
+          { next: { revalidate: 1 } }
         );
         const data = await response.json();
         if (response.ok && data.success) {
@@ -335,14 +336,11 @@ const ProductsPage = () => {
 
       if (editingProduct) {
         // Update existing product
-        response = await fetch(
-          `/api/product/${editingProduct.slug}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(productData),
-          }
-        );
+        response = await fetch(`/api/product/${editingProduct.slug}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(productData),
+        });
       } else {
         // Create new product
         response = await fetch(`/api/product`, {

@@ -10,12 +10,11 @@ import { FaCartShopping } from "react-icons/fa6";
 const useClientSideCart = () => {
   const [isHydrated, setIsHydrated] = useState(false);
   const cartStore = useCartStore();
-  
+
   useEffect(() => {
     setIsHydrated(true);
   }, []);
-  
-  // Return empty state during SSR, actual state after hydration
+
   return isHydrated ? cartStore : { cart: [], getTotalItems: () => 0 };
 };
 
@@ -23,9 +22,31 @@ function BottomCart() {
   const { cart, getTotalItems } = useClientSideCart();
   const totalItems = getTotalItems();
 
+  const [show, setShow] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > lastScrollY) {
+        // scrolling down
+        setShow(false);
+      } else {
+        // scrolling up
+        setShow(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
   return (
     <AnimatePresence>
-      {cart.length > 0 && (
+      {cart.length > 0 && show && (
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -34,11 +55,11 @@ function BottomCart() {
           className="fixed bottom-0 left-0 right-0 z-20"
         >
           <div className="container mx-auto px-4 max-w-5xl">
-            <div className="bg-green-500  shadow-xl px-4 py-2">
+            <div className="bg-green-500 shadow-xl px-4 py-2 rounded-t-xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <FaCartShopping className="text-white h-6 w-6" />
-                  <h2 className="text-white font-medium text-sm">
+                  <h2 className="text-white font-medium text-xs">
                     Shopping Cart
                   </h2>
                   <span className="bg-white text-green-600 rounded-full px-2 py-1 text-xs font-bold">
@@ -48,7 +69,7 @@ function BottomCart() {
 
                 <Link
                   href="/cart"
-                  className="bg-white text-green-600 hover:bg-green-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                  className="bg-white text-green-600 hover:bg-green-50 px-4 py-2 rounded-lg text-xs font-medium transition-colors duration-200"
                 >
                   View Cart
                 </Link>

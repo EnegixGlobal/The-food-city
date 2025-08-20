@@ -10,12 +10,12 @@ import React, { useState, useEffect } from "react";
 import { FaFire, FaLeaf, FaMinus, FaPlus } from "react-icons/fa";
 import { FiStar, FiClock, FiPlus, FiMinus } from "react-icons/fi";
 import { GiChickenOven, GiNoodles, GiIndiaGate } from "react-icons/gi";
-import { FaCartShopping, FaCartPlus } from "react-icons/fa6";
+import { FaCartPlus } from "react-icons/fa6";
 import { useCartStore } from "@/app/zustand/cartStore";
-import { useAddonStore } from "@/app/zustand/addonStore";
 import CustomizationModal from "@/app/components/CustomizationModal";
 import ReviewsModal from "@/app/components/ReviewsModal";
 import useUserStore from "@/app/zustand/userStore";
+import BottomCart from "@/app/components/BottomCart";
 
 interface AddOn {
   rating: number;
@@ -238,7 +238,9 @@ function ProductPage({ params }: ProductPageProps) {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(`/api/product/${slug}`);
+      const response = await fetch(`/api/product/${slug}`, {
+        next: { revalidate: 300 },
+      });
       const data: ApiResponse = await response.json();
 
       if (data.success) {
@@ -271,9 +273,10 @@ function ProductPage({ params }: ProductPageProps) {
         sortBy: "rating",
         sortOrder: "desc",
       });
-      const res = await fetch(`/api/product?${params.toString()}`, {
-        cache: "no-store",
-      });
+      const res = await fetch(
+        `/api/product?${params.toString()}`,
+        { next: { revalidate: 3600 } } // revalidate every hour
+      );
       const data = await res.json();
       if (res.ok && data?.data?.products) {
         let candidates: Product[] = data.data.products.filter(
@@ -318,7 +321,9 @@ function ProductPage({ params }: ProductPageProps) {
   const fetchReviews = async (productId: string) => {
     try {
       setIsLoadingReviews(true);
-      const response = await fetch(`/api/review?productId=${productId}`);
+      const response = await fetch(`/api/review?productId=${productId}`, {
+        cache: "no-store",
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -343,62 +348,6 @@ function ProductPage({ params }: ProductPageProps) {
     };
     getParams();
   }, [params]);
-
-  // Handle addon selection
-  const handleAddonToggle = (addon: AddOn) => {
-    setSelectedAddons((prev) => {
-      const exists = prev.find((a) => a._id === addon._id);
-      if (exists) {
-        return prev.filter((a) => a._id !== addon._id);
-      } else {
-        return [...prev, addon];
-      }
-    });
-  };
-
-  // Check if addon is selected
-  const isAddonSelected = (addonId: string) => {
-    return selectedAddons.some((addon) => addon._id === addonId);
-  };
-
-  // Calculate total price including addons
-  const getTotalPrice = () => {
-    if (!product) return 0;
-    const basePrice = product.discountedPrice || product.price;
-    const addonsPrice = selectedAddons.reduce(
-      (sum, addon) => sum + addon.price,
-      0
-    );
-    return basePrice + addonsPrice;
-  };
-
-  // Handle add to cart
-  const handleAddToCart = () => {
-    if (!product) return;
-
-    try {
-      // Normalize product data for cart store
-      const normalizedProduct = {
-        _id: product._id,
-        title: product.title,
-        slug: product.slug,
-        description: product.description,
-        price: product.price,
-        discountedPrice: product.discountedPrice,
-        category: product.category,
-        imageUrl: product.imageUrl,
-        isVeg: product.isVeg,
-        isBestSeller: product.isBestSeller,
-        spicyLevel: product.spicyLevel,
-        prepTime: parseInt(product.prepTime) || 30, // Convert string to number
-        rating: product.rating,
-      };
-
-      addProductToCart(normalizedProduct, quantity, selectedAddons);
-    } catch (error) {
-      console.error("Error adding product to cart:", error);
-    }
-  };
 
   // Handle add to cart with quantity reset
   const handleAddtocart = () => {
@@ -497,16 +446,6 @@ function ProductPage({ params }: ProductPageProps) {
       </>
     );
   }
-
-  const getTotalprice = () => {
-    if (!product) return 0;
-    const basePrice = product.discountedPrice || product.price;
-    const addonsPrice = selectedAddons.reduce(
-      (sum, addon) => sum + addon.price,
-      0
-    );
-    return basePrice + addonsPrice;
-  };
 
   // Check if current product is in cart (any variant)
   const isItemInCart = product
@@ -1107,7 +1046,7 @@ function ProductPage({ params }: ProductPageProps) {
         onUpdateReview={handleUpdateReview}
         currentUserId={user?.id}
       />
-
+      <BottomCart />
       <Footer />
     </>
   );

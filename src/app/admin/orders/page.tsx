@@ -148,8 +148,6 @@ const AdminOrdersPage = () => {
     refunded: "bg-gray-100 text-gray-800 border border-gray-300",
   };
 
-
-
   // Fetch orders
   const fetchOrders = useCallback(async () => {
     try {
@@ -165,9 +163,7 @@ const AdminOrdersPage = () => {
       if (statusFilter) params.append("status", statusFilter);
 
       const response = await fetch(`/api/admin/orders?${params}`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        cache: "no-store",
       });
 
       const data = await response.json();

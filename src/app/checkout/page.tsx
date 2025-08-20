@@ -271,11 +271,10 @@ const CheckoutPage = () => {
     try {
       const response = await fetch("/api/users/address", {
         cache: "no-store",
+        credentials: "include",
       });
 
       const data = await response.json();
-
-      console.log(data)
 
       if (response.ok && data.success) {
         const addressList = data.data || [];

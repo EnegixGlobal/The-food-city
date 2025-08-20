@@ -100,9 +100,7 @@ const SearchContent = () => {
 
     try {
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(
-          query
-        )}&page=${page}&limit=12`
+        `/api/search?q=${encodeURIComponent(query)}&page=${page}&limit=20`, { cache: "no-store" }
       );
       const data: SearchResponse = await response.json();
 

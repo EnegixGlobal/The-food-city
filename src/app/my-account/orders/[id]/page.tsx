@@ -116,14 +116,13 @@ export default function OrderDetailsPage() {
   const params = useParams();
   const orderId = params.id as string;
 
-
-  
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
         setLoading(true);
         const response = await fetch(`/api/order/${orderId}`, {
           credentials: "include",
+          cache: "no-store",
         });
 
         if (!response.ok) {
@@ -195,10 +194,10 @@ export default function OrderDetailsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 sm:p-4">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="bg-white rounded-none shadow-sm p-4 sm:p-6">
+        <div className="bg-white rounded-none shadow-sm p-2 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-4">
               <button
@@ -237,7 +236,6 @@ export default function OrderDetailsPage() {
           </div>
 
           <div className="flex flex-wrap gap-2 sm:gap-3">
-
             <span
               className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium border ${getPaymentStatusColor(
                 order.paymentStatus
@@ -359,44 +357,48 @@ export default function OrderDetailsPage() {
             </h2>
             <div className="space-y-4">
               {order.items.map((item, index) => (
-                <Link key={index} href={`/product/${item.slug}`} className="block">
-                <div
-                  
-                  className="flex items-center space-x-4 p-4 border border-gray-100 rounded-none">
-                  <div className="w-16 h-16 relative rounded-none overflow-hidden bg-gray-100 flex-shrink-0">
-                    {item.imageUrl ? (
-                      <Image
-                        src={item.imageUrl}
-                        alt={item.title}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">
-                        🍽️
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{item.title}</h3>
-                    {item.selectedCustomization && (
-                      <p className="text-sm text-blue-600 font-medium">
-                        {item.selectedCustomization.option}
+                <Link
+                  key={index}
+                  href={`/product/${item.slug}`}
+                  className="block">
+                  <div className="flex items-center space-x-4 p-4 border border-gray-100 rounded-none">
+                    <div className="w-16 h-16 relative rounded-none overflow-hidden bg-gray-100 flex-shrink-0">
+                      {item.imageUrl ? (
+                        <Image
+                          src={item.imageUrl}
+                          alt={item.title}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">
+                          🍽️
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">
+                        {item.title}
+                      </h3>
+                      {item.selectedCustomization && (
+                        <p className="text-sm text-blue-600 font-medium">
+                          {item.selectedCustomization.option}
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-600">
+                        Quantity: {item.quantity}
                       </p>
-                    )}
-                    <p className="text-sm text-gray-600">
-                      Quantity: {item.quantity}
-                    </p>
-                    <p className="text-sm font-medium text-orange-600">
-                      ₹{item.price} each
-                    </p>
+                      <p className="text-sm font-medium text-orange-600">
+                        ₹{item.price} each
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900">
+                        ₹{item.price * item.quantity}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-gray-900">
-                      ₹{item.price * item.quantity}
-                    </p>
-                  </div>
-                </div></Link>
+                </Link>
               ))}
 
               {/* Add-ons */}

@@ -154,7 +154,7 @@ function Navbar() {
     <>
       <nav className="bg-gradient-to-r from-[#550000] to-red-900 text-white shadow-xl sticky top-0 z-50">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-20">
+          <div className="flex justify-between items-center h-18">
             {/* Logo with Categories */}
             <div className="flex items-center space-x-6">
               <Link href="/">

@@ -128,6 +128,7 @@ export default function OrdersPage() {
 
       const response = await fetch(`/api/order?${queryParams}`, {
         credentials: "include",
+        cache: "no-store",
       });
 
       if (!response.ok) {
@@ -600,7 +601,7 @@ export default function OrdersPage() {
                                     item.imageUrl
                                   );
                                 }}
-                                className="w-full flex items-center justify-start text-orange-500 gap-2  cursor-pointer hover:text-orange-400">
+                                className="w-full text-sm flex items-center justify-start text-orange-500 gap-2  cursor-pointer hover:text-orange-400">
                                 <svg
                                   className="w-4 h-4"
                                   fill="none"

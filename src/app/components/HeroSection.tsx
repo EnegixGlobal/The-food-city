@@ -1,42 +1,60 @@
 "use client";
 
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import InstallAppButton from "./InstallAppButton";
 import Container from "./Container";
 import Button from "./Button";
-import { FaArrowRight} from "react-icons/fa";
+import { FaArrowRight } from "react-icons/fa";
 import Link from "next/link";
-
-
 
 function HeroSection() {
   const categories = [
     {
       name: "Indian",
       bgImage:
-        "https://imgs.search.brave.com/zwudZdgp40IeX0z7JRLUmi2ElldrTgitQOAUR0eFZCI/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly90NC5m/dGNkbi5uZXQvanBn/LzAyLzg0LzQ2Lzg5/LzM2MF9GXzI4NDQ2/ODk4M180S1pTaWV2/SDBwZmxlRFM4amhu/Z05iZVl1WVNwSnpO/RC5qcGc",
+        "/indian.webp",
       href: "/indian",
     },
     {
       name: "Chinese",
       bgImage:
-        "https://imgs.search.brave.com/aZNSSTItd1B-CNzgoIxpRkXUxfeNublpDw__ar6l_QE/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly93d3cu/c2h1dHRlcnN0b2Nr/LmNvbS9pbWFnZS1w/aG90by9hc3NvcnRl/ZC1jaGluZXNlLWZv/b2Qtb24tZGFyay0y/NjBudy0yMjA5NzQz/ODI3LmpwZw",
+        "/chinese.webp",
       href: "/chinese",
     },
     {
       name: "South",
       bgImage:
-        "https://imgs.search.brave.com/AzUHwLQ7CQpRCZGZ47e1HT31k-Sk6iYExceNCqwlmeo/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly93d3cu/c2h1dHRlcnN0b2Nr/LmNvbS9pbWFnZS1w/aG90by9ncm91cC1z/b3V0aC1pbmRpYW4t/Zm9vZC1saWtlLTI2/MG53LTExNTM4MTg4/MjMuanBn",
+        "/south.webp",
       href: "/south-indian",
     },
     {
       name: "Tandoor",
       bgImage:
-        "https://imgs.search.brave.com/ORCKll6DBlMoHhUCJohZN1jTn0uCXXDRhmA7aCBybJ0/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTI4/NzU5MTg3MS9waG90/by9pbmRpYW4tZm9v/ZC5qcGc_cz02MTJ4/NjEyJnc9MCZrPTIw/JmM9dXFmMWdXQTFh/THAwV3A4bE9HbUV1/Y1BkYWxjVDIzZGpB/WGpzTHpzSHV6Yz0",
+        "/tandoor.webp",
       href: "/tandoor",
     },
   ];
+
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log("Install outcome:", outcome);
+    setDeferredPrompt(null);
+  };
 
   return (
     <div className="relative md:text-left text-center h-[700px] overflow-hidden">
@@ -91,7 +109,13 @@ function HeroSection() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button className="py-3! px-8! ">Order Now</Button>
-                  <InstallAppButton className="animate-pulse" />
+                  {deferredPrompt && (
+                    <Button
+                      onClick={handleInstallClick}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700">
+                      📲 Install App
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

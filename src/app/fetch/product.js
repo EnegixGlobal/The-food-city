@@ -22,7 +22,7 @@ export const fetchIndianProducts = async (
     if (filters.prepTime) queryParams.append("prepTime", filters.prepTime);
 
     const response = await fetch(`${baseUrl}/api/product?${queryParams}`, {
-      cache: "no-store", // Disable caching for now to test
+      next: { revalidate: 300 }, // Disable caching for now to test
     });
 
     if (!response.ok) {
@@ -38,7 +38,6 @@ export const fetchIndianProducts = async (
 };
 
 // Fetch products for Chinese category
-
 export const fetchChineseProducts = async (
   page = 1,
   limit = 20,
@@ -61,7 +60,7 @@ export const fetchChineseProducts = async (
     if (filters.prepTime) queryParams.append("prepTime", filters.prepTime);
 
     const response = await fetch(`${baseUrl}/api/product?${queryParams}`, {
-      cache: "no-store", // Disable caching for now to test
+      next: { revalidate: 300 }, // Disable caching for now to test
     });
 
     if (!response.ok) {
@@ -99,7 +98,7 @@ export const fetchSouthIndianProducts = async (
     if (filters.prepTime) queryParams.append("prepTime", filters.prepTime);
 
     const response = await fetch(`${baseUrl}/api/product?${queryParams}`, {
-      cache: "no-store", // Disable caching for now to test
+      next: { revalidate: 300 }, // Disable caching for now to test
     });
 
     if (!response.ok) {
@@ -138,7 +137,7 @@ export const fetchTandoorProducts = async (
     if (filters.prepTime) queryParams.append("prepTime", filters.prepTime);
 
     const response = await fetch(`${baseUrl}/api/product?${queryParams}`, {
-      cache: "no-store", // Disable caching for now to test
+      next: { revalidate: 300 }, // Disable caching for now to test
     });
 
     if (!response.ok) {

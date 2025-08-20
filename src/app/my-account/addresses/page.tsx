@@ -35,7 +35,7 @@ export default function AddressesPage() {
       setLoading(true);
       const response = await fetch(`/api/users/address`, {
         cache: "no-store",
-        credentials : "include",
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -266,19 +266,7 @@ export default function AddressesPage() {
           </div>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-none p-4 mb-4 sm:mb-6">
-            <div className="flex items-center">
-              <div className="text-red-600 text-sm">{error}</div>
-              <button
-                onClick={() => setError(null)}
-                className="ml-auto text-red-600 hover:text-red-800">
-                ×
-              </button>
-            </div>
-          </div>
-        )}
+        
 
         {/* Add Address Form */}
         {isAddingAddress && (
