@@ -329,17 +329,17 @@ function MainCard({
           // Regular Add to Cart Button
           <Button
             onClick={handleAddToCart}
-            className={`w-full rounded-md  bg-white! border!  text-green-600! hover:bg-green-50 transition-colors `}>
-            <span className="flex items-center justify-center gap-2">
+            className={`w-full rounded-md  bg-white! border! text-green-600! hover:bg-green-50 transition-colors `}>
+            <span className="flex items-center justify-center gap-2 text-sm">
               {isCustomizable ? (
                 <>
                   <FaCartPlus />
-                  ADD TO CART
+                  ADD
                 </>
               ) : (
                 <>
                   <FaCartPlus />
-                  ADD TO CART
+                  ADD
                 </>
               )}
             </span>
