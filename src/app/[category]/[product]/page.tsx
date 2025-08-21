@@ -52,6 +52,7 @@ interface Review {
 }
 
 interface Product {
+  ratingCount: number;
   _id: string;
   title: string;
   slug: string;
@@ -698,7 +699,8 @@ function ProductPage({ params }: ProductPageProps) {
                       product.isVeg
                         ? "bg-green-600 text-white"
                         : "bg-red-600 text-white"
-                    }`}>
+                    }`}
+                  >
                     {product.isVeg ? "VEG" : "NON-VEG"}
                   </div>
                   {product.isBestSeller && (
@@ -725,7 +727,8 @@ function ProductPage({ params }: ProductPageProps) {
                     <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md p-3 sm:p-4">
                       <button
                         onClick={handleDecrementCart}
-                        className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
+                        className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+                      >
                         <FaMinus className="text-xs sm:text-sm" />
                       </button>
 
@@ -740,7 +743,8 @@ function ProductPage({ params }: ProductPageProps) {
 
                       <button
                         onClick={handleIncrementCart}
-                        className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
+                        className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+                      >
                         <FaPlus className="text-xs sm:text-sm" />
                       </button>
                     </div>
@@ -753,7 +757,8 @@ function ProductPage({ params }: ProductPageProps) {
                             onClick={() =>
                               setQuantity((prev) => Math.max(1, prev - 1))
                             }
-                            className="p-2 text-gray-600 hover:text-red-900">
+                            className="p-2 text-gray-600 hover:text-red-900"
+                          >
                             <FiMinus className="text-sm" />
                           </button>
                           <span className="px-3 sm:px-4 font-medium text-sm sm:text-base">
@@ -761,14 +766,16 @@ function ProductPage({ params }: ProductPageProps) {
                           </span>
                           <button
                             onClick={() => setQuantity((prev) => prev + 1)}
-                            className="p-2 text-gray-600 hover:text-red-900">
+                            className="p-2 text-gray-600 hover:text-red-900"
+                          >
                             <FiPlus className="text-sm" />
                           </button>
                         </div>
 
                         <Button
                           onClick={handleAddtocart}
-                          className="flex-1 ml-2 sm:ml-4 py-2 sm:py-3 bg-red-900 hover:bg-red-800 text-sm sm:text-base">
+                          className="flex-1 ml-2 sm:ml-4 py-2 sm:py-3 bg-red-900 hover:bg-red-800 text-sm sm:text-base"
+                        >
                           <span className="flex items-center justify-center gap-1 sm:gap-2">
                             <FaCartPlus className="text-sm" />
                             <span className="hidden sm:inline">
@@ -830,7 +837,8 @@ function ProductPage({ params }: ProductPageProps) {
                     {reviews.slice(0, 3).map((review) => (
                       <div
                         key={review._id}
-                        className="border-b border-gray-100 pb-4 last:border-b-0">
+                        className="border-b border-gray-100 pb-4 last:border-b-0"
+                      >
                         <div className="flex items-start gap-3">
                           {/* User Avatar */}
                           <div className="w-10 h-10 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
@@ -896,14 +904,16 @@ function ProductPage({ params }: ProductPageProps) {
                                   review.isHelpful
                                     ? "bg-green-100 text-green-700 hover:bg-green-200"
                                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                }`}>
+                                }`}
+                              >
                                 <svg
                                   className={`w-3 h-3 ${
                                     review.isHelpful ? "fill-current" : ""
                                   }`}
                                   fill="none"
                                   stroke="currentColor"
-                                  viewBox="0 0 24 24">
+                                  viewBox="0 0 24 24"
+                                >
                                   <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -931,13 +941,15 @@ function ProductPage({ params }: ProductPageProps) {
                       <div className="pt-4 border-t border-gray-100">
                         <button
                           onClick={() => setShowReviewsModal(true)}
-                          className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 font-medium flex items-center justify-center gap-2">
+                          className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 font-medium flex items-center justify-center gap-2"
+                        >
                           <span>Show All {reviews.length} Reviews</span>
                           <svg
                             className="w-4 h-4"
                             fill="none"
                             stroke="currentColor"
-                            viewBox="0 0 24 24">
+                            viewBox="0 0 24 24"
+                          >
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -976,7 +988,8 @@ function ProductPage({ params }: ProductPageProps) {
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
-                    className="animate-pulse flex md:px-20 border-t border-gray-300 py-4">
+                    className="animate-pulse flex md:px-20 border-t border-gray-300 py-4"
+                  >
                     <div className="flex-1 space-y-2 pr-4">
                       <div className="h-4 bg-gray-200 rounded w-1/3" />
                       <div className="h-4 bg-gray-200 rounded w-1/4" />
@@ -996,7 +1009,8 @@ function ProductPage({ params }: ProductPageProps) {
                       id: sp._id,
                       name: sp.title,
                       price: sp.discountedPrice || sp.price,
-                      rating: sp.rating || 4.5,
+                      rating: sp.rating,
+                      ratingCount: sp.ratingCount,
                       image: sp.imageUrl,
                       isVeg: sp.isVeg,
                       description: sp.description,

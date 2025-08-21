@@ -9,6 +9,7 @@ import { useCartStore } from "@/app/zustand/cartStore";
 
 interface RecommendatedionCardProps {
   item: {
+    ratingCount: number;
     id: number | string;
     name: string;
     description: string;
@@ -95,6 +96,7 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
             ? parseInt(item.prepTime) || 30
             : item.prepTime || 30,
         rating: item.rating,
+        ratingCount: item.ratingCount || 0,
       };
       addProductToCart(normalizedProduct, 1, [], null);
     } catch (e) {
@@ -166,6 +168,7 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
             ? parseInt(item.prepTime) || 30
             : item.prepTime || 30,
         rating: item.rating,
+        ratingCount: item.ratingCount || 0,
       };
       addProductToCart(normalizedProduct, 1, [], selectedOption);
       setShowCustomizationModal(false);
@@ -177,7 +180,8 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
   return (
     <div
       key={item.id}
-      className=" flex  my-2 md:px-20 overflow-hidden border-t border-gray-300 py-4 transition">
+      className=" flex  my-2 md:px-20 overflow-hidden border-t border-gray-300 py-4 transition"
+    >
       <div className="md:p-4 p-2 flex-8">
         {item.isVeg && (
           <span className=" text-green-800 rounded-full text-xs font-medium">
@@ -197,7 +201,9 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
           </span>
           <div className="flex items-center">
             <FiStar className="text-yellow-400 mr-1" />
-            <span>{item.rating}</span>
+            <span>
+              {item?.rating.toFixed(1)} ({item.ratingCount || 0})
+            </span>
           </div>
         </div>
         <p className="text-sm text-gray-600 mb-2">{item.description}</p>
@@ -212,7 +218,8 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
             {item.isCustomizable && (
               <button
                 onClick={handleEditCustomization}
-                className="text-xs text-blue-600 underline hover:text-blue-700">
+                className="text-xs text-blue-600 underline hover:text-blue-700"
+              >
                 Edit
               </button>
             )}
@@ -224,7 +231,8 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
           type="button"
           aria-label="Preview image"
           onClick={() => setShowImageModal(true)}
-          className="group relative focus:outline-none focus:ring-2 focus:ring-red-500 rounded-2xl">
+          className="group relative focus:outline-none focus:ring-2 focus:ring-red-500 rounded-2xl"
+        >
           <Image
             src={item.image}
             alt={item.name}
@@ -242,7 +250,8 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
             <div className="flex items-center bg-green-50 border border-green-200 rounded-md px-3 py-2">
               <button
                 onClick={handleDecrementCart}
-                className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
+                className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+              >
                 <FaMinus className="text-xs" />
               </button>
 
@@ -257,7 +266,8 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
 
               <button
                 onClick={handleIncrementCart}
-                className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
+                className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+              >
                 <FaPlus className="text-xs" />
               </button>
             </div>
@@ -265,7 +275,8 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
             // Regular add to cart button
             <Button
               onClick={handleAddToCart}
-              className="relative text-sm flex items-center gap-2">
+              className="relative text-sm flex items-center gap-2"
+            >
               <FaCartPlus />
               Add to Cart
             </Button>
@@ -291,7 +302,8 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
         <div
           className="fixed inset-0 z-[999] flex items-center justify-center px-4 py-10 backdrop-blur-sm"
           aria-modal="true"
-          role="dialog">
+          role="dialog"
+        >
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 animate-fadeIn"
@@ -302,7 +314,8 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
             <button
               onClick={closeImageModal}
               aria-label="Close image preview"
-              className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur hover:bg-red-600 hover:text-white text-gray-600 shadow transition">
+              className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur hover:bg-red-600 hover:text-white text-gray-600 shadow transition"
+            >
               ✕
             </button>
             <div className="p-3 sm:p-4">
@@ -333,7 +346,8 @@ function RecommendationCard({ item }: RecommendatedionCardProps) {
               <div className="mt-4 flex justify-end gap-2">
                 <button
                   onClick={closeImageModal}
-                  className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition">
+                  className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+                >
                   Close
                 </button>
               </div>
