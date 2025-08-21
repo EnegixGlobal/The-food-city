@@ -58,13 +58,22 @@ function HeroSection() {
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')] bg-cover bg-center "></div>
 
       <div className="bg-black/50 inset-0 absolute">
+        <div className="w-full flex items-center justify-center mt-6">
+          <button
+            onClick={handleInstallClick}
+            className="md:hidden self-center cursor-pointer bg-black border border-yellow-300 rounded-full  text-white hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 px-6 py-2 font-bold"
+          >
+            📲 Install App
+          </button>
+        </div>
         {/* Category boxes */}
-        <Container>
+        <Container className="py-6! md:py-12!">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {categories.map((category, index) => (
               <div
                 key={index}
-                className="border-2 border-white/45  cursor-pointer rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                className="border-2 border-white/45  cursor-pointer rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+              >
                 {/* Image + Text Overlay */}
                 <Link href={category.href}>
                   <div className="relative w-full h-24">
@@ -90,7 +99,7 @@ function HeroSection() {
         </Container>
 
         <div className="relative z-10">
-          <Container className="py-6!">
+          <Container className="py-2! md:py-6!">
             <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8">
               {/* Text content */}
               <div className="text-white">
@@ -98,20 +107,20 @@ function HeroSection() {
                   <span className="text-yellow-400">Delicious</span> Food
                   Delivered To Your Doorstep
                 </h1>
-                <p className="text-lg md:text-xl mb-8 max-w-xl">
+                <p className="text-lg md:text-xl mb-8 max-w-xl font-semibold">
                   Order from your favorite restaurants with just a few taps.
                   Fast delivery, fresh meals, and unforgettable taste
                   experiences.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button className="py-3! px-8! mb-2">Order Now</Button>
-                  {deferredPrompt && (
-                    <Button
-                      onClick={handleInstallClick}
-                      className="py-3! px-8!">
-                      📲 Install App
-                    </Button>
-                  )}
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-start">
+                  <Button className="md:py-3! py-2! px-8!">Order Now</Button>
+
+                  <button
+                    onClick={handleInstallClick}
+                    className="hidden cursor-pointer bg-black border border-yellow-300 rounded-full  text-white  hover:text-white transition-colors duration-300 md:flex items-center gap-2 px-6 py-3 font-bold"
+                  >
+                    📲 Install App
+                  </button>
                 </div>
               </div>
             </div>
