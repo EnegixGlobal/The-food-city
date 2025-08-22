@@ -130,7 +130,7 @@ export const GET = asyncHandler(async (req) => {
   const page = Number.isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
   // Clamp limit to a safe range [1, 50]
   const rawLimit = Number.isNaN(parsedLimit) ? 10 : parsedLimit;
-  const limit = Math.max(1, Math.min(rawLimit, 50));
+  const limit = Math.max(1, Math.min(rawLimit, 300));
   const sortBy = searchParams.get("sortBy") || "createdAt";
   const sortOrder = searchParams.get("sortOrder") || "desc";
 

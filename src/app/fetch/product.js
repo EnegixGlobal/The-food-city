@@ -151,3 +151,27 @@ export const fetchTandoorProducts = async (
     throw error;
   }
 };
+
+// fetch best selling products
+export const fetchBestSellingProducts = async (page = 1, limit = 30) => {
+  try {
+    // Build query string with only provided filters
+    const queryParams = new URLSearchParams({
+      isBestSeller: "true",
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    const response = await fetch(`${baseUrl}/api/product?${queryParams}`);
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    const data = await response.json();
+    return data.data.products;
+  } catch (error) {
+    console.error("Fetch error:", error);
+    throw error;
+  }
+};

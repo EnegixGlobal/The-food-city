@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { FiChevronLeft, FiChevronRight, FiTag, FiClock, FiShoppingCart } from "react-icons/fi";
+import {
+  FiChevronLeft,
+  FiChevronRight,
+  FiTag,
+  FiClock,
+  FiShoppingCart,
+} from "react-icons/fi";
 import { FaFire, FaGift } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import Container from "./Container";
@@ -41,9 +47,9 @@ const SpecialOffers = () => {
   };
 
   // Handle "View All Items" - create a search query with all product names
-  const handleViewAllItems = (products: Array<{title: string}>) => {
+  const handleViewAllItems = (products: Array<{ title: string }>) => {
     // Create a search query with multiple product names separated by " OR "
-    const searchTerms = products.map(p => p.title).join(' OR ');
+    const searchTerms = products.map((p) => p.title).join(" OR ");
     const searchQuery = encodeURIComponent(searchTerms);
     router.push(`/search?q=${searchQuery}`);
   };
@@ -52,14 +58,14 @@ const SpecialOffers = () => {
   useEffect(() => {
     const fetchOffers = async () => {
       try {
-        const response = await fetch('/api/coupon');
+        const response = await fetch("/api/coupon");
         const data = await response.json();
-        
+
         if (data.success && data.data) {
           setOffers(data.data);
         }
       } catch (error) {
-        console.error('Error fetching offers:', error);
+        console.error("Error fetching offers:", error);
       } finally {
         setIsLoading(false);
       }
@@ -88,10 +94,10 @@ const SpecialOffers = () => {
 
   // Helper functions
   const getCurrentOffer = () => offers[currentSlide];
-  
+
   const getDiscountText = (offer: Coupon) => {
-    return offer.discountType === 'percentage' 
-      ? `${offer.discountValue}% OFF` 
+    return offer.discountType === "percentage"
+      ? `${offer.discountValue}% OFF`
       : `₹${offer.discountValue} OFF`;
   };
 
@@ -101,15 +107,22 @@ const SpecialOffers = () => {
   };
 
   const getOfferDescription = (offer: Coupon) => {
-    const productNames = offer.applicableProducts.slice(0, 3).map(p => p.title).join(', ');
-    const moreItems = offer.applicableProducts.length > 3 ? ` and ${offer.applicableProducts.length - 3} more items` : '';
+    const productNames = offer.applicableProducts
+      .slice(0, 3)
+      .map((p) => p.title)
+      .join(", ");
+    const moreItems =
+      offer.applicableProducts.length > 3
+        ? ` and ${offer.applicableProducts.length - 3} more items`
+        : "";
     return `Valid on ${productNames}${moreItems}. Use code ${offer.code} at checkout!`;
   };
 
   const getOfferImage = (offer: Coupon) => {
     if (offer.offerImage) return offer.offerImage;
-    if (offer.applicableProducts.length > 0) return offer.applicableProducts[0].imageUrl;
-    return '/placeholder-food.svg';
+    if (offer.applicableProducts.length > 0)
+      return offer.applicableProducts[0].imageUrl;
+    return "/placeholder-food.svg";
   };
 
   const isOfferExpiringSoon = (offer: Coupon) => {
@@ -141,228 +154,255 @@ const SpecialOffers = () => {
     );
   }
 
-  if (!offers.length) {
-    return (
-      <div className="relative bg-white md:py-12 py-8 md:px-4 text-gray-800 overflow-hidden">
-        <div className="mx-auto px-4 relative z-10">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-2 text-red-800">
-            Special Offers
-          </h2>
-          <p className="text-center text-gray-600 mb-6 max-w-2xl mx-auto text-sm md:text-2xl">
-            No special offers available right now. Check back soon!
-          </p>
-          <Image 
-            src="https://img.freepik.com/premium-vector/no-offer-found-illustration-icon_842098-19.jpg"
-            alt="No offers available"
-            width={300}
-            height={200}
-            className="mx-auto mb-6"
-          />
-        </div>
-      </div>
-    );
-  }
+  // if (!offers.length) {
+  //   return (
+  //     <div className="relative bg-white md:py-12 py-8 md:px-4 text-gray-800 overflow-hidden">
+  //       <div className="mx-auto px-4 relative z-10">
+  //         <h2 className="text-2xl md:text-3xl font-bold text-center mb-2 text-red-800">
+  //           Special Offers
+  //         </h2>
+  //         <p className="text-center text-gray-600 mb-6 max-w-2xl mx-auto text-sm md:text-2xl">
+  //           No special offers available right now. Check back soon!
+  //         </p>
+  //         <Image
+  //           src="https://img.freepik.com/premium-vector/no-offer-found-illustration-icon_842098-19.jpg"
+  //           alt="No offers available"
+  //           width={300}
+  //           height={200}
+  //           className="mx-auto mb-6"
+  //         />
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   const currentOffer = getCurrentOffer();
 
-  return (
-    <div className="relative bg-gray-100 md:py-12 py-8 md:px-4 text-gray-800 overflow-hidden">
-      {/* Decorative background pattern */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-100 to-gray-200 opacity-50" />
-      <div className=" mx-auto px-4 relative z-10">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-2 text-red-800">
-          Special Offers
-        </h2>
-        <p className="text-center text-gray-600 mb-6 max-w-2xl mx-auto text-sm">
-          Limited-time deals you don&apos;t want to miss! Grab them before
-          they&apos;re gone.
-        </p>
+  if (!offers?.length) {
+    return null;
+  } else
+    return (
+      <div className="relative bg-gray-100 md:py-12 py-8 md:px-4 text-gray-800 overflow-hidden">
+        {/* Decorative background pattern */}
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-100 to-gray-200 opacity-50" />
+        <div className=" mx-auto px-4 relative z-10">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-2 text-red-800">
+            Special Offers
+          </h2>
+          <p className="text-center text-gray-600 mb-6 max-w-2xl mx-auto text-sm">
+            Limited-time deals you don&apos;t want to miss! Grab them before
+            they&apos;re gone.
+          </p>
 
-        {/* Carousel */}
-        <Container>
-          {/* Navigation Arrows */}
-          {offers.length > 1 && (
-            <>
-              <button
-                onClick={prevSlide}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-sm transition transform hover:scale-110 shadow-lg">
-                <FiChevronLeft className="text-2xl text-red-800" />
-              </button>
+          {/* Carousel */}
+          <Container>
+            {/* Navigation Arrows */}
+            {offers.length > 1 && (
+              <>
+                <button
+                  onClick={prevSlide}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-sm transition transform hover:scale-110 shadow-lg"
+                >
+                  <FiChevronLeft className="text-2xl text-red-800" />
+                </button>
 
-              <button
-                onClick={nextSlide}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-sm transition transform hover:scale-110 shadow-lg">
-                <FiChevronRight className="text-2xl text-red-800" />
-              </button>
-            </>
-          )}
+                <button
+                  onClick={nextSlide}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-sm transition transform hover:scale-110 shadow-lg"
+                >
+                  <FiChevronRight className="text-2xl text-red-800" />
+                </button>
+              </>
+            )}
 
-          {/* Carousel Slides */}
-          <div className="flex md:flex-row flex-col w-full overflow-hidden rounded-xl shadow-2xl bg-white">
-            {/* Left Side - Image */}
-            <div className="md:w-1/2 md:h-[550px] h-[320px] relative overflow-hidden">
-              <Image
-                width={600}
-                height={400}
-                src={getOfferImage(currentOffer)}
-                alt={getOfferTitle(currentOffer)}
-                className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                onError={(e) => {
-                  e.currentTarget.src = '/placeholder-food.svg';
-                }}
-              />
-              
-              {/* Overlay Badges */}
-              <div className="absolute top-0 left-0 right-0 p-3 flex justify-between items-start">
-                <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-red-900 px-3 py-1 rounded-full font-bold text-xs shadow-lg flex items-center gap-1">
-                  <FaFire className="text-red-700 text-xs" />
-                  HOT DEAL
-                </div>
-                {isOfferExpiringSoon(currentOffer) && (
-                  <div className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold animate-pulse flex items-center gap-1">
-                    <FiClock className="text-xs" />
-                    EXPIRES SOON
+            {/* Carousel Slides */}
+            <div className="flex md:flex-row flex-col w-full overflow-hidden rounded-xl shadow-2xl bg-white">
+              {/* Left Side - Image */}
+              <div className="md:w-1/2 md:h-[550px] h-[320px] relative overflow-hidden">
+                <Image
+                  width={600}
+                  height={400}
+                  src={getOfferImage(currentOffer)}
+                  alt={getOfferTitle(currentOffer)}
+                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                  onError={(e) => {
+                    e.currentTarget.src = "/placeholder-food.svg";
+                  }}
+                />
+
+                {/* Overlay Badges */}
+                <div className="absolute top-0 left-0 right-0 p-3 flex justify-between items-start">
+                  <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-red-900 px-3 py-1 rounded-full font-bold text-xs shadow-lg flex items-center gap-1">
+                    <FaFire className="text-red-700 text-xs" />
+                    HOT DEAL
                   </div>
-                )}
-              </div>
-
-              {/* Product Images Preview - Clickable */}
-              {currentOffer.applicableProducts.length > 0 && (
-                <div className="absolute bottom-3 left-3 flex gap-1">
-                  {currentOffer.applicableProducts.slice(0, 3).map((product, index) => (
-                    <div 
-                      key={product._id} 
-                      className="relative cursor-pointer hover:scale-110 transition-transform"
-                      onClick={() => handleProductClick(product.title)}
-                      title={`Click to search for ${product.title}`}
-                    >
-                      <Image
-                        src={product.imageUrl}
-                        alt={product.title}
-                        width={40}
-                        height={40}
-                        className="rounded-md border-2 border-white shadow-lg object-cover hover:border-yellow-400 transition-colors"
-                      />
-                      {index === 2 && currentOffer.applicableProducts.length > 3 && (
-                        <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center hover:bg-black/50 transition-colors">
-                          <span className="text-white text-xs font-bold">+{currentOffer.applicableProducts.length - 3}</span>
-                        </div>
-                      )}
+                  {isOfferExpiringSoon(currentOffer) && (
+                    <div className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold animate-pulse flex items-center gap-1">
+                      <FiClock className="text-xs" />
+                      EXPIRES SOON
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Right Side - Offer Details */}
-            <div className="md:w-1/2 px-4 py-6 flex flex-col justify-center bg-gradient-to-br from-red-900 to-red-800 relative overflow-hidden">
-              {/* Background Pattern */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-400 rounded-full -translate-y-12 translate-x-12"></div>
-                <div className="absolute bottom-0 left-0 w-16 h-16 bg-orange-400 rounded-full translate-y-8 -translate-x-8"></div>
-              </div>
-
-              <div className="relative z-10 text-center">
-                {/* Coupon Code Badge */}
-                <div className="inline-flex items-center gap-1 bg-yellow-400 text-red-900 px-3 py-1 rounded-full font-bold text-xs mb-3 shadow-lg">
-                  <FiTag className="text-xs" />
-                  {currentOffer.code}
+                  )}
                 </div>
 
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-3 leading-tight">
-                  {getOfferTitle(currentOffer)}
-                </h3>
-                
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 mb-4 border border-white/20">
-                  <p className="text-yellow-300 text-2xl md:text-3xl font-extrabold mb-1">
-                    {getDiscountText(currentOffer)}
-                  </p>
-                  <p className="text-white/90 text-xs">
-                    Valid on {currentOffer.applicableProducts.length} delicious items
-                  </p>
-                </div>
-
-                <p className="text-white/90 mb-4 leading-relaxed text-sm">
-                  {getOfferDescription(currentOffer)}
-                </p>
-
-                {/* Expiry Info */}
-                <div className="text-white/70 text-xs mb-3 flex items-center justify-center gap-1">
-                  <FiClock className="text-xs" />
-                  Expires: {new Date(currentOffer.endDate).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </div>
-
-                {/* Clickable Product Preview */}
+                {/* Product Images Preview - Clickable */}
                 {currentOffer.applicableProducts.length > 0 && (
-                  <div className="mb-4">
-                    <p className="text-white/80 text-xs mb-2 text-center">Click any item to search:</p>
-                    <div className="flex flex-wrap justify-center gap-2 max-w-xs mx-auto">
-                      {currentOffer.applicableProducts.slice(0, 6).map((product) => (
-                        <button
+                  <div className="absolute bottom-3 left-3 flex gap-1">
+                    {currentOffer.applicableProducts
+                      .slice(0, 3)
+                      .map((product, index) => (
+                        <div
                           key={product._id}
+                          className="relative cursor-pointer hover:scale-110 transition-transform"
                           onClick={() => handleProductClick(product.title)}
-                          className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded-full border border-white/20 hover:border-yellow-400 transition-all duration-200 hover:scale-105"
-                          title={`Search for ${product.title}`}
+                          title={`Click to search for ${product.title}`}
                         >
-                          {product.title.length > 15 ? `${product.title.substring(0, 15)}...` : product.title}
-                        </button>
+                          <Image
+                            src={product.imageUrl}
+                            alt={product.title}
+                            width={40}
+                            height={40}
+                            className="rounded-md border-2 border-white shadow-lg object-cover hover:border-yellow-400 transition-colors"
+                          />
+                          {index === 2 &&
+                            currentOffer.applicableProducts.length > 3 && (
+                              <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center hover:bg-black/50 transition-colors">
+                                <span className="text-white text-xs font-bold">
+                                  +{currentOffer.applicableProducts.length - 3}
+                                </span>
+                              </div>
+                            )}
+                        </div>
                       ))}
-                      {currentOffer.applicableProducts.length > 6 && (
-                        <button
-                          onClick={() => handleViewAllItems(currentOffer.applicableProducts)}
-                          className="bg-yellow-400/20 hover:bg-yellow-400/30 text-yellow-300 text-xs px-2 py-1 rounded-full border border-yellow-400/50 hover:border-yellow-400 transition-all duration-200 hover:scale-105"
-                        >
-                          +{currentOffer.applicableProducts.length - 6} more
-                        </button>
-                      )}
-                    </div>
                   </div>
                 )}
+              </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                  <Link href="/offers">
-                    <Button className="bg-yellow-400 hover:bg-yellow-500 text-red-900 font-bold py-2 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-1 text-sm">
-                      <FaGift className="text-sm" />
-                      View All Offers
+              {/* Right Side - Offer Details */}
+              <div className="md:w-1/2 px-4 py-6 flex flex-col justify-center bg-gradient-to-br from-red-900 to-red-800 relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-400 rounded-full -translate-y-12 translate-x-12"></div>
+                  <div className="absolute bottom-0 left-0 w-16 h-16 bg-orange-400 rounded-full translate-y-8 -translate-x-8"></div>
+                </div>
+
+                <div className="relative z-10 text-center">
+                  {/* Coupon Code Badge */}
+                  <div className="inline-flex items-center gap-1 bg-yellow-400 text-red-900 px-3 py-1 rounded-full font-bold text-xs mb-3 shadow-lg">
+                    <FiTag className="text-xs" />
+                    {currentOffer.code}
+                  </div>
+
+                  <h3 className="text-xl md:text-2xl font-bold text-white mb-3 leading-tight">
+                    {getOfferTitle(currentOffer)}
+                  </h3>
+
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 mb-4 border border-white/20">
+                    <p className="text-yellow-300 text-2xl md:text-3xl font-extrabold mb-1">
+                      {getDiscountText(currentOffer)}
+                    </p>
+                    <p className="text-white/90 text-xs">
+                      Valid on {currentOffer.applicableProducts.length}{" "}
+                      delicious items
+                    </p>
+                  </div>
+
+                  <p className="text-white/90 mb-4 leading-relaxed text-sm">
+                    {getOfferDescription(currentOffer)}
+                  </p>
+
+                  {/* Expiry Info */}
+                  <div className="text-white/70 text-xs mb-3 flex items-center justify-center gap-1">
+                    <FiClock className="text-xs" />
+                    Expires:{" "}
+                    {new Date(currentOffer.endDate).toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      }
+                    )}
+                  </div>
+
+                  {/* Clickable Product Preview */}
+                  {currentOffer.applicableProducts.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-white/80 text-xs mb-2 text-center">
+                        Click any item to search:
+                      </p>
+                      <div className="flex flex-wrap justify-center gap-2 max-w-xs mx-auto">
+                        {currentOffer.applicableProducts
+                          .slice(0, 6)
+                          .map((product) => (
+                            <button
+                              key={product._id}
+                              onClick={() => handleProductClick(product.title)}
+                              className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded-full border border-white/20 hover:border-yellow-400 transition-all duration-200 hover:scale-105"
+                              title={`Search for ${product.title}`}
+                            >
+                              {product.title.length > 15
+                                ? `${product.title.substring(0, 15)}...`
+                                : product.title}
+                            </button>
+                          ))}
+                        {currentOffer.applicableProducts.length > 6 && (
+                          <button
+                            onClick={() =>
+                              handleViewAllItems(
+                                currentOffer.applicableProducts
+                              )
+                            }
+                            className="bg-yellow-400/20 hover:bg-yellow-400/30 text-yellow-300 text-xs px-2 py-1 rounded-full border border-yellow-400/50 hover:border-yellow-400 transition-all duration-200 hover:scale-105"
+                          >
+                            +{currentOffer.applicableProducts.length - 6} more
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                    <Link href="/offers">
+                      <Button className="bg-yellow-400 hover:bg-yellow-500 text-red-900 font-bold py-2 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-1 text-sm">
+                        <FaGift className="text-sm" />
+                        View All Offers
+                      </Button>
+                    </Link>
+                    <Button
+                      onClick={() =>
+                        handleViewAllItems(currentOffer.applicableProducts)
+                      }
+                      className="bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 font-bold py-2 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-1 text-sm"
+                    >
+                      <FiShoppingCart className="text-sm" />
+                      Search All Items
                     </Button>
-                  </Link>
-                  <Button 
-                    onClick={() => handleViewAllItems(currentOffer.applicableProducts)}
-                    className="bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 font-bold py-2 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-1 text-sm"
-                  >
-                    <FiShoppingCart className="text-sm" />
-                    Search All Items
-                  </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </Container>
+          </Container>
 
-        {/* Carousel Indicators */}
-        {offers.length > 1 && (
-          <div className="flex justify-center space-x-2 mt-6">
-            {offers.map((offer, index) => (
-              <button
-                key={offer._id}
-                onClick={() => setCurrentSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  currentSlide === index 
-                    ? "bg-red-800 scale-125" 
-                    : "bg-red-300 hover:bg-red-500"
-                }`}
-              />
-            ))}
-          </div>
-        )}
+          {/* Carousel Indicators */}
+          {offers.length > 1 && (
+            <div className="flex justify-center space-x-2 mt-6">
+              {offers.map((offer, index) => (
+                <button
+                  key={offer._id}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    currentSlide === index
+                      ? "bg-red-800 scale-125"
+                      : "bg-red-300 hover:bg-red-500"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
 };
 
 export default SpecialOffers;

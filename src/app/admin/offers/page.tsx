@@ -56,6 +56,7 @@ interface CouponFormData {
 
 const CouponsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [productSearchTerm, setProductSearchTerm] = useState("");
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -73,8 +74,6 @@ const CouponsPage = () => {
     usageLimit: "",
     isActive: true,
   });
-
-
 
   // Image upload handler
   const handleImageUpload = async (file: File) => {
@@ -154,9 +153,10 @@ const CouponsPage = () => {
   // Fetch products for dropdown
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`/api/product`);
+      const response = await fetch(`/api/product?limit=300`, {
+        next: { revalidate: 10 },
+      });
       const data = await response.json();
-
       if (response.ok && data.success) {
         setProducts(data.data.products || []);
       }
@@ -164,6 +164,8 @@ const CouponsPage = () => {
       console.error("Error fetching products:", error);
     }
   };
+
+  console.log(products);
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -317,7 +319,8 @@ const CouponsPage = () => {
       <span
         className={`px-2 py-1 rounded-full text-xs flex items-center ${
           isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-        }`}>
+        }`}
+      >
         {isActive ? (
           <>
             <FiCheckCircle className="mr-1" /> Active
@@ -368,7 +371,8 @@ const CouponsPage = () => {
             </div>
             <button
               onClick={() => setShowForm(true)}
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-none flex items-center gap-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl">
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-none flex items-center gap-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
               <FaPlus /> Create New Coupon
             </button>
           </div>
@@ -411,7 +415,8 @@ const CouponsPage = () => {
               {!searchTerm && (
                 <button
                   onClick={() => setShowForm(true)}
-                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-none flex items-center gap-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl mx-auto">
+                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-none flex items-center gap-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl mx-auto"
+                >
                   <FaPlus /> Create Your First Coupon
                 </button>
               )}
@@ -451,7 +456,8 @@ const CouponsPage = () => {
                   {filteredCoupons.map((coupon) => (
                     <tr
                       key={coupon._id}
-                      className="hover:bg-gray-50 transition-colors duration-200">
+                      className="hover:bg-gray-50 transition-colors duration-200"
+                    >
                       {/* Coupon Details */}
                       <td className="px-6 py-4">
                         <div className="flex items-center">
@@ -551,7 +557,8 @@ const CouponsPage = () => {
                                   .map((product) => (
                                     <span
                                       key={product._id}
-                                      className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                                      className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+                                    >
                                       {product.title}
                                     </span>
                                   ))}
@@ -571,13 +578,15 @@ const CouponsPage = () => {
                           <button
                             onClick={() => handleEdit(coupon)}
                             className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-none transition-colors duration-200"
-                            title="Edit Coupon">
+                            title="Edit Coupon"
+                          >
                             <FaEdit className="text-sm" />
                           </button>
                           <button
                             onClick={() => handleDelete(coupon)}
                             className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-none transition-colors duration-200"
-                            title="Delete Coupon">
+                            title="Delete Coupon"
+                          >
                             <FaTrash className="text-sm" />
                           </button>
                         </div>
@@ -647,7 +656,8 @@ const CouponsPage = () => {
               </h2>
               <button
                 onClick={resetForm}
-                className="text-gray-500 hover:text-gray-700 transition-colors duration-200">
+                className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+              >
                 <FaTimes className="text-xl" />
               </button>
             </div>
@@ -673,7 +683,8 @@ const CouponsPage = () => {
                         onClick={() =>
                           setFormData({ ...formData, offerImage: "" })
                         }
-                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors duration-200">
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors duration-200"
+                      >
                         <FaTimes />
                       </button>
                     </div>
@@ -698,7 +709,8 @@ const CouponsPage = () => {
                         htmlFor="image-upload"
                         className={`bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-none cursor-pointer transition-colors duration-200 ${
                           uploadingImage ? "opacity-50 cursor-not-allowed" : ""
-                        }`}>
+                        }`}
+                      >
                         {uploadingImage ? (
                           <>
                             <FiLoader className="inline animate-spin mr-2" />
@@ -745,7 +757,8 @@ const CouponsPage = () => {
                       })
                     }
                     className="w-full border border-gray-300 rounded-none p-3 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
-                    required>
+                    required
+                  >
                     <option value="percentage">Percentage (%)</option>
                     <option value="fixed">Fixed Amount (₹)</option>
                   </select>
@@ -866,58 +879,77 @@ const CouponsPage = () => {
                       No products available
                     </p>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {products.map((product) => (
-                        <label
-                          key={product._id}
-                          className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.applicableItems.includes(
-                              product._id
-                            )}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setFormData({
-                                  ...formData,
-                                  applicableItems: [
-                                    ...formData.applicableItems,
-                                    product._id,
-                                  ],
-                                });
-                              } else {
-                                setFormData({
-                                  ...formData,
-                                  applicableItems:
-                                    formData.applicableItems.filter(
-                                      (id) => id !== product._id
-                                    ),
-                                });
-                              }
-                            }}
-                            className="mr-2 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
-                          />
-                          <div className="flex items-center">
-                            <Image
-                              src={product.imageUrl}
-                              alt={product.title}
-                              width={32}
-                              height={32}
-                              className="w-8 h-8 rounded object-cover mr-2"
-                            />
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {product.title}
+                    <>
+                      {/* Product Search Bar */}
+                      <div className="mb-2">
+                        <input
+                          type="text"
+                          placeholder="Search products by name..."
+                          value={productSearchTerm}
+                          onChange={(e) => setProductSearchTerm(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-none focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        {products
+                          .filter((product) =>
+                            product.title
+                              .toLowerCase()
+                              .includes(productSearchTerm.toLowerCase())
+                          )
+                          .map((product) => (
+                            <label
+                              key={product._id}
+                              className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={formData.applicableItems.includes(
+                                  product._id
+                                )}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFormData({
+                                      ...formData,
+                                      applicableItems: [
+                                        ...formData.applicableItems,
+                                        product._id,
+                                      ],
+                                    });
+                                  } else {
+                                    setFormData({
+                                      ...formData,
+                                      applicableItems:
+                                        formData.applicableItems.filter(
+                                          (id) => id !== product._id
+                                        ),
+                                    });
+                                  }
+                                }}
+                                className="mr-2 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                              />
+                              <div className="flex items-center">
+                                <Image
+                                  src={product.imageUrl}
+                                  alt={product.title}
+                                  width={32}
+                                  height={32}
+                                  className="w-8 h-8 rounded object-cover mr-2"
+                                />
+                                <div>
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {product.title}
+                                  </div>
+                                  <div className="text-xs text-gray-500 flex items-center">
+                                    <FaRupeeSign className="mr-1" size={10} />
+                                    {product.price}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-xs text-gray-500 flex items-center">
-                                <FaRupeeSign className="mr-1" size={10} />
-                                {product.price}
-                              </div>
-                            </div>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
+                            </label>
+                          ))}
+                      </div>
+                    </>
                   )}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
@@ -930,7 +962,8 @@ const CouponsPage = () => {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-none font-medium transition-colors duration-200">
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-none font-medium transition-colors duration-200"
+                >
                   Cancel
                 </button>
                 <button
@@ -938,7 +971,8 @@ const CouponsPage = () => {
                   disabled={
                     uploadingImage || formData.applicableItems.length === 0
                   }
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-none font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-none font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   {editingCoupon ? "Update Coupon" : "Create Coupon"}
                 </button>
               </div>
