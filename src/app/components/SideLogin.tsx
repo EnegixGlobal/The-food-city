@@ -127,7 +127,6 @@ const SideLogin = ({
           setTimer(30);
           setIsResendDisabled(true);
         } else if (isLogin && isOtpSent) {
-          // OTP verified and login successful
           addAlert({
             type: "success",
             title: "Login Successful!",
@@ -155,7 +154,7 @@ const SideLogin = ({
       console.error("Error:", error);
 
       // More specific error handling
-      let errorMessage = "Something went wrong. Please try again.";
+      let errorMessage = "Create your account first, then login!";
       let errorTitle = "Operation Failed";
 
       if (error.response?.status === 400) {
@@ -267,8 +266,6 @@ const SideLogin = ({
     setIsResendDisabled(true);
     reset(); // Clear form
     setData({ phone: "", name: "", email: "", otp: "" });
-
-
   };
 
   return (
@@ -290,11 +287,13 @@ const SideLogin = ({
             isOpen
               ? "md:translate-x-0 translate-y-0"
               : "md:translate-x-full translate-y-full"
-          }`}>
+          }`}
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute md:top-4 md:left-4 top-4 right-4 text-gray-500 hover:text-red-900 transition p-2 z-10 cursor-pointer">
+          className="absolute md:top-4 md:left-4 top-4 right-4 text-gray-500 hover:text-red-900 transition p-2 z-10 cursor-pointer"
+        >
           <FiX size={24} />
         </button>
 
@@ -309,7 +308,8 @@ const SideLogin = ({
               or{" "}
               <button
                 onClick={toggleMode}
-                className="text-red-900 text-sm font-bold hover:underline">
+                className="text-red-900 text-sm font-bold hover:underline"
+              >
                 {isLogin ? "Create an account" : "Already have an account?"}
               </button>
             </p>
@@ -318,7 +318,8 @@ const SideLogin = ({
           {/* Form */}
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="flex-1 flex flex-col">
+            className="flex-1 flex flex-col"
+          >
             <div className="space-y-6">
               {/* Email Field */}
               <div className="relative">
@@ -349,7 +350,8 @@ const SideLogin = ({
                         isResendDisabled
                           ? "text-gray-400 pointer-events-none"
                           : "text-red-900 hover:underline"
-                      }`}>
+                      }`}
+                    >
                       {isResendDisabled
                         ? `Resend OTP in ${timer}s`
                         : "Resend OTP!"}
