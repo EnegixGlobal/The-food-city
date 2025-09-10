@@ -13,9 +13,7 @@ const DosaOffer = () => {
   const [isOfferVisible, setIsOfferVisible] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState("");
   const [mounted, setMounted] = useState(false);
-  const [imageSrc, setImageSrc] = useState(
-    "https://assets.grok.com/users/3ddc1ab0-2224-459a-9de6-96e023163932/generated/e7e02d1e-c804-4dc8-885b-977bb4900c9f/image.jpg"
-  );
+
 
   // Check if current time is between 9 AM and 2:30 PM
   useEffect(() => {
@@ -103,10 +101,9 @@ const DosaOffer = () => {
               <Image
                 width={600}
                 height={600}
-                src={imageSrc}
+                src="/dosa.jpg"
                 alt="Buy 2 Dosas Get 1 Free"
                 className="w-full h-full object-cover"
-                onError={() => setImageSrc("/placeholder-food.svg")}
               />
 
               {/* Offer badge */}

@@ -18,11 +18,15 @@ export const metadata: Metadata = {
   title: "The Food City | Online Food Delivery in Ranchi",
   description: "Delicious food delivered to your doorstep",
   manifest: "/manifest.json",
-  themeColor: "#2563eb",
   icons: {
     icon: "/new_logo.png",
     apple: "/new_logo.png",
   },
+};
+
+// layout.tsx
+export const viewport = {
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({

@@ -16,7 +16,7 @@ export default function BookTableOffer() {
           {/* Image */}
           <div className="w-full h-64 md:h-96 rounded-xl overflow-hidden shadow-lg">
             <Image
-              src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1400&q=80"
+              src="/table.png"
               alt="Restaurant table"
               width={1400}
               height={900}
