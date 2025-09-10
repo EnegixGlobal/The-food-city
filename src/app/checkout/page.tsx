@@ -71,27 +71,10 @@ const CheckoutPage = () => {
     "online" | "cod"
   >("online");
 
-  // Load Razorpay script
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
   // Process payment
   const processPayment = async (orderData: any) => {
     try {
       setProcessingPayment(true);
-
-      // Load Razorpay script
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        throw new Error("Failed to load payment gateway");
-      }
 
       // Create payment order
       const response = await fetch("/api/payment/create-order", {
@@ -106,73 +89,7 @@ const CheckoutPage = () => {
         throw new Error(paymentData.message || "Failed to create payment");
       }
 
-      // Configure Razorpay options
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: paymentData.data.amount,
-        currency: paymentData.data.currency,
-        name: "The Food City",
-        description: `Payment for Order #${orderData.orderId}`,
-        order_id: paymentData.data.razorpayOrderId,
-        handler: async (response: any) => {
-          try {
-            // Verify payment
-            const verifyResponse = await fetch("/api/payment/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                orderId: orderData.orderId,
-              }),
-            });
-
-            const verifyData = await verifyResponse.json();
-            if (verifyResponse.ok && verifyData.success) {
-              showAlert.success(
-                "Payment Successful!",
-                "Your order has been confirmed"
-              );
-
-              // Clear cart and redirect
-              const { clearCart } = useCartStore.getState();
-              clearCart();
-              clearAddons();
-
-              setTimeout(() => {
-                router.push("/my-account");
-              }, 2000);
-            } else {
-              throw new Error(
-                verifyData.message || "Payment verification failed"
-              );
-            }
-          } catch (error) {
-            console.error("Payment verification error:", error);
-            showAlert.error(
-              "Payment Verification Failed",
-              "Please contact support"
-            );
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            showAlert.warning(
-              "Payment Cancelled",
-              "You can retry payment anytime"
-            );
-            setProcessingPayment(false);
-          },
-        },
-        theme: {
-          color: "#b91c1c", // red-700
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
+      window.location.href = paymentData.data.redirectUrl;
     } catch (error) {
       console.error("Payment processing error:", error);
       showAlert.error(
@@ -339,8 +256,6 @@ const CheckoutPage = () => {
         landmark: address.Landmark.trim() || undefined,
       };
 
-      console.log("Sending address data:", addressData);
-
       const response = await fetch("/api/users/address", {
         method: "POST",
         headers: {
@@ -351,7 +266,6 @@ const CheckoutPage = () => {
       });
 
       const data = await response.json();
-      console.log("API Response:", data);
 
       if (response.ok && data.success) {
         // Reset form
@@ -442,8 +356,6 @@ const CheckoutPage = () => {
     }
 
     setApplyingCoupon(true);
-
-    console.log(cart);
 
     try {
       // Prepare cart items for API
@@ -613,8 +525,6 @@ const CheckoutPage = () => {
         status: "pending",
       };
 
-      console.log("Creating order with data:", orderData);
-
       const response = await fetch("/api/order", {
         method: "POST",
         headers: {
@@ -746,7 +656,8 @@ const CheckoutPage = () => {
               {user ? (
                 <Link
                   href="/my-account"
-                  className="hover:text-red-600 transition-colors">
+                  className="hover:text-red-600 transition-colors"
+                >
                   <div className="text-sm md:text-base font-bold text-gray-900 hover:text-yellow-400 transition-colors">
                     {user.name}
                   </div>
@@ -757,7 +668,8 @@ const CheckoutPage = () => {
               ) : (
                 <button
                   onClick={openLogin}
-                  className="text-sm md:text-base font-bold text-gray-900 hover:text-red-600 transition-colors">
+                  className="text-sm md:text-base font-bold text-gray-900 hover:text-red-600 transition-colors"
+                >
                   Login
                 </button>
               )}
@@ -777,11 +689,13 @@ const CheckoutPage = () => {
                   <div
                     className={`flex flex-col items-center ${
                       activeStep >= 1 ? "text-red-900" : "text-gray-400"
-                    }`}>
+                    }`}
+                  >
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center ${
                         activeStep >= 1 ? "bg-red-100" : "bg-gray-100"
-                      }`}>
+                      }`}
+                    >
                       <FiUser className="text-lg" />
                     </div>
                     <span className="mt-2 text-sm font-bold">Login</span>
@@ -794,13 +708,15 @@ const CheckoutPage = () => {
                     (needsLogin ? activeStep >= 2 : activeStep >= 1)
                       ? "text-red-900"
                       : "text-gray-400"
-                  }`}>
+                  }`}
+                >
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center ${
                       (needsLogin ? activeStep >= 2 : activeStep >= 1)
                         ? "bg-red-100"
                         : "bg-gray-100"
-                    }`}>
+                    }`}
+                  >
                     <FiMapPin className="text-lg" />
                   </div>
                   <span className="mt-2 text-sm font-bold">Address</span>
@@ -812,13 +728,15 @@ const CheckoutPage = () => {
                     (needsLogin ? activeStep >= 3 : activeStep >= 2)
                       ? "text-red-900"
                       : "text-gray-400"
-                  }`}>
+                  }`}
+                >
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center ${
                       (needsLogin ? activeStep >= 3 : activeStep >= 2)
                         ? "bg-red-100"
                         : "bg-gray-100"
-                    }`}>
+                    }`}
+                  >
                     <FiCreditCard className="text-lg" />
                   </div>
                   <span className="mt-2 text-sm font-bold">Payment</span>
@@ -836,7 +754,8 @@ const CheckoutPage = () => {
                   </p>
                   <Button
                     onClick={openLogin}
-                    className="w-full py-3 px-4 bg-red-900 text-white rounded-none hover:bg-red-800 transition-colors">
+                    className="w-full py-3 px-4 bg-red-900 text-white rounded-none hover:bg-red-800 transition-colors"
+                  >
                     Sign In / Sign Up
                   </Button>
                   <p className="text-sm text-gray-500 text-center">
@@ -881,7 +800,8 @@ const CheckoutPage = () => {
                               ? "border-red-900 bg-red-50 shadow-sm"
                               : "border-gray-300 bg-white hover:border-gray-400 hover:shadow-sm"
                           }`}
-                          onClick={() => selectAddress(addr)}>
+                          onClick={() => selectAddress(addr)}
+                        >
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
                               <div className="flex items-center mb-2">
@@ -916,7 +836,8 @@ const CheckoutPage = () => {
                               ) : (
                                 <Button
                                   onClick={() => selectAddress(addr)}
-                                  className="bg-white! border border-green-500 text-green-500! px-4 py-2 rounded-none text-sm hover:bg-red-50">
+                                  className="bg-white! border border-green-500 text-green-500! px-4 py-2 rounded-none text-sm hover:bg-red-50"
+                                >
                                   Deliver Here
                                 </Button>
                               )}
@@ -944,7 +865,8 @@ const CheckoutPage = () => {
                   {!loadingAddresses && (
                     <Button
                       onClick={() => setShowAddressSidebar(true)}
-                      className="w-full py-3! px-4 border bg-white! border-gray-300 rounded-none text-left flex justify-between items-center hover:bg-gray-50">
+                      className="w-full py-3! px-4 border bg-white! border-gray-300 rounded-none text-left flex justify-between items-center hover:bg-gray-50"
+                    >
                       <span className="text-gray-700">
                         {addresses.length === 0
                           ? "Add delivery address"
@@ -973,14 +895,16 @@ const CheckoutPage = () => {
                         selectedPaymentMethod === "online"
                           ? "border-blue-500 bg-blue-50 shadow-md"
                           : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-                      }`}>
+                      }`}
+                    >
                       <div className="flex items-center space-x-3">
                         <div
                           className={`p-3 rounded-full ${
                             selectedPaymentMethod === "online"
                               ? "bg-blue-100 text-blue-600"
                               : "bg-gray-100 text-gray-600"
-                          }`}>
+                          }`}
+                        >
                           <FaCreditCard className="text-xl" />
                         </div>
                         <div className="flex-1">
@@ -1001,7 +925,8 @@ const CheckoutPage = () => {
                             selectedPaymentMethod === "online"
                               ? "border-blue-500 bg-blue-500"
                               : "border-gray-300"
-                          }`}>
+                          }`}
+                        >
                           {selectedPaymentMethod === "online" && (
                             <div className="w-2 h-2 bg-white rounded-full"></div>
                           )}
@@ -1016,14 +941,16 @@ const CheckoutPage = () => {
                         selectedPaymentMethod === "cod"
                           ? "border-green-500 bg-green-50 shadow-md"
                           : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-                      }`}>
+                      }`}
+                    >
                       <div className="flex items-center space-x-3">
                         <div
                           className={`p-3 rounded-full ${
                             selectedPaymentMethod === "cod"
                               ? "bg-green-100 text-green-600"
                               : "bg-gray-100 text-gray-600"
-                          }`}>
+                          }`}
+                        >
                           <FaMoneyBillWave className="text-xl" />
                         </div>
                         <div className="flex-1">
@@ -1044,7 +971,8 @@ const CheckoutPage = () => {
                             selectedPaymentMethod === "cod"
                               ? "border-green-500 bg-green-500"
                               : "border-gray-300"
-                          }`}>
+                          }`}
+                        >
                           {selectedPaymentMethod === "cod" && (
                             <div className="w-2 h-2 bg-white rounded-full"></div>
                           )}
@@ -1061,7 +989,8 @@ const CheckoutPage = () => {
                       selectedPaymentMethod === "online"
                         ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg"
                         : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg"
-                    }`}>
+                    }`}
+                  >
                     {creatingOrder ? (
                       <>
                         <Spinner h={20} className="mr-3" />
@@ -1133,7 +1062,8 @@ const CheckoutPage = () => {
                 {activeStep > 1 && (
                   <Button
                     onClick={() => setActiveStep(activeStep - 1)}
-                    className="px-6 py-3 border bg-white! border-gray-300 rounded-none text-gray-700 font-medium hover:bg-gray-50">
+                    className="px-6 py-3 border bg-white! border-gray-300 rounded-none text-gray-700 font-medium hover:bg-gray-50"
+                  >
                     Back
                   </Button>
                 )}
@@ -1157,7 +1087,8 @@ const CheckoutPage = () => {
                         activeStep < maxSteps
                           ? "bg-red-900! text-white hover:bg-red-800"
                           : "bg-red-900! text-white hover:bg-red-800"
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}>
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
                       {creatingOrder ? (
                         <div className="flex items-center">
                           <Spinner h={20} className="mr-2 text-white" />
@@ -1199,7 +1130,8 @@ const CheckoutPage = () => {
                     {cart.map((item: any) => (
                       <div
                         key={item.cartItemId}
-                        className="flex items-center justify-between bg-gray-50 p-3 rounded-none">
+                        className="flex items-center justify-between bg-gray-50 p-3 rounded-none"
+                      >
                         <div className="flex items-center">
                           <Image
                             src={item.imageUrl || "/placeholder-food.svg"}
@@ -1243,7 +1175,8 @@ const CheckoutPage = () => {
                                   );
                                 }
                               }}
-                              className="p-1 text-gray-600 hover:text-red-900">
+                              className="p-1 text-gray-600 hover:text-red-900"
+                            >
                               <FiMinus size={12} />
                             </button>
                             <span className="px-2 text-sm font-medium">
@@ -1260,7 +1193,8 @@ const CheckoutPage = () => {
                                   );
                                 }
                               }}
-                              className="p-1 text-gray-600 hover:text-red-900">
+                              className="p-1 text-gray-600 hover:text-red-900"
+                            >
                               <FiPlus size={12} />
                             </button>
                           </div>
@@ -1284,7 +1218,8 @@ const CheckoutPage = () => {
                     {addons.map((item: any) => (
                       <div
                         key={item.addonCartItemId}
-                        className="flex items-center justify-between bg-gray-50 p-3 rounded-none">
+                        className="flex items-center justify-between bg-gray-50 p-3 rounded-none"
+                      >
                         <div className="flex items-center">
                           <Image
                             src={item.imageUrl || "/placeholder-food.svg"}
@@ -1328,7 +1263,8 @@ const CheckoutPage = () => {
                                   );
                                 }
                               }}
-                              className="p-1 text-gray-600 hover:text-red-900">
+                              className="p-1 text-gray-600 hover:text-red-900"
+                            >
                               <FiMinus size={12} />
                             </button>
                             <span className="px-2 text-sm font-medium">
@@ -1345,7 +1281,8 @@ const CheckoutPage = () => {
                                   );
                                 }
                               }}
-                              className="p-1 text-gray-600 hover:text-red-900">
+                              className="p-1 text-gray-600 hover:text-red-900"
+                            >
                               <FiPlus size={12} />
                             </button>
                           </div>
@@ -1378,7 +1315,8 @@ const CheckoutPage = () => {
                       <Button
                         onClick={applyCoupon}
                         disabled={!couponCode.trim() || applyingCoupon}
-                        className="px-4 py-2 bg-red-600 text-white rounded-none hover:bg-red-700 disabled:bg-gray-300">
+                        className="px-4 py-2 bg-red-600 text-white rounded-none hover:bg-red-700 disabled:bg-gray-300"
+                      >
                         {applyingCoupon ? "Applying..." : "Apply"}
                       </Button>
                     </div>
@@ -1394,7 +1332,8 @@ const CheckoutPage = () => {
                       </div>
                       <Button
                         onClick={removeCoupon}
-                        className="text-red-600 px-2! py-2! hover:text-red-800 bg-transparent border-none rounded-none">
+                        className="text-red-600 px-2! py-2! hover:text-red-800 bg-transparent border-none rounded-none"
+                      >
                         <FiX size={16} />
                       </Button>
                     </div>
@@ -1408,7 +1347,8 @@ const CheckoutPage = () => {
                   <p>Your cart is empty</p>
                   <Link
                     href="/"
-                    className="text-red-600 hover:text-red-800 underline mt-2 inline-block">
+                    className="text-red-600 hover:text-red-800 underline mt-2 inline-block"
+                  >
                     Continue Shopping
                   </Link>
                 </div>
@@ -1504,7 +1444,8 @@ const CheckoutPage = () => {
           <div className="absolute inset-0 overflow-hidden">
             <div
               className="absolute inset-0 bg-black/75 transition-opacity"
-              onClick={() => setShowAddressSidebar(false)}></div>
+              onClick={() => setShowAddressSidebar(false)}
+            ></div>
             <div className="fixed inset-y-0 left-0 max-w-full flex">
               <div className="relative w-screen max-w-md">
                 <div className="h-full flex flex-col bg-white shadow-xl">
@@ -1516,7 +1457,8 @@ const CheckoutPage = () => {
                       <button
                         type="button"
                         className="text-gray-400 hover:text-gray-500"
-                        onClick={() => setShowAddressSidebar(false)}>
+                        onClick={() => setShowAddressSidebar(false)}
+                      >
                         <FiX className="h-6 w-6" />
                       </button>
                     </div>
@@ -1598,7 +1540,8 @@ const CheckoutPage = () => {
                       disabled={savingAddress}
                       className={`w-full py-3 rounded-none! ${
                         savingAddress ? "opacity-50 cursor-not-allowed" : ""
-                      }`}>
+                      }`}
+                    >
                       {savingAddress ? (
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>

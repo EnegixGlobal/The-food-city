@@ -13,7 +13,7 @@ import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer className="bg-[#471419] text-white  pb-6">
+    <footer className="bg-[#471419] text-white pb-6">
       {/* Container Wrapper */}
       <Container>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
@@ -101,7 +101,7 @@ const Footer = () => {
               <li className="font-thin">
                 <Link
                   href="/admin"
-                  className=" hover:text-yellow-400 transition font-thin">
+                  className="hover:text-yellow-400 transition font-thin">
                   Admin
                 </Link>
               </li>
@@ -124,7 +124,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center font-medium">
                 <FaEnvelope className="mr-2 text-yellow-400" />
-                <a href="mailto:thefoodcity@gmai.com" className="hover:text-yellow-400 transition">thefoodcity@gmail.com</a>
+                <a href="mailto:tfc.25nov2024@gmail.com" className="hover:text-yellow-400 transition">tfc.25nov2024@gmail.com</a>
               </li>
             </ul>
           </div>
@@ -152,32 +152,54 @@ const Footer = () => {
 
         {/* Bottom Copyright & Legal */}
         <div className="flex border-t border-red-800 items-center justify-between text-sm">
-          <div className=" pt-6">
+          <div className="pt-6">
             <p className="font-bold">
               © {new Date().getFullYear()} The Food City. All Rights Reserved.
             </p>
             <div className="flex justify-center space-x-6 mt-4">
-              <a
-                href="#"
+              <Link
+                href="/privacy-policy"
                 className="font-medium hover:text-yellow-400 transition">
                 Privacy Policy
-              </a>
-              <a
-                href="#"
+              </Link>
+              <Link
+                href="/terms-and-conditions"
                 className="font-medium hover:text-yellow-400 transition">
                 Terms of Service
-              </a>
+              </Link>
+              <Link
+                href="/shipping-policy"
+                className="font-medium hover:text-yellow-400 transition">
+                Shipping Policy
+              </Link>
               <a
                 href="#"
                 className="font-medium hover:text-yellow-400 transition">
                 FAQ
               </a>
             </div>
+            <p className="font-medium mt-4">
+              We accept payments via{" "}
+              <a
+                href="https://business.phonepe.com/"
+                target="_blank"
+                className="font-bold hover:text-yellow-400 transition"
+              >
+                PhonePe Payment Gateway
+              </a>
+              
+          
+            </p>
           </div>
           <div>
             <p className="text-center text-sm text-gray-400 mt-4">
-              Designed and Developed by <Link className="font-bold text-gray-100" target="_blank" href={"https://www.enegixwebsolutions.com"}>
-              Enegix Web Solutions
+              Designed and Developed by{" "}
+              <Link
+                className="font-bold text-gray-100"
+                target="_blank"
+                href="https://www.enegixwebsolutions.com"
+              >
+                Enegix Web Solutions
               </Link>
             </p>
           </div>

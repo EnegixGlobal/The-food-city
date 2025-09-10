@@ -7,6 +7,7 @@ import axios from "axios";
 import Spinner from "./Spinner";
 import useUserStore from "../zustand/userStore";
 import { useAlertStore } from "../zustand/alertStore";
+import Link from "next/link";
 
 const SideLogin = ({
   isOpen,
@@ -282,7 +283,7 @@ const SideLogin = ({
       <div
         className={`fixed 
           md:top-0 md:right-0 md:h-full md:w-96 md:rounded-none 
-          top-80 bottom-0  right-0 w-full rounded-t-3xl 
+          top-80 bottom-0 right-0 w-full rounded-t-3xl 
           bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${
             isOpen
               ? "md:translate-x-0 translate-y-0"
@@ -342,7 +343,7 @@ const SideLogin = ({
                       {...register("otp", { required: true })}
                       placeholder="Enter OTP"
                       maxLength={6}
-                      className="mt-4 w-full px-5 py-3 text-lg tracking-widest text-center text-gray-800 bg-white border border-gray-300  shadow-sm placeholder-gray-400  outline-none transition-all duration-300 ease-in-out"
+                      className="mt-4 w-full px-5 py-3 text-lg tracking-widest text-center text-gray-800 bg-white border border-gray-300 shadow-sm placeholder-gray-400 outline-noneloca transition-all duration-300 ease-in-out"
                     />
                     <span
                       onClick={resendOtp}
@@ -385,8 +386,26 @@ const SideLogin = ({
               )}
             </div>
 
+            {/* Terms and Conditions & Privacy Policy Links */}
+            <div className="mt-4 text-sm text-gray-600">
+              By continuing, you agree to our{" "}
+              <Link
+                href="/terms-and-conditions"
+                className="text-red-900 font-bold hover:underline"
+              >
+                Terms and Conditions
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy-policy"
+                className="text-red-900 font-bold hover:underline"
+              >
+                Privacy Policy
+              </Link>.
+            </div>
+
             {/* Submit Button */}
-            <Button type="submit" className="mt-6 py-3! rounded-none">
+            <Button type="submit" className="mt-6 py-3 rounded-none">
               {loading ? (
                 <Spinner />
               ) : !isLogin ? (

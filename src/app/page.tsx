@@ -9,6 +9,8 @@ import BottomCart from "./components/BottomCart";
 import BestSellingServer from "./components/server-components/BestSellingServer";
 import DosaOffer from "./components/DosaOffer";
 
+export const dynamic = "force-dynamic";
+
 export default function Home() {
   return (
     <div className="min-h-screen w-full bg-white text-gray-900 antialiased font-sans">

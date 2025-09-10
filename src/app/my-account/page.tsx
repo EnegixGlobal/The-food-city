@@ -155,28 +155,10 @@ export default function OrdersPage() {
     fetchOrders(currentPage, selectedStatus);
   }, [currentPage, selectedStatus]);
 
-  // Load Razorpay script
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
   // Process payment for pending order
   const processPayment = async (order: Order) => {
     try {
       setProcessingPayment(order._id);
-
-      // Load Razorpay script
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        alert("Failed to load payment gateway. Please try again.");
-        return;
-      }
 
       // Create payment order
       const response = await fetch(`/api/payment/create-order`, {
@@ -191,58 +173,8 @@ export default function OrdersPage() {
         throw new Error(paymentData.message || "Failed to create payment");
       }
 
-      // Configure Razorpay options
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: paymentData.data.amount,
-        currency: paymentData.data.currency,
-        name: "The Food City",
-        description: `Payment for Order #${order.orderId}`,
-        order_id: paymentData.data.razorpayOrderId,
-        handler: async (response: any) => {
-          try {
-            // Verify payment
-            const verifyResponse = await fetch(`/api/payment/verify`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                orderId: order.orderId,
-              }),
-            });
-
-            const verifyData = await verifyResponse.json();
-            if (verifyResponse.ok && verifyData.success) {
-              alert("Payment successful! Your order has been confirmed.");
-              // Refresh orders to show updated payment status
-              fetchOrders(currentPage, selectedStatus);
-            } else {
-              throw new Error(
-                verifyData.message || "Payment verification failed"
-              );
-            }
-          } catch (error) {
-            console.error("Payment verification error:", error);
-            alert("Payment verification failed. Please contact support.");
-          } finally {
-            setProcessingPayment(null);
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            setProcessingPayment(null);
-          },
-        },
-        theme: {
-          color: "#f97316", // orange-500
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
+      // open phonepe payment gateway
+      window.location.href = paymentData.redirectUrl;
     } catch (error) {
       console.error("Payment processing error:", error);
       alert(
@@ -297,7 +229,8 @@ export default function OrdersPage() {
               <p className="text-gray-600">{error}</p>
               <button
                 onClick={() => fetchOrders(currentPage, selectedStatus)}
-                className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-none hover:bg-orange-600 transition-colors">
+                className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-none hover:bg-orange-600 transition-colors"
+              >
                 Try Again
               </button>
             </div>
@@ -324,7 +257,8 @@ export default function OrdersPage() {
                 selectedStatus === ""
                   ? "bg-orange-500 text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}>
+              }`}
+            >
               All Orders
             </button>
             {[
@@ -341,7 +275,8 @@ export default function OrdersPage() {
                   selectedStatus === status
                     ? "bg-orange-500 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}>
+                }`}
+              >
                 {status.replace("_", " ")}
               </button>
             ))}
@@ -363,7 +298,8 @@ export default function OrdersPage() {
               </p>
               <button
                 onClick={() => router.push("/")}
-                className="px-6 py-3 bg-orange-500 text-white rounded-none hover:bg-orange-600 transition-colors">
+                className="px-6 py-3 bg-orange-500 text-white rounded-none hover:bg-orange-600 transition-colors"
+              >
                 Start Ordering
               </button>
             </div>
@@ -374,7 +310,8 @@ export default function OrdersPage() {
               <div
                 key={order._id}
                 onClick={() => handleOrderClick(order._id)}
-                className="bg-white rounded-none shadow-sm p-4 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-orange-200 group">
+                className="bg-white rounded-none shadow-sm p-4 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-orange-200 group"
+              >
                 {/* Order Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
                   <div className="mb-3 sm:mb-0">
@@ -388,7 +325,8 @@ export default function OrdersPage() {
                         className="w-4 h-4"
                         fill="none"
                         stroke="currentColor"
-                        viewBox="0 0 24 24">
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -410,7 +348,8 @@ export default function OrdersPage() {
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
                           order.paymentStatus
-                        )}`}>
+                        )}`}
+                      >
                         {order.paymentStatus.toUpperCase()}
                       </span>
 
@@ -421,7 +360,8 @@ export default function OrdersPage() {
                             order.paymentMethod === "online"
                               ? "bg-blue-100 text-blue-800"
                               : "bg-orange-100 text-orange-800"
-                          }`}>
+                          }`}
+                        >
                           {order.paymentMethod === "online" ? "ONLINE" : "COD"}
                         </span>
                       </div>
@@ -452,7 +392,8 @@ export default function OrdersPage() {
                           className="w-6 h-6"
                           fill="none"
                           stroke="currentColor"
-                          viewBox="0 0 24 24">
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -507,7 +448,8 @@ export default function OrdersPage() {
                             className="w-4 h-4 text-gray-400"
                             fill="none"
                             stroke="currentColor"
-                            viewBox="0 0 24 24">
+                            viewBox="0 0 24 24"
+                          >
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -524,7 +466,8 @@ export default function OrdersPage() {
                             className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0"
                             fill="none"
                             stroke="currentColor"
-                            viewBox="0 0 24 24">
+                            viewBox="0 0 24 24"
+                          >
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -553,7 +496,8 @@ export default function OrdersPage() {
                               processPayment(order);
                             }}
                             disabled={processingPayment === order._id}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-none hover:from-blue-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm hover:shadow-md">
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-none hover:from-blue-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm hover:shadow-md"
+                          >
                             {processingPayment === order._id ? (
                               <>
                                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
@@ -565,7 +509,8 @@ export default function OrdersPage() {
                                   className="w-4 h-4"
                                   fill="none"
                                   stroke="currentColor"
-                                  viewBox="0 0 24 24">
+                                  viewBox="0 0 24 24"
+                                >
                                   <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -601,12 +546,14 @@ export default function OrdersPage() {
                                     item.imageUrl
                                   );
                                 }}
-                                className="w-full text-sm flex items-center justify-start text-orange-500 gap-2  cursor-pointer hover:text-orange-400">
+                                className="w-full text-sm flex items-center justify-start text-orange-500 gap-2  cursor-pointer hover:text-orange-400"
+                              >
                                 <svg
                                   className="w-4 h-4"
                                   fill="none"
                                   stroke="currentColor"
-                                  viewBox="0 0 24 24">
+                                  viewBox="0 0 24 24"
+                                >
                                   <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -633,7 +580,8 @@ export default function OrdersPage() {
                           className="w-4 h-4 text-orange-500"
                           fill="none"
                           stroke="currentColor"
-                          viewBox="0 0 24 24">
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -649,7 +597,8 @@ export default function OrdersPage() {
                         {order.addons.map((addon, index) => (
                           <span
                             key={index}
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-orange-50 text-orange-700 border border-orange-200">
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-orange-50 text-orange-700 border border-orange-200"
+                          >
                             {addon.name}
                           </span>
                         ))}
@@ -669,7 +618,8 @@ export default function OrdersPage() {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="px-3 sm:px-4 py-2 rounded-none border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                className="px-3 sm:px-4 py-2 rounded-none border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
                 Previous
               </button>
 
@@ -694,7 +644,8 @@ export default function OrdersPage() {
                         currentPage === pageNum
                           ? "bg-orange-500 text-white"
                           : "text-gray-700 hover:bg-gray-100 border border-gray-300"
-                      }`}>
+                      }`}
+                    >
                       {pageNum}
                     </button>
                   );
@@ -706,7 +657,8 @@ export default function OrdersPage() {
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="px-3 sm:px-4 py-2 rounded-none border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                className="px-3 sm:px-4 py-2 rounded-none border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
                 Next
               </button>
             </div>

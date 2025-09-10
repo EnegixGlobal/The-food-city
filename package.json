@@ -20,6 +20,7 @@
     "mongoose": "^8.16.4",
     "next": "15.3.5",
     "next-pwa": "^5.6.0",
+    "pg-sdk-node": "https://phonepe.mycloudrepo.io/public/repositories/phonepe-pg-sdk-node/releases/v2/phonepe-pg-sdk-node.tgz",
     "razorpay": "^2.9.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
