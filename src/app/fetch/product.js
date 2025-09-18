@@ -26,7 +26,7 @@ export const fetchIndianProducts = async (
     });
 
     if (!response.ok) {
-      throw new Error("Network response was not ok");
+      throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();

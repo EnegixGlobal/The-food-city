@@ -8,13 +8,7 @@ const userSchema = new Schema(
       required: [true, "Name is required"],
       maxlength: [50, "Name cannot exceed 50 characters"],
     },
-    phone: {
-      type: String,
-      required: [true, "Phone number is required"],
-      unique: true,
-      trim: true,
-      match: [/^(?:\+91|0)?[6-9]\d{9}$/, "Please provide a valid phone number"],
-    },
+    
     email: {
       type: String,
       trim: true,

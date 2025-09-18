@@ -7,40 +7,26 @@ import jwt from "jsonwebtoken";
 import Otp from "@/app/models/Otp";
 import { NextResponse } from "next/server";
 
-
 export const POST = asyncHandler(async (req) => {
-  const { otp, phone } = await req.json();
+  const { otp, email } = await req.json();
 
-
-  if (!otp) {
-    return apiError(400, "OTP is required");
-  }
-
-  if (!phone) {
-    return apiError(400, "Phone number is required");
-  }
+  if (!otp) return apiError(400, "OTP is required");
+  if (!email) return apiError(400, "Email is required");
 
   await connectDb();
 
-  // Find the most recent OTP for this phone number
-  const savedOtp = await Otp.findOne({ 
-    phone: phone 
-  }).sort({ createdAt: -1 });
-
+  // Find the most recent OTP for this email
+  const savedOtp = await Otp.findOne({ email }).sort({ createdAt: -1 });
   if (!savedOtp) {
     return apiError(404, "OTP not found or expired");
   }
 
-  // Verify the OTP by comparing with the hashed version
   const isOtpValid = await bcryptjs.compare(otp, savedOtp.otp);
-
   if (!isOtpValid) {
-    // Increment attempts
     savedOtp.attempts += 1;
     await savedOtp.save();
 
     if (savedOtp.attempts >= 3) {
-      // Delete OTP after max attempts
       await Otp.deleteOne({ _id: savedOtp._id });
       return apiError(400, "Maximum OTP attempts exceeded. Please request a new OTP");
     }
@@ -48,22 +34,19 @@ export const POST = asyncHandler(async (req) => {
     return apiError(400, "Invalid OTP");
   }
 
-  // find user by phone
-  const user = await User.findOne({ phone: savedOtp.phone });
+  // find user by email
+  const user = await User.findOne({ email });
   if (!user) {
     return apiError(404, "User not found");
   }
 
-  // Delete the used OTP
   await Otp.deleteOne({ _id: savedOtp._id });
-
-  console.log(user)
 
   // generate JWT token
   const tokenData = {
     id: user._id,
     name: user.name,
-    phone: user.phone,
+    email: user.email,
   };
 
   const jwtSecret = process.env.JWT_SECRET;
@@ -82,11 +65,10 @@ export const POST = asyncHandler(async (req) => {
       user: {
         id: user._id,
         name: user.name,
-        phone: user.phone,
         email: user.email,
       },
-      token
-    }
+      token,
+    },
   });
 
   response.cookies.set("token", token, {
@@ -94,7 +76,7 @@ export const POST = asyncHandler(async (req) => {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     maxAge: 60 * 60 * 24 * 2, // 2 days
-    path: "/"
+    path: "/",
   });
 
   return response;

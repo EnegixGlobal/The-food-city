@@ -494,7 +494,7 @@ const CheckoutPage = () => {
       // Prepare customer info
       const customerInfo = {
         name: user.name,
-        phone: user.phone || user.mobile || "0000000000", // Fallback phone number
+        email: user.email || "example@example.com", // Fallback email
         address: selectedAddress.fullAddress,
         pincode: selectedAddress.pincode,
       };

@@ -32,7 +32,7 @@ export const POST = asyncHandler(async (req) => {
 
   // validate customerInfo
   const { customerInfo } = orderData;
-  const requiredCustomerFields = ["name", "phone", "address", "pincode"];
+  const requiredCustomerFields = ["name", "email", "address", "pincode"];
 
   for (const field of requiredCustomerFields) {
     if (!customerInfo[field]) {
@@ -41,10 +41,16 @@ export const POST = asyncHandler(async (req) => {
   }
 
   // validate phone number
-  const phoneRegex = /^[6-9]\d{9}$/;
-  if (!phoneRegex.test(customerInfo.phone)) {
-    return apiResponse(400, "Please enter a valid phone number");
-  }
+  // const phoneRegex = /^[6-9]\d{9}$/;
+  // if (!phoneRegex.test(customerInfo.phone)) {
+  //   return apiResponse(400, "Please enter a valid phone number");
+  // }
+
+  // validate email instead of phone
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(customerInfo.email)) {
+  return apiResponse(400, "Please enter a valid email address");
+}
 
   //   validate items array
   if (!Array.isArray(orderData.items) || orderData.items.length === 0) {

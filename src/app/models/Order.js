@@ -85,10 +85,11 @@ const customerInfoSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
-  phone: {
+  email: {
     type: String,
     required: true,
-    match: [/^[6-9]\d{9}$/, "Please enter a valid phone number"],
+    trim: true,
+    match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email address"],
   },
   address: {
     type: String,
@@ -233,7 +234,7 @@ const orderSchema = new mongoose.Schema(
 );
 
 // Indexes for better performance
-orderSchema.index({ "customerInfo.mobileNumber": 1 });
+orderSchema.index({ "customerInfo.email": 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ orderDate: -1 });
 orderSchema.index({ estimatedDeliveryDate: 1 });

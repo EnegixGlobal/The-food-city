@@ -4,49 +4,55 @@ import User from "@/app/models/User";
 import { apiError } from "@/app/lib/ApiError";
 import { asyncHandler } from "@/app/lib/asyncHandler";
 import { apiResponse } from "@/app/lib/apiResponse";
-import {
-  generateOTP,
-  normalizePhoneNumber,
-  sendOTP,
-} from "@/app/utils/sendOtp";
 import Otp from "@/app/models/Otp";
+import nodemailer from "nodemailer";
 
 export const POST = asyncHandler(async (req) => {
-  const { phone } = await req.json();
+  const { email } = await req.json();
 
-  if (!phone) {
-    return apiError(400, "Phone number is required");
+  if (!email) {
+    return apiError(400, "Email is required");
   }
 
-  // if phone is more than 10 digits, normalize it return error
-  if (phone.length > 10) {
-    return apiError(400, "Phone number should not exceed 10 digits!");
+  // Validate email format
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (!isValidEmail) {
+    return apiError(400, "Invalid email format!");
   }
 
-  const normalizedPhone = normalizePhoneNumber(phone);
-  // Do something with phone...
   await connectDb();
 
-  const user = await User.findOne({ phone: normalizedPhone });
-
+  const user = await User.findOne({ email });
   if (!user) {
     return apiError(404, "User not found");
   }
 
-  const otp = generateOTP();
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-  sendOTP(normalizedPhone, otp);
+  // Send OTP by email
+  const transporter = nodemailer.createTransport({
+    service: "gmail", // or SMTP settings for your provider
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
 
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Your OTP Code",
+    text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
+  });
+
+  // Hash and save OTP
   const hashedOtp = await bcryptjs.hash(otp, 10);
-
   const newOtp = new Otp({
-    phone: normalizedPhone,
+    email,
     otp: hashedOtp,
   });
 
   await newOtp.save();
 
-  return apiResponse(200, "OTP sent successfully", {
-    otp,
-  });
+  return apiResponse(200, "OTP sent successfully", { otp }); // ⚠️ remove otp from response in prod
 });
