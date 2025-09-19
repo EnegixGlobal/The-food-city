@@ -351,6 +351,7 @@ function Navbar() {
                 </Link>
               )}
               <button
+              title="Menu"
                 className=" focus:outline-none p-2 rounded-full bg-red-700 hover:bg-red-800"
                 onClick={() => setIsOpen(!isOpen)}>
                 <svg
