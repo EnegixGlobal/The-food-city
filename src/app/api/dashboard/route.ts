@@ -386,7 +386,7 @@ export const GET = asyncHandler(async (req: NextRequest) => {
     const processedRecentOrders = recentOrders.map((order) => ({
       id: order.orderId,
       customer: order.customerInfo?.name || "Unknown Customer",
-      phone: order.customerInfo?.phone || "",
+      email: order.customerInfo?.email || "example@example.com",
       items: order.items?.length || 0,
       total: `₹${order.totalAmount.toLocaleString("en-IN")}`,
       status: order.status,
