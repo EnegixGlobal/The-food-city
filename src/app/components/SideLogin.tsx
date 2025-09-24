@@ -254,14 +254,14 @@ const SideLogin = ({
       )}
 
       <div
-        className={`fixed md:top-0 md:right-0 md:h-full md:w-96 md:rounded-none 
-          top-80 bottom-0 right-0 w-full rounded-t-3xl bg-white z-50 shadow-2xl 
-          transform transition-transform duration-300 ease-in-out ${
-            isOpen
-              ? "md:translate-x-0 translate-y-0"
-              : "md:translate-x-full translate-y-full"
-          }`}
-      >
+  className={`fixed inset-x-0 bottom-0 md:inset-y-0 md:right-0 md:w-96
+  h-full md:rounded-none rounded-t-3xl bg-white z-50 shadow-2xl
+  transform transition-transform duration-300 ease-in-out ${
+    isOpen
+      ? "md:translate-x-0 translate-y-0"
+      : "md:translate-x-full translate-y-full"
+  }`}
+>
         <button
           onClick={onClose}
           aria-label="Close panel"
@@ -271,8 +271,8 @@ const SideLogin = ({
           <FiX size={24} />
         </button>
 
-        <div className="h-full flex flex-col p-6 md:p-8 pt-16 md:pt-16">
-          <div className="text-left mb-8">
+<div className="h-full flex flex-col p-6 md:p-8 pt-16 md:pt-16 overflow-y-auto">        
+    <div className="text-left mb-8">
             <h2 className="text-3xl font-semibold mb-2">
               {isLogin ? "Login" : "Sign Up"}
             </h2>
