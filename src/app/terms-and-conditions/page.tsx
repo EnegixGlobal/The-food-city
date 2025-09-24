@@ -154,6 +154,9 @@ function page() {
               communicated to us using the contact information provided on this
               website.
             </li>
+            <li>
+              <b>Please note that we do not provide any return or refund policy on our products/services.</b>
+            </li>
           </ol>
         </div>
       </div>

@@ -69,7 +69,7 @@ function page() {
             </p>
           </section>
 
-          <section>
+          {/* <section>
             <h2 className="text-xl font-semibold text-gray-800 mb-2">Grievance Officer</h2>
             <p>
               Insert Name of the Officer:<br />
@@ -79,7 +79,7 @@ function page() {
               Phone:<br />
               Time: Monday - Friday (9:00 - 18:00)
             </p>
-          </section>
+          </section> */}
         </div>
       </div>
     </div>

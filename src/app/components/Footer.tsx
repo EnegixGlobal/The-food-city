@@ -172,6 +172,11 @@ const Footer = () => {
                 className="font-medium hover:text-yellow-400 transition">
                 Shipping Policy
               </Link>
+              <Link
+                href="/refund-policy"
+                className="font-medium hover:text-yellow-400 transition">
+                Refund Policy
+              </Link>
               <a
                 href="#"
                 className="font-medium hover:text-yellow-400 transition">
