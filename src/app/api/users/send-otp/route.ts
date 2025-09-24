@@ -29,21 +29,35 @@ export const POST = asyncHandler(async (req) => {
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-  // Send OTP by email
-  const transporter = nodemailer.createTransport({
-    service: "gmail", // or SMTP settings for your provider
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Your OTP Code",
-    text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
-  });
+  if (!emailUser || !emailPass) {
+    return apiError(500, "Email service not configured. Please try later.");
+  }
+
+  let mailSent = false;
+  let mailError: unknown = null;
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user: emailUser, pass: emailPass },
+    });
+
+    await transporter.sendMail({
+      from: emailUser,
+      to: email,
+      subject: "Your OTP Code",
+      text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
+    });
+    mailSent = true;
+  } catch (e) {
+    mailError = e;
+    if (process.env.NODE_ENV === "production") {
+      return apiError(503, "Failed to send OTP. Please try again shortly.");
+    }
+    console.warn("[DEV] Email sending failed, continuing with fallback:", e);
+  }
 
   // Hash and save OTP
   const hashedOtp = await bcryptjs.hash(otp, 10);
@@ -54,5 +68,9 @@ export const POST = asyncHandler(async (req) => {
 
   await newOtp.save();
 
-  return apiResponse(200, "OTP sent successfully", { otp }); // ⚠️ remove otp from response in prod
+  return apiResponse(200, mailSent ? "OTP sent successfully" : "OTP generated (email not sent in dev)", {
+    otp: process.env.NODE_ENV === "development" ? otp : undefined,
+    mailSent,
+    mailError: process.env.NODE_ENV === "development" ? (mailError as Error | null)?.message : undefined,
+  });
 });

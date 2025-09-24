@@ -27,12 +27,8 @@ const SideLogin = ({
     otp: "",
   });
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm();
+  interface FormDataShape { email: string; name: string; otp: string }
+  const { register, handleSubmit, reset } = useForm<FormDataShape>();
 
   const setUser = useUserStore((state) => state.setUser);
   const addAlert = useAlertStore((state) => state.addAlert);
@@ -50,7 +46,7 @@ const SideLogin = ({
     }
   };
 
-  const onSubmit = async (formData: any) => {
+  const onSubmit = async (formData: FormDataShape) => {
     // Validation
     if (!formData.email) {
       addAlert({
@@ -83,7 +79,7 @@ const SideLogin = ({
     }
 
     setLoading(true);
-    setData(formData);
+  setData({ name: formData.name || "", email: formData.email, otp: formData.otp || "" });
 
     const endpoint = getApiEndpoint();
     if (!endpoint) {
@@ -145,24 +141,43 @@ const SideLogin = ({
           duration: 4000,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error:", error);
       let errorMessage = "Something went wrong.";
       let errorTitle = "Error";
 
-      if (error.response?.status === 400) {
+  type AxiosLikeError = { response?: { status?: number; data?: { message?: string; error?: { conflictField?: string } } } };
+  const e = error as AxiosLikeError;
+      const status = e.response?.status;
+      const serverMsg = e.response?.data?.message;
+      const conflictField = e.response?.data?.error?.conflictField;
+
+      if (status === 409) {
+        errorTitle = "Already Registered";
+        if (conflictField === "email") {
+          errorMessage = "An account with this email already exists. Please login instead.";
+        } else if (conflictField === "phone") {
+          errorMessage = "An account with this phone already exists. Please login.";
+        } else {
+          errorMessage = serverMsg || "Account already exists.";
+        }
+        // Auto switch to login mode if currently on signup
+        if (!isLogin) {
+          setIsLogin(true);
+        }
+      } else if (status === 400) {
         errorTitle = "Invalid Request";
-        errorMessage = error.response?.data?.message;
-      } else if (error.response?.status === 404) {
+        errorMessage = serverMsg || "Invalid request";
+      } else if (status === 404) {
         errorTitle = "Not Found";
-        errorMessage = error.response?.data?.message;
-      } else if (error.response?.status === 500) {
+        errorMessage = serverMsg || "Resource not found";
+      } else if (status === 500) {
         errorTitle = "Server Error";
         errorMessage = "Please try again later.";
       }
 
       addAlert({
-        type: "error",
+        type: status === 409 ? "warning" : "error",
         title: errorTitle,
         message: errorMessage,
         duration: 5000,
@@ -207,7 +222,7 @@ const SideLogin = ({
         setTimer(30);
         setIsResendDisabled(true);
       }
-    } catch (err) {
+    } catch {
       addAlert({
         type: "error",
         title: "Resend Failed",
@@ -249,6 +264,8 @@ const SideLogin = ({
       >
         <button
           onClick={onClose}
+          aria-label="Close panel"
+          title="Close"
           className="absolute md:top-4 md:left-4 top-4 right-4 text-gray-500 hover:text-red-900 transition p-2 z-10 cursor-pointer"
         >
           <FiX size={24} />
